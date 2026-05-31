@@ -32,6 +32,36 @@ export type Database = {
         }
         Relationships: []
       }
+      banners: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          image_url: string
+          link_url: string | null
+          sort_order: number
+          title: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          image_url: string
+          link_url?: string | null
+          sort_order?: number
+          title?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          image_url?: string
+          link_url?: string | null
+          sort_order?: number
+          title?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -45,6 +75,7 @@ export type Database = {
           fbp: string | null
           full_name: string | null
           id: string
+          is_frozen: boolean
           kyc_status: string
           phone: string | null
           referrer: string | null
@@ -70,6 +101,7 @@ export type Database = {
           fbp?: string | null
           full_name?: string | null
           id: string
+          is_frozen?: boolean
           kyc_status?: string
           phone?: string | null
           referrer?: string | null
@@ -95,6 +127,7 @@ export type Database = {
           fbp?: string | null
           full_name?: string | null
           id?: string
+          is_frozen?: boolean
           kyc_status?: string
           phone?: string | null
           referrer?: string | null
