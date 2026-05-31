@@ -9,6 +9,7 @@ import { getMyProfile } from "@/lib/profile.functions";
 import { createPodPayPixDeposit } from "@/lib/podpay.functions";
 import { getSettings } from "@/lib/settings.functions";
 import { useAuth } from "@/hooks/use-auth";
+import { maskCPF, validateCPF } from "@/lib/validations";
 import { cn } from "@/lib/utils";
 
 const presets = [20, 50, 100, 250, 500, 1000];
