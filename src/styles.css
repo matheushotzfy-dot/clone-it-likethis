@@ -119,4 +119,18 @@
   .bg-brand-2 { background-color: var(--brand-2); }
   .clip-diagonal-r { clip-path: polygon(0 0, 100% 0, calc(100% - 32px) 100%, 0 100%); }
   .clip-diagonal-l { clip-path: polygon(32px 0, 100% 0, 100% 100%, 0 100%); }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
 }
