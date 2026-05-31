@@ -261,19 +261,19 @@ export function DepositDialog() {
                 </button>
               </div>
             ) : (
-              <div className="text-center space-y-8 py-4">
+              <div className="text-center space-y-5 py-2 sm:py-4">
                 <div className="space-y-2">
                   <h3 className="text-2xl font-black text-white uppercase tracking-tight">Pagamento Pendente</h3>
-                  <p className="text-sm text-white/60">Escaneie o QR Code ou copie a chave abaixo</p>
+                  <p className="text-sm text-white/60">Copie o PIX copia e cola para liberar a conclusão.</p>
                 </div>
 
                 <div className="relative inline-block group">
                   <div className="absolute inset-0 bg-primary/20 rounded-[2.5rem] blur-3xl" />
-                  <div className="relative bg-white rounded-[2rem] p-6 shadow-2xl">
+                  <div className="relative bg-white rounded-[2rem] p-4 sm:p-6 shadow-2xl">
                     {pix?.qrCodeImage ? (
-                      <img src={pix.qrCodeImage} alt="QR Code PIX" className="size-56" />
+                      <img src={pix.qrCodeImage} alt="QR Code PIX" className="size-48 sm:size-56" />
                     ) : (
-                      <QrCode className="size-56 text-black" strokeWidth={1.5} />
+                      <QrCode className="size-48 sm:size-56 text-black" strokeWidth={1.5} />
                     )}
                     <div className="absolute -top-3 -right-3 bg-primary text-primary-foreground size-12 rounded-full flex items-center justify-center shadow-lg border-4 border-brand">
                       <Zap className="size-6 fill-current" />
@@ -288,24 +288,27 @@ export function DepositDialog() {
                       {pix?.copyPaste || "Gerando..."}
                     </div>
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         if (!pix?.copyPaste) return;
-                        navigator.clipboard.writeText(pix.copyPaste);
-                        toast.success("Código PIX copiado!");
+                        await navigator.clipboard.writeText(pix.copyPaste);
+                        setPixCopied(true);
+                        toast.success("PIX copia e cola copiado! Agora é só pagar.");
                       }}
-                      className="absolute right-3 bottom-3 size-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center hover:scale-110 transition-all shadow-lg active:scale-95"
+                      className="mt-3 w-full min-h-12 rounded-xl bg-primary text-primary-foreground flex items-center justify-center gap-2 px-3 text-sm font-black uppercase tracking-wide hover:brightness-110 transition-all shadow-lg active:scale-[0.98]"
                     >
-                      <Copy className="size-5" />
+                      {pixCopied ? <CheckCircle2 className="size-5" /> : <Copy className="size-5" />}
+                      {pixCopied ? "PIX copiado" : "Copiar PIX copia e cola"}
                     </button>
                   </div>
                 </div>
 
-                <p className="text-xs text-white/50">Aguardando confirmação automática. Pode fechar esta janela — você será notificado.</p>
+                <p className="text-xs text-white/50">Depois de copiar, pague no seu banco. A confirmação é automática.</p>
                 <button
                   onClick={close}
-                  className="w-full h-14 rounded-2xl bg-white/5 text-white/60 hover:text-white font-bold uppercase text-sm tracking-wider"
+                  disabled={!pixCopied}
+                  className="w-full h-14 rounded-2xl bg-white/5 text-white/60 hover:text-white font-bold uppercase text-sm tracking-wider disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  Concluir e Voltar
+                  {pixCopied ? "Concluir e Voltar" : "Copie o PIX para concluir"}
                 </button>
               </div>
             )}
