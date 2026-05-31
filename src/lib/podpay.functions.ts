@@ -37,7 +37,6 @@ async function podpay<T>(
 
 const depositSchema = z.object({
   amount: z.number().min(5).max(10000),
-  cpf: z.string().min(11).max(14).optional(),
 });
 
 type PixTransaction = {
@@ -59,13 +58,10 @@ export const createPodPayPixDeposit = createServerFn({ method: "POST" })
       .select("full_name,cpf,phone")
       .eq("id", userId)
       .maybeSingle();
-    const cpf = (data.cpf || profile?.cpf || "").replace(/\D/g, "");
-    if (!cpf || cpf.length !== 11) throw new Error("CPF inválido — atualize seu perfil");
+    const cpf = (profile?.cpf || "").replace(/\D/g, "");
+    if (!cpf || cpf.length !== 11)
+      throw new Error("CPF não encontrado no cadastro. Atualize seu perfil.");
 
-    // Persist CPF for next deposits
-    if (!profile?.cpf && data.cpf) {
-      await supabase.from("profiles").update({ cpf }).eq("id", userId);
-    }
 
     const amountCents = Math.round(data.amount * 100);
     const idempotencyKey = crypto.randomUUID();
