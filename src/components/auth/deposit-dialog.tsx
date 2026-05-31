@@ -5,7 +5,8 @@ import { ArrowLeft, Copy, QrCode, CheckCircle2, ShieldCheck, Zap, Gift, Clock } 
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createTransaction, getMyProfile } from "@/lib/profile.functions";
+import { getMyProfile } from "@/lib/profile.functions";
+import { createPodPayPixDeposit } from "@/lib/podpay.functions";
 import { getSettings } from "@/lib/settings.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
@@ -18,7 +19,8 @@ export function DepositDialog() {
   const { user } = useAuth();
   const [amount, setAmount] = useState(50);
   const [step, setStep] = useState<"form" | "pix">("form");
-  const create = useServerFn(createTransaction);
+  const [pix, setPix] = useState<{ qrCodeImage: string; copyPaste: string } | null>(null);
+  const createPix = useServerFn(createPodPayPixDeposit);
   const fetchSettings = useServerFn(getSettings);
   const fetchProfile = useServerFn(getMyProfile);
   const qc = useQueryClient();
@@ -44,22 +46,22 @@ export function DepositDialog() {
   useEffect(() => { 
     if (current === "deposit") { 
       setStep("form"); 
+      setPix(null);
       setAmount(Math.max(min, 50)); 
     } 
   }, [current, min]);
 
   const mut = useMutation({
-    mutationFn: () => create({ data: { type: "deposit", amount } }),
-    onSuccess: () => {
-      toast.success("Depósito criado! Aguardando pagamento.");
+    mutationFn: () => createPix({ data: { amount, cpf: profile?.cpf ?? undefined } }),
+    onSuccess: (res) => {
+      setPix({ qrCodeImage: res.qrCodeImage, copyPaste: res.copyPaste });
+      toast.success("PIX gerado! Pague para creditar o saldo.");
       qc.invalidateQueries({ queryKey: ["transactions"] });
       qc.invalidateQueries({ queryKey: ["my-profile"] });
       setStep("pix");
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: Error) => toast.error(e.message),
   });
-
-  const fakePix = `00020126580014BR.GOV.BCB.PIX0136pixbet-${amount}-${Date.now().toString(36)}5204000053039865802BR5909PIXBET6009SAO PAULO62070503***6304ABCD`;
 
   return (
     <Dialog open={current === "deposit"} onOpenChange={(o) => !o && close()}>
@@ -206,7 +208,11 @@ export function DepositDialog() {
                 <div className="relative inline-block group">
                   <div className="absolute inset-0 bg-primary/20 rounded-[2.5rem] blur-3xl group-hover:bg-primary/30 transition-colors" />
                   <div className="relative bg-white rounded-[2rem] p-6 shadow-2xl">
-                    <QrCode className="size-56 text-black" strokeWidth={1.5} />
+                    {pix?.qrCodeImage ? (
+                      <img src={pix.qrCodeImage} alt="QR Code PIX" className="size-56" />
+                    ) : (
+                      <QrCode className="size-56 text-black" strokeWidth={1.5} />
+                    )}
                     <div className="absolute -top-3 -right-3 bg-primary text-primary-foreground size-12 rounded-full flex items-center justify-center shadow-lg border-4 border-brand">
                       <Zap className="size-6 fill-current" />
                     </div>
@@ -217,11 +223,12 @@ export function DepositDialog() {
                   <div className="text-[10px] uppercase font-black text-white/40 tracking-widest">Pix Copia e Cola</div>
                   <div className="relative group">
                     <div className="bg-brand-2 rounded-2xl p-5 text-[11px] font-mono break-all text-left text-white/80 border border-white/10 max-h-24 overflow-y-auto custom-scrollbar leading-relaxed">
-                      {fakePix}
+                      {pix?.copyPaste || "Gerando..."}
                     </div>
                     <button
                       onClick={() => { 
-                        navigator.clipboard.writeText(fakePix); 
+                        if (!pix?.copyPaste) return;
+                        navigator.clipboard.writeText(pix.copyPaste); 
                         toast.success("Código PIX copiado!"); 
                       }}
                       className="absolute right-3 bottom-3 size-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center hover:scale-110 transition-all shadow-lg active:scale-95"
