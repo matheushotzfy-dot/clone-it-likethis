@@ -118,15 +118,15 @@ export const adjustBalance = createServerFn({ method: "POST" })
     if (!profile) throw new Error("Usuário não encontrado");
     const next = Number(profile.balance) + data.delta;
     if (next < 0) throw new Error("Saldo ficaria negativo");
-    const { error } = await supabase.from("profiles").update({ balance: next, updated_at: new Date().toISOString() }).eq("id", data.userId);
-    if (error) throw new Error(error.message);
-    await supabase.from("transactions").insert({
+    // Insert as already-approved; the DB trigger credits/debits the balance automatically.
+    const { error } = await supabase.from("transactions").insert({
       user_id: data.userId,
       type: data.delta > 0 ? "deposit" : "withdrawal",
       amount: Math.abs(data.delta),
       status: "approved",
       description: `Ajuste manual: ${data.reason}`,
     });
+    if (error) throw new Error(error.message);
     return { ok: true, balance: next };
   });
 
