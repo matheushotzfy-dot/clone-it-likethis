@@ -67,8 +67,8 @@ function Index() {
         </section>
 
         <Section title="Slots" items={slots} />
-        <Section title="Crash Games" items={crash} />
         <Section title="Cassino Ao Vivo" items={live} />
+        <Section title="Crash Games" items={crash} />
       </div>
     </SiteShell>
   );
