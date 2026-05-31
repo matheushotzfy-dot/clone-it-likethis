@@ -12,7 +12,9 @@ export const getMyProfile = createServerFn({ method: "GET" })
       .eq("id", userId)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    return data;
+    // Check admin
+    const { data: role } = await supabase.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
+    return { ...data, isAdmin: !!role };
   });
 
 const updateSchema = z.object({
@@ -20,6 +22,7 @@ const updateSchema = z.object({
   username: z.string().trim().min(3).max(50).regex(/^[a-zA-Z0-9_]+$/).optional(),
   phone: z.string().trim().max(20).optional(),
   cpf: z.string().trim().max(20).optional(),
+  avatar_url: z.string().url().max(500).optional(),
 });
 
 export const updateMyProfile = createServerFn({ method: "POST" })
@@ -37,7 +40,7 @@ export const updateMyProfile = createServerFn({ method: "POST" })
 
 const txSchema = z.object({
   type: z.enum(["deposit", "withdrawal"]),
-  amount: z.number().min(10).max(50000),
+  amount: z.number().min(1).max(100000),
   pix_key: z.string().trim().min(1).max(200).optional(),
 });
 
@@ -46,6 +49,22 @@ export const createTransaction = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => txSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    // Load settings
+    const { data: settings } = await supabase.from("app_settings").select("key,value");
+    const s = Object.fromEntries((settings ?? []).map(r => [r.key, r.value as never])) as Record<string, number | boolean>;
+    if (s.maintenance_mode) throw new Error("Plataforma em manutenção");
+    if (data.type === "deposit") {
+      const min = Number(s.min_deposit ?? 20), max = Number(s.max_deposit ?? 10000);
+      if (data.amount < min) throw new Error(`Depósito mínimo: R$ ${min.toFixed(2)}`);
+      if (data.amount > max) throw new Error(`Depósito máximo: R$ ${max.toFixed(2)}`);
+    } else {
+      const min = Number(s.min_withdraw ?? 50), max = Number(s.max_withdraw ?? 5000);
+      if (data.amount < min) throw new Error(`Saque mínimo: R$ ${min.toFixed(2)}`);
+      if (data.amount > max) throw new Error(`Saque máximo: R$ ${max.toFixed(2)}`);
+      const { data: prof } = await supabase.from("profiles").select("balance").eq("id", userId).maybeSingle();
+      if (!prof || Number(prof.balance) < data.amount) throw new Error("Saldo insuficiente");
+      if (!data.pix_key) throw new Error("Chave PIX obrigatória");
+    }
     const { error } = await supabase.from("transactions").insert({
       user_id: userId,
       type: data.type,
@@ -67,7 +86,19 @@ export const listMyTransactions = createServerFn({ method: "GET" })
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
-      .limit(50);
+      .limit(100);
     if (error) throw new Error(error.message);
     return data ?? [];
+  });
+
+// Self-promote to admin (only works if no admin exists yet — bootstrap)
+export const claimFirstAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { count } = await supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "admin");
+    if ((count ?? 0) > 0) throw new Error("Já existe um administrador. Peça a ele para promover você.");
+    const { error } = await supabase.from("user_roles").update({ role: "admin" }).eq("user_id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
