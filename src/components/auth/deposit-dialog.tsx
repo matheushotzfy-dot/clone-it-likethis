@@ -19,7 +19,8 @@ export function DepositDialog() {
   const { user } = useAuth();
   const [amount, setAmount] = useState(50);
   const [step, setStep] = useState<"form" | "pix">("form");
-  const create = useServerFn(createTransaction);
+  const [pix, setPix] = useState<{ qrCodeImage: string; copyPaste: string } | null>(null);
+  const createPix = useServerFn(createPodPayPixDeposit);
   const fetchSettings = useServerFn(getSettings);
   const fetchProfile = useServerFn(getMyProfile);
   const qc = useQueryClient();
@@ -45,22 +46,22 @@ export function DepositDialog() {
   useEffect(() => { 
     if (current === "deposit") { 
       setStep("form"); 
+      setPix(null);
       setAmount(Math.max(min, 50)); 
     } 
   }, [current, min]);
 
   const mut = useMutation({
-    mutationFn: () => create({ data: { type: "deposit", amount } }),
-    onSuccess: () => {
-      toast.success("Depósito criado! Aguardando pagamento.");
+    mutationFn: () => createPix({ data: { amount, cpf: profile?.cpf ?? undefined } }),
+    onSuccess: (res) => {
+      setPix({ qrCodeImage: res.qrCodeImage, copyPaste: res.copyPaste });
+      toast.success("PIX gerado! Pague para creditar o saldo.");
       qc.invalidateQueries({ queryKey: ["transactions"] });
       qc.invalidateQueries({ queryKey: ["my-profile"] });
       setStep("pix");
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: Error) => toast.error(e.message),
   });
-
-  const fakePix = `00020126580014BR.GOV.BCB.PIX0136pixbet-${amount}-${Date.now().toString(36)}5204000053039865802BR5909PIXBET6009SAO PAULO62070503***6304ABCD`;
 
   return (
     <Dialog open={current === "deposit"} onOpenChange={(o) => !o && close()}>
