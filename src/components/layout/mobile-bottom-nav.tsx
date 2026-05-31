@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Menu, Volleyball, Dice5, Radio, Plus } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useAuthDialog } from "@/components/auth/auth-dialog-context";
+import { useAuth } from "@/hooks/use-auth";
 
 const sideItems = [
   { to: "/esportes", label: "Esportes", icon: Volleyball, side: "left" as const },
@@ -15,6 +16,7 @@ export function MobileBottomNav() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { toggleSidebar } = useSidebar();
   const { open } = useAuthDialog();
+  const { user } = useAuth();
 
   const itemClass = (active: boolean) =>
     `flex flex-col items-center justify-center gap-0.5 h-full text-[11px] font-bold ${
