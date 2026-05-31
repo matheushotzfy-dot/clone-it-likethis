@@ -37,40 +37,76 @@ export type Database = {
           avatar_url: string | null
           balance: number
           bonus_balance: number
+          bonus_expires_at: string | null
+          bonus_used: boolean
           cpf: string | null
           created_at: string
+          fbc: string | null
+          fbp: string | null
           full_name: string | null
           id: string
           kyc_status: string
           phone: string | null
+          referrer: string | null
+          signup_ip: string | null
+          signup_user_agent: string | null
           updated_at: string
           username: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
         }
         Insert: {
           avatar_url?: string | null
           balance?: number
           bonus_balance?: number
+          bonus_expires_at?: string | null
+          bonus_used?: boolean
           cpf?: string | null
           created_at?: string
+          fbc?: string | null
+          fbp?: string | null
           full_name?: string | null
           id: string
           kyc_status?: string
           phone?: string | null
+          referrer?: string | null
+          signup_ip?: string | null
+          signup_user_agent?: string | null
           updated_at?: string
           username?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
         }
         Update: {
           avatar_url?: string | null
           balance?: number
           bonus_balance?: number
+          bonus_expires_at?: string | null
+          bonus_used?: boolean
           cpf?: string | null
           created_at?: string
+          fbc?: string | null
+          fbp?: string | null
           full_name?: string | null
           id?: string
           kyc_status?: string
           phone?: string | null
+          referrer?: string | null
+          signup_ip?: string | null
+          signup_user_agent?: string | null
           updated_at?: string
           username?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
         }
         Relationships: []
       }
