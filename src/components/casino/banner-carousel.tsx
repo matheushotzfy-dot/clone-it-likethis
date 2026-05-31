@@ -34,7 +34,7 @@ export function BannerCarousel() {
 
   return (
     <div className="space-y-3">
-      <div className="relative w-full aspect-[16/9] sm:aspect-[5/2] rounded-xl md:rounded-2xl overflow-hidden bg-surface ring-1 ring-primary/20 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.6)]">
+      <div className="relative w-full aspect-[5/2] sm:aspect-[16/3] md:aspect-[20/3] rounded-xl md:rounded-2xl overflow-hidden bg-surface ring-1 ring-primary/20 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.6)]">
         {/* All slides mounted to enable smooth crossfade; eager-load first only */}
         {slides.map((s, i) => {
           const img = (
