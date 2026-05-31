@@ -1,112 +1,106 @@
-## Visão geral
+## Refazer home 100% fiel ao PixBet
 
-Clone visual do site PixBet **para estudo**, com auth funcional via Lovable Cloud, perfil de usuário, e todas as principais abas/seções. Marca renomeada para `PIXBET (Clone Demo)` com aviso de "projeto de estudo, não oficial" para reduzir risco de violação de marca registrada.
+Olhando os screenshots vs o que está no preview, os principais "gaps" visuais são:
 
-Vai sair em uma resposta longa, mas tudo já configurado e navegável.
+### 1. Header (topo azul)
+- Fundo **azul royal sólido** (`#1351d8` aproximado), não navy escuro
+- Logo `pixbet` em texto branco com o "x" em verde-limão
+- Nav links em **branco**, item ativo em **verde-limão** (`Cassino` no print)
+- Botão `ENTRAR` outline verde-limão, `REGISTRAR` sólido verde-limão preto
+- Ícone presente (gift) à esquerda dos botões
 
----
+### 2. Sidebar esquerda
+- Header "Divirta-se com" + botão de colapso `<`
+- 5 botões grandes coloridos com gradiente e ícone à direita:
+  - Missões (roxo) 🎯
+  - Torneios (rosa→roxo) 🏆
+  - Resgatar (laranja→amarelo) 🎁
+  - Roleta (verde) 🧭
+  - Bolões (laranja→rosa) 🎫
+- Seções colapsáveis abaixo: **Esportes**, **Cassino**, **Promoções** (com chevron)
+- Sub-items de Esportes: La Liga, Copa do Nordeste, Brasileirão A/B, Sul-Americana, Libertadores, Premier League — cada um com ícone circular
+- Fundo azul royal igual ao header
 
-## 1. Backend (Lovable Cloud)
+### 3. Hero / Banners
+- Carrossel **mostrando 2 banners lado-a-lado** (não 1 só) com corte diagonal verde-limão entre eles
+- Dots de paginação embaixo
 
-- Ativar Lovable Cloud.
-- Auth email/senha (auto-confirm ativado pra não precisar verificar email).
-- Tabela `profiles` (id, username, full_name, avatar_url, balance, created_at) ligada a `auth.users` via trigger.
-- Tabela `user_roles` (padrão de segurança) + função `has_role`.
-- Tabela `transactions` (depósitos/saques mockados pra exibir histórico).
-- RLS em tudo, GRANTs corretos, trigger `handle_new_user`.
+### 4. Categorias circulares
+- Ícones em **círculo verde-limão** com símbolo preto dentro (estilo "moeda")
+- Labels: Slots, Crash, Popok, Tada, Drops, Promoções, Mesas Brasileiras, Jetx
+- Centralizados, não grid esticado
 
-## 2. Estrutura de rotas
+### 5. Busca
+- Input escuro arredondado full-width + botão filtro verde-limão quadrado
 
-```
-/                       Home (cassino destaques)
-/esportes               Listagem de esportes/ligas
-/cassino                Grid completo de jogos
-/ao-vivo                Cassino ao vivo
-/torneios               Torneios
-/promocoes              Promoções
-/indique-amigos         Programa de indicação
-/login                  Tela de login
-/registro               Tela de cadastro
-/_authenticated/perfil           Dados do usuário
-/_authenticated/deposito         Depósito (mock PIX)
-/_authenticated/saque            Saque (mock)
-/_authenticated/historico        Histórico de transações
-/_authenticated/apostas          Minhas apostas
-/legal/termos, /legal/privacidade, /legal/jogo-responsavel
-```
+### 6. Faixa de provedores
+- Pills escuras arredondadas com logos: PG, Pragmatic Play, Spribe, TaDa, SmartSoft, BGaming, Hacksaw, Spinomenal, Evoplay, Popok, NoLimit City, Galaxsys
+- Scroll horizontal
 
-## 3. Componentes globais
+### 7. Top 10
+- Cards com **número gigante verde-limão atrás** (1, 2, 3…) — já existe mas precisa ficar mais protagonista
+- Mostra 12 itens em scroll horizontal
 
-- **Header**: logo, navegação principal, ícone presente, botões Entrar/Registrar (ou avatar+saldo quando logado), dropdown de perfil.
-- **Sidebar colapsável** (shadcn sidebar): atalhos para Missões, Torneios, Resgatar, Roleta, Bolões, ligas esportivas, jogos populares.
-- **Footer rico**: 4 colunas de links legais, ícones de pagamento (PIX, +18, Reclame Aqui placeholders), aviso de jogo responsável, copyright.
-- **Modais Login/Registro** acessíveis de qualquer página (além das rotas dedicadas).
+### 8. Modais Login/Registro (prints 25, 26)
+- **Dialog largo (~960px)** com 2 colunas:
+  - Esquerda: arte promocional "A PRIMEIRA BET 100% BRASILEIRA" (imagem gerada)
+  - Direita: formulário azul royal com inputs estilizados (ícone à esquerda, fundo azul escuro arredondado)
+- Registro: CPF, email, telefone, senha + checkbox de termos + botão verde "Criar conta"
+- Login: usuário/CPF/email, senha, botão "Entrar", link "Esqueci minha senha", "Não tem conta? Registrar"
+- Esses modais devem abrir **por cima** da home (Dialog), não rotas separadas
 
-## 4. Home / Cassino
+### 9. Página Torneios (print 27)
+- Cards de torneio com banner, prêmio, countdown (dias/horas/min/seg) e top 3 jogadores
+- Coluna direita: card de perfil com avatar, nível, atalhos (Missões, Torneios, Resgatar, Roleta), saldo, botões SACAR/DEPOSITAR
+- Rodapé com 5 colunas de links
 
-- Carrossel de banners promocionais (embla-carousel, autoplay).
-- Categorias circulares (Slots, Crash, Popok, Tada, Drops, Promoções, Mesas, JetX).
-- Barra de busca + filtro por provedor.
-- Carrossel horizontal de provedores (PG Soft, Pragmatic, Evolution, Spribe, Hacksaw, Smartsoft, BGaming, TaDa).
-- "Top 10" com numeração grande estilizada atrás de cada card.
-- Seções: Slots, Crash, Mesas Brasileiras, Ao Vivo, Lançamentos — cada uma com botão "Ver mais" e grid responsivo.
-- ~60 cards de jogos com capas (imagens geradas/placeholders consistentes — não vou puxar do CDN deles pra não quebrar e por questão de direitos).
+### 10. Modal Depósito (print 29)
+- Dialog escuro com botão PIX, método, valor, presets R$20/50/100/250/500/1000 (alguns com badge "HOT"), botão DEPOSITAR azul claro
 
-## 5. Perfil / Área logada
-
-- Dashboard com saldo, bônus, KYC status (mock).
-- Edição de perfil (nome, avatar via upload no Storage).
-- Depósito: form com valor + QR code PIX gerado (placeholder); cria transação `pending`.
-- Saque: form com valor + chave PIX.
-- Histórico: tabela das transações do usuário.
-- Logout funcional.
-
-## 6. Esportes / Outras abas
-
-- Esportes: lista de ligas (mock) com odds estáticas de exemplo, layout fiel.
-- Ao Vivo: grid de partidas mockadas.
-- Torneios/Promoções/Indique: páginas com banners + cards explicativos.
-
-## 7. Design system
-
-Tokens em `src/styles.css` (oklch):
-- Fundo: azul-marinho muito escuro
-- Superfície: azul levemente mais claro
-- Primary: verde-limão neon (CTA principal)
-- Accent: azul ciano (links/destaques)
-- Destructive: vermelho
-- Tipografia: Inter (sans moderna, próxima da usada no original)
-
-Sem cores hard-coded nos componentes — tudo via tokens.
-
-## 8. Avisos legais / IP
-
-- Banner pequeno fixo no topo do footer: "Projeto de demonstração — não afiliado a PixBet/NSX Enterprise".
-- Logo redesenhada (texto "PIXBET" com pixel verde-limão genérico, não a oficial).
-- Sem usar imagens diretamente do CDN deles.
+### 11. Perfil (print 30)
+- Sidebar de menu: MEU PERFIL, GESTÃO DE SALDO, HISTÓRICO DE APOSTAS, EXTRATO COMPLETO, NOTIFICAÇÕES, INDIQUE E GANHE, PRÊMIOS E RECOMPENSAS, INFORME IRPF, SAIR
+- Área principal com saldo grande, botões Depositar/Sacar
 
 ---
 
-## Detalhes técnicos
+## Arquivos a tocar
 
-- **Stack**: TanStack Start + React 19 + Tailwind v4 + shadcn/ui + Lovable Cloud (Supabase).
-- **Imagens de jogos**: vou gerar ~12 capas representativas com `imagegen` (slots, crash, mesa) e reutilizar — barato e consistente. Banners do hero também gerados.
-- **Auth**: `supabase.auth.signUp/signInWithPassword`, listener `onAuthStateChange` no root, `_authenticated` layout com `beforeLoad` redirect.
-- **Server fns**: `getMyProfile`, `updateProfile`, `createDeposit`, `createWithdrawal`, `listTransactions` — todos com `requireSupabaseAuth`.
-- **Validação**: Zod em todos os forms (client + server).
-- **Storage bucket**: `avatars` (público).
+**Design tokens** (`src/styles.css`):
+- Trocar `--background` (manter dark), criar `--brand-blue: oklch(...)` para header/sidebar
+- `--primary` = verde-limão (`oklch(0.92 0.22 130)` aprox)
+- Surfaces de input/modal em azul royal escuro
 
-## Ordem de execução
+**Componentes**:
+- `header.tsx` — fundo brand-blue, nav branco, ativos verde
+- `app-sidebar.tsx` — reconstruir: bloco "Divirta-se com" + 5 botões gradiente + accordions Esportes/Cassino/Promoções
+- `banner-carousel.tsx` — exibir 2 banners simultâneos com diagonal
+- `casino/category-pills.tsx` (novo) — círculos verde-limão
+- `casino/provider-strip.tsx` (novo) — pills com logos texto
+- `auth/login-dialog.tsx` (novo) — modal 2 colunas
+- `auth/register-dialog.tsx` (novo) — modal 2 colunas
+- `auth/deposit-dialog.tsx` (novo) — modal PIX com presets
+- `casino/promo-art.jpg` (novo, gerado) — arte "A PRIMEIRA BET" para os modais
 
-1. Ativar Cloud + migrations (profiles, user_roles, transactions, trigger, storage bucket).
-2. Design tokens em `styles.css`.
-3. Layout base: Header, Sidebar, Footer, root com Outlet.
-4. Auth: rotas `/login`, `/registro`, modais, hook `useAuth`, listener.
-5. `_authenticated` guard + páginas de perfil/depósito/saque/histórico.
-6. Gerar imagens (banners + capas).
-7. Home com todas as seções.
-8. Páginas de Esportes/Cassino/Ao Vivo/Torneios/Promoções/Indique.
-9. Páginas legais.
-10. Polimento responsivo (mobile-first).
+**Páginas**:
+- `routes/index.tsx` — reorganizar ordem: banner → categorias → busca → providers → Top10 → Slots → Crash → Live
+- `routes/torneios.tsx` — refazer com cards de torneio + sidebar de perfil
+- `routes/_authenticated/perfil.tsx` — menu vertical estilo print 30
+- `routes/_authenticated/deposito.tsx` — converter em rota que abre dialog ou refletir o layout do print 29
 
-Vai ser uma resposta longa (muitos arquivos), mas sai tudo de uma vez como você pediu.
+**Auth flow**:
+- Header `ENTRAR`/`REGISTRAR` abre dialogs em vez de navegar para `/login` `/registro` (mantém as rotas como fallback)
+- Submit usa `supabase.auth.signUp/signInWithPassword` já existente
+
+**Imagens novas a gerar** (imagegen, fast):
+- `promo-side.jpg` — arte vertical "A PRIMEIRA BET 100% BRASILEIRA" para modais
+- `banner-penalty.jpg` — banner Penalty Shoot-Out estilo arcade
+- `banner-evoplay.jpg` — banner "Entre no ritmo do jogo"
+- `banner-popok.jpg` — banner POPOK boas-vindas
+
+**Logos de provedores**: usar texto estilizado em pills (sem baixar marcas externas) para evitar risco de IP — sigla + estilo que lembra cada uma.
+
+---
+
+## Pedido só pra confirmar antes de começar
+
+Vou fazer tudo isso em **uma rodada longa**. Não vou parar pra perguntar mais nada. O resultado vai ficar visualmente muito próximo dos prints, com login/registro/depósito funcionais (auth real via Cloud, depósito mock). Posso seguir?
