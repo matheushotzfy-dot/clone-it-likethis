@@ -153,7 +153,7 @@ export const updateUserAdmin = createServerFn({ method: "POST" })
     }
     if (Object.keys(cleaned).length === 0) return { ok: true };
     cleaned.updated_at = new Date().toISOString();
-    const { error } = await supabase.from("profiles").update(cleaned).eq("id", target);
+    const { error } = await supabase.from("profiles").update(cleaned as never).eq("id", target);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
