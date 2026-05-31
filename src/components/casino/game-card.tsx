@@ -21,8 +21,12 @@ export function GameCard({ game, rank }: Props) {
           src={game.image}
           alt={game.name}
           loading="lazy"
-          className="w-full h-full object-cover"
+          decoding="async"
+          width={300}
+          height={400}
+          className="w-full h-full object-cover bg-surface-2"
         />
+
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
           <div className="size-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
             <Play className="size-5 fill-current" />
