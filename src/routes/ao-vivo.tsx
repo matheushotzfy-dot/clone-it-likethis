@@ -29,7 +29,7 @@ function Page() {
           <p className="text-muted-foreground text-sm mt-1">{live.length} mesas com crupiês reais em tempo real</p>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
-          {live.map((g) => <GameCard key={g.id} game={g} />)}
+          {live.map((g, i) => <GameCard key={g.id} game={g} priority={i < 12} />)}
         </div>
       </div>
     </SiteShell>
