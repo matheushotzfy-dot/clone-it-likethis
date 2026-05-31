@@ -15,7 +15,7 @@ const cats = [
 export function CategoryPills() {
   return (
     <div className="w-full overflow-x-auto no-scrollbar py-2">
-      <div className="flex items-start gap-4 md:gap-8 px-4 md:justify-center min-w-max md:min-w-0">
+      <div className="flex items-start gap-4 md:gap-8 px-2 md:px-4 md:justify-center min-w-max md:min-w-0">
         {cats.map(({ id, label, Icon }) => (
           <button key={id} className="flex flex-col items-center gap-2 group w-16 md:w-20">
             <div className={cn(
