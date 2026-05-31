@@ -13,8 +13,8 @@ export type AppSettings = {
 };
 
 const DEFAULTS: AppSettings = {
-  min_deposit: 20,
-  max_deposit: 10000,
+  min_deposit: 30,
+  max_deposit: 3000,
   min_withdraw: 50,
   max_withdraw: 5000,
   withdrawal_fee_pct: 0,
