@@ -1,12 +1,11 @@
-import { Play, Lock } from "lucide-react";
+import { Play } from "lucide-react";
 import type { Game } from "@/lib/games";
 import { useGameAccess } from "@/hooks/use-game-access";
 
 interface Props { game: Game; rank?: number }
 
 export function GameCard({ game, rank }: Props) {
-  const { tryPlay, hasDeposited, isLogged } = useGameAccess();
-  const locked = !isLogged || !hasDeposited;
+  const { tryPlay } = useGameAccess();
   return (
     <div className="relative group">
       {rank && (
@@ -24,11 +23,6 @@ export function GameCard({ game, rank }: Props) {
           loading="lazy"
           className="w-full h-full object-cover"
         />
-        {locked && (
-          <span className="absolute top-2 right-2 z-20 size-6 rounded-full bg-black/70 text-primary flex items-center justify-center">
-            <Lock className="size-3" />
-          </span>
-        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
           <div className="size-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
             <Play className="size-5 fill-current" />
