@@ -35,12 +35,24 @@ function Page() {
         <div className="bg-card border border-border rounded-xl p-5 md:col-span-2">
           <h2 className="text-xl font-bold mb-3">{p.full_name || p.username || "Sem nome"}</h2>
           <dl className="grid grid-cols-2 gap-3 text-sm">
+            <div><dt className="text-muted-foreground">Email</dt><dd className="font-mono text-xs break-all">{p.email || "—"}</dd></div>
             <div><dt className="text-muted-foreground">Usuário</dt><dd className="font-mono">{p.username ?? "—"}</dd></div>
-            <div><dt className="text-muted-foreground">CPF</dt><dd>{p.cpf ?? "—"}</dd></div>
-            <div><dt className="text-muted-foreground">Telefone</dt><dd>{p.phone ?? "—"}</dd></div>
-            <div><dt className="text-muted-foreground">KYC</dt><dd>{p.kyc_status}</dd></div>
+            <div><dt className="text-muted-foreground">CPF</dt><dd className="font-mono">{p.cpf ?? "—"}</dd></div>
+            <div><dt className="text-muted-foreground">Telefone</dt><dd className="font-mono">{p.phone ?? "—"}</dd></div>
+            <div><dt className="text-muted-foreground">KYC</dt><dd className="uppercase font-bold">{p.kyc_status}</dd></div>
             <div><dt className="text-muted-foreground">Cadastro</dt><dd>{new Date(p.created_at).toLocaleString("pt-BR")}</dd></div>
             <div><dt className="text-muted-foreground">Saldo bônus</dt><dd>R$ {Number(p.bonus_balance).toFixed(2).replace(".", ",")}</dd></div>
+            <div><dt className="text-muted-foreground">Bônus usado?</dt><dd>{p.bonus_used ? "Sim" : "Não"}</dd></div>
+            <div className="col-span-2 border-t border-border pt-3 mt-1"><dt className="text-muted-foreground text-[10px] uppercase font-bold mb-1">Origem / Tracking</dt></div>
+            <div><dt className="text-muted-foreground">UTM Source</dt><dd>{p.utm_source ?? "—"}</dd></div>
+            <div><dt className="text-muted-foreground">UTM Medium</dt><dd>{p.utm_medium ?? "—"}</dd></div>
+            <div><dt className="text-muted-foreground">UTM Campaign</dt><dd>{p.utm_campaign ?? "—"}</dd></div>
+            <div><dt className="text-muted-foreground">UTM Content</dt><dd>{p.utm_content ?? "—"}</dd></div>
+            <div><dt className="text-muted-foreground">Referrer</dt><dd className="text-xs break-all">{p.referrer ?? "—"}</dd></div>
+            <div><dt className="text-muted-foreground">IP</dt><dd className="font-mono text-xs">{p.signup_ip ?? "—"}</dd></div>
+            <div className="col-span-2"><dt className="text-muted-foreground">User Agent</dt><dd className="text-xs break-all">{p.signup_user_agent ?? "—"}</dd></div>
+            <div><dt className="text-muted-foreground">fbp</dt><dd className="font-mono text-[10px] break-all">{p.fbp ?? "—"}</dd></div>
+            <div><dt className="text-muted-foreground">fbc</dt><dd className="font-mono text-[10px] break-all">{p.fbc ?? "—"}</dd></div>
           </dl>
         </div>
         <div className="bg-card border border-border rounded-xl p-5">

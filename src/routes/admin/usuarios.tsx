@@ -26,8 +26,10 @@ function Page() {
           <thead className="bg-muted/50 text-left">
             <tr>
               <th className="px-4 py-3">Usuário</th>
+              <th className="px-4 py-3">Email</th>
               <th className="px-4 py-3">Nome</th>
               <th className="px-4 py-3">CPF</th>
+              <th className="px-4 py-3">Telefone</th>
               <th className="px-4 py-3">Saldo</th>
               <th className="px-4 py-3">KYC</th>
               <th className="px-4 py-3">Cadastro</th>
@@ -35,13 +37,15 @@ function Page() {
             </tr>
           </thead>
           <tbody>
-            {isLoading && (<tr><td colSpan={7} className="text-center py-8 text-muted-foreground">Carregando...</td></tr>)}
-            {!isLoading && (data ?? []).length === 0 && (<tr><td colSpan={7} className="text-center py-8 text-muted-foreground">Nenhum usuário</td></tr>)}
+            {isLoading && (<tr><td colSpan={9} className="text-center py-8 text-muted-foreground">Carregando...</td></tr>)}
+            {!isLoading && (data ?? []).length === 0 && (<tr><td colSpan={9} className="text-center py-8 text-muted-foreground">Nenhum usuário</td></tr>)}
             {(data ?? []).map((u: any) => (
               <tr key={u.id} className="border-t border-border hover:bg-muted/30">
                 <td className="px-4 py-3 font-mono">{u.username ?? "—"}</td>
+                <td className="px-4 py-3 text-xs">{u.email || "—"}</td>
                 <td className="px-4 py-3">{u.full_name ?? "—"}</td>
-                <td className="px-4 py-3">{u.cpf ?? "—"}</td>
+                <td className="px-4 py-3 font-mono text-xs">{u.cpf ?? "—"}</td>
+                <td className="px-4 py-3 font-mono text-xs">{u.phone ?? "—"}</td>
                 <td className="px-4 py-3 font-bold text-primary">R$ {Number(u.balance).toFixed(2).replace(".", ",")}</td>
                 <td className="px-4 py-3"><span className={`text-xs uppercase font-bold ${u.kyc_status === "approved" ? "text-success" : "text-muted-foreground"}`}>{u.kyc_status}</span></td>
                 <td className="px-4 py-3 text-muted-foreground">{new Date(u.created_at).toLocaleDateString("pt-BR")}</td>
