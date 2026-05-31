@@ -87,10 +87,36 @@ export function DepositDialog() {
           <div className="p-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
             {step === "form" ? (
               <div className="space-y-6">
-                {/* Method Selector */}
-                <div className="flex gap-2 p-1 bg-brand-2 rounded-xl border border-white/5">
-                  <button className="flex-1 h-11 rounded-lg bg-primary text-primary-foreground font-black text-xs uppercase tracking-wider shadow-lg">PIX</button>
-                  <button disabled className="flex-1 h-11 rounded-lg text-white/30 font-bold text-xs uppercase tracking-wider cursor-not-allowed">Cartão</button>
+                {/* Bonus Banner */}
+                {bonusActive && (
+                  <div className="relative overflow-hidden rounded-2xl border-2 border-primary/40 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent p-4">
+                    <div className="absolute -top-8 -right-8 size-32 bg-primary/20 rounded-full blur-2xl" />
+                    <div className="relative flex items-center gap-3">
+                      <div className="size-12 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-lg">
+                        <Gift className="size-6" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[10px] font-black uppercase tracking-widest text-primary">Oferta exclusiva</div>
+                        <div className="text-sm font-black text-white leading-tight">100% de Bônus · Sem Rollover · Saque ou Jogue</div>
+                      </div>
+                      <div className="flex items-center gap-1.5 bg-black/40 border border-primary/30 rounded-lg px-2.5 py-1.5">
+                        <Clock className="size-3.5 text-primary" />
+                        <span className="font-mono text-sm font-black text-primary tabular-nums">
+                          {String(mm).padStart(2, "0")}:{String(ss).padStart(2, "0")}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {bonusUsed && (
+                  <div className="rounded-xl border border-white/5 bg-brand-2/40 p-3 text-xs text-white/60 text-center">
+                    Bônus de boas-vindas já utilizado.
+                  </div>
+                )}
+
+                {/* Method Selector - PIX Only */}
+                <div className="p-1 bg-brand-2 rounded-xl border border-white/5">
+                  <button className="w-full h-11 rounded-lg bg-primary text-primary-foreground font-black text-xs uppercase tracking-wider shadow-lg">PIX</button>
                 </div>
 
                 {/* Limits Info */}
