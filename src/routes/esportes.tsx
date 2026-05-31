@@ -26,6 +26,35 @@ type Pick = {
 type Tab = "live" | "today" | "tomorrow" | "upcoming";
 
 function Page() {
+  const { isLogged, hasDeposited, tryPlay } = useGameAccess();
+  const { open } = useAuthDialog();
+
+  // Gate: not logged or no deposit → lock the whole sports page
+  if (!isLogged || !hasDeposited) {
+    return (
+      <SiteShell>
+        <div className="max-w-3xl mx-auto px-4 py-16 text-center">
+          <div className="inline-flex size-20 rounded-full bg-primary/10 text-primary items-center justify-center mb-6 ring-4 ring-primary/20">
+            <Lock className="size-9" />
+          </div>
+          <h1 className="text-3xl md:text-4xl font-black mb-3">Aba Esportes bloqueada</h1>
+          <p className="text-white/70 max-w-xl mx-auto mb-2">
+            {isLogged
+              ? "Faça seu primeiro depósito para liberar todas as apostas esportivas. Ganhe 100% de bônus nos primeiros 10 minutos!"
+              : "Cadastre-se e faça seu primeiro depósito para acessar os jogos esportivos."}
+          </p>
+          <p className="text-xs text-white/40 mb-8">Promoção válida apenas para novos depositantes.</p>
+          <button
+            onClick={() => open(isLogged ? "deposit" : "register")}
+            className="inline-flex items-center gap-2 h-14 px-8 rounded-xl bg-primary text-primary-foreground font-black uppercase tracking-wider hover:brightness-110 shadow-lg shadow-primary/30"
+          >
+            <Wallet className="size-5" /> {isLogged ? "Depositar agora" : "Criar conta e depositar"}
+          </button>
+        </div>
+      </SiteShell>
+    );
+  }
+
   const [tab, setTab] = useState<Tab>("today");
   const [activeLeague, setActiveLeague] = useState<string>("all");
   const [search, setSearch] = useState("");
