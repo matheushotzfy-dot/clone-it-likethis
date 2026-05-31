@@ -10,9 +10,11 @@ export const Route = createFileRoute("/admin/usuarios")({ component: Page });
 function Page() {
   const [search, setSearch] = useState("");
   const fn = useServerFn(listUsers);
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["admin-users", search],
     queryFn: () => fn({ data: { search: search || undefined } }),
+    staleTime: 10_000,
+    refetchOnWindowFocus: false,
   });
 
   return (
@@ -21,7 +23,8 @@ function Page() {
         <h1 className="text-2xl font-bold">Usuários</h1>
         <Input placeholder="Buscar por nome, usuário ou CPF" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />
       </div>
-      <div className="bg-card border border-border rounded-xl overflow-x-auto">
+      {error && <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">Erro ao carregar usuários: {(error as Error).message} <button onClick={() => refetch()} className="ml-2 font-bold underline">tentar novamente</button></div>}
+      <div className="bg-card border border-border rounded-xl overflow-x-auto shadow-lg shadow-background/20">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-left">
             <tr>
@@ -37,7 +40,7 @@ function Page() {
             </tr>
           </thead>
           <tbody>
-            {isLoading && (<tr><td colSpan={9} className="text-center py-8 text-muted-foreground">Carregando...</td></tr>)}
+            {isLoading && (<tr><td colSpan={9} className="text-center py-8 text-muted-foreground">Carregando usuários...</td></tr>)}
             {!isLoading && (data ?? []).length === 0 && (<tr><td colSpan={9} className="text-center py-8 text-muted-foreground">Nenhum usuário</td></tr>)}
             {(data ?? []).map((u: any) => (
               <tr key={u.id} className="border-t border-border hover:bg-muted/30">
