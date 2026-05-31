@@ -5,59 +5,116 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, x-podpay-signature",
+  "Access-Control-Allow-Headers":
+    "Content-Type, x-podpay-signature, x-signature, x-webhook-signature",
+};
+
+type PodPayEvent = {
+  event?: string;
+  type?: string;
+  id?: string;
+  transactionId?: string;
+  data?: {
+    id?: string;
+    status?: string;
+    amount?: number;
+    paymentMethod?: string;
+    metadata?: Record<string, unknown>;
+  };
+  status?: string;
 };
 
 export const Route = createFileRoute("/api/public/podpay-webhook")({
   server: {
     handlers: {
-      OPTIONS: async () => new Response(null, { status: 204, headers: corsHeaders }),
+      OPTIONS: async () =>
+        new Response(null, { status: 204, headers: corsHeaders }),
       POST: async ({ request }) => {
         const secret = process.env.PODPAY_WEBHOOK_SECRET;
         const body = await request.text();
-        const signature = request.headers.get("x-podpay-signature") || request.headers.get("x-signature");
+        const signature =
+          request.headers.get("x-podpay-signature") ||
+          request.headers.get("x-signature") ||
+          request.headers.get("x-webhook-signature");
 
         if (secret && signature) {
           try {
-            const expected = createHmac("sha256", secret).update(body).digest("hex");
-            const a = Buffer.from(signature);
+            const expected = createHmac("sha256", secret)
+              .update(body)
+              .digest("hex");
+            // Accept hex or "sha256=..." prefix
+            const provided = signature.replace(/^sha256=/, "").trim();
+            const a = Buffer.from(provided);
             const b = Buffer.from(expected);
             if (a.length !== b.length || !timingSafeEqual(a, b)) {
-              return new Response("Invalid signature", { status: 401, headers: corsHeaders });
+              console.warn("PodPay webhook: invalid signature");
+              return new Response("Invalid signature", {
+                status: 401,
+                headers: corsHeaders,
+              });
             }
-          } catch {
-            return new Response("Invalid signature", { status: 401, headers: corsHeaders });
+          } catch (e) {
+            console.warn("PodPay webhook: signature check error", e);
+            return new Response("Invalid signature", {
+              status: 401,
+              headers: corsHeaders,
+            });
           }
         }
 
-        let payload: any;
-        try { payload = JSON.parse(body); } catch { return new Response("Bad JSON", { status: 400, headers: corsHeaders }); }
+        let payload: PodPayEvent;
+        try {
+          payload = JSON.parse(body);
+        } catch {
+          return new Response("Bad JSON", {
+            status: 400,
+            headers: corsHeaders,
+          });
+        }
 
-        const podpayId: string | undefined = payload?.data?.id || payload?.transactionId || payload?.id;
-        const status: string | undefined = payload?.data?.status || payload?.status;
-        if (!podpayId || !status) return new Response("Missing id/status", { status: 400, headers: corsHeaders });
+        console.log("PodPay webhook event", JSON.stringify(payload));
 
-        // Find our transaction by description containing the podpay id
+        const podpayId =
+          payload?.data?.id || payload?.transactionId || payload?.id;
+        const status = payload?.data?.status || payload?.status;
+        if (!podpayId || !status) {
+          return new Response("Missing id/status", {
+            status: 400,
+            headers: corsHeaders,
+          });
+        }
+
         const { data: tx } = await supabaseAdmin
           .from("transactions")
           .select("id,status")
           .ilike("description", `%${podpayId}%`)
           .maybeSingle();
 
-        if (!tx) return new Response("ok", { status: 200, headers: corsHeaders });
+        if (!tx) {
+          console.warn("PodPay webhook: no matching tx for", podpayId);
+          return new Response("ok", { status: 200, headers: corsHeaders });
+        }
 
         const map: Record<string, "approved" | "rejected" | "pending"> = {
           paid: "approved",
           completed: "approved",
+          approved: "approved",
           failed: "rejected",
           cancelled: "rejected",
+          canceled: "rejected",
           refunded: "rejected",
+          blocked: "rejected",
+          chargeback: "rejected",
+          pre_chargeback: "pending",
           pending: "pending",
           processing: "pending",
         };
-        const newStatus = map[status] ?? "pending";
+        const newStatus = map[status.toLowerCase()] ?? "pending";
         if (newStatus !== "pending" && tx.status === "pending") {
-          await supabaseAdmin.from("transactions").update({ status: newStatus }).eq("id", tx.id);
+          await supabaseAdmin
+            .from("transactions")
+            .update({ status: newStatus })
+            .eq("id", tx.id);
         }
         return new Response("ok", { status: 200, headers: corsHeaders });
       },
