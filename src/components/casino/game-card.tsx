@@ -2,9 +2,9 @@ import { Play } from "lucide-react";
 import type { Game } from "@/lib/games";
 import { useGameAccess } from "@/hooks/use-game-access";
 
-interface Props { game: Game; rank?: number }
+interface Props { game: Game; rank?: number; priority?: boolean }
 
-export function GameCard({ game, rank }: Props) {
+export function GameCard({ game, rank, priority }: Props) {
   const { tryPlay } = useGameAccess();
   return (
     <div className="relative group">
@@ -20,8 +20,10 @@ export function GameCard({ game, rank }: Props) {
         <img
           src={game.image}
           alt={game.name}
-          loading="lazy"
+          loading={priority ? "eager" : "lazy"}
           decoding="async"
+          // @ts-expect-error fetchpriority is valid HTML attr
+          fetchpriority={priority ? "high" : "auto"}
           width={300}
           height={400}
           className="w-full h-full object-cover bg-surface-2"
