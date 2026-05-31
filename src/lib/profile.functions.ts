@@ -96,8 +96,17 @@ export const listMyTransactions = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(100);
     if (error) throw new Error(error.message);
-    return data ?? [];
+    const txs = data ?? [];
+    // Attach latest KYC submission per transaction
+    const subIds = txs.map(t => t.kyc_submission_id).filter(Boolean) as string[];
+    let subMap = new Map<string, any>();
+    if (subIds.length) {
+      const { data: subs } = await supabase.from("kyc_submissions").select("id,status,rejection_reason").in("id", subIds);
+      subMap = new Map((subs ?? []).map((s: any) => [s.id, s]));
+    }
+    return txs.map(t => ({ ...t, kyc_submission: t.kyc_submission_id ? subMap.get(t.kyc_submission_id) ?? null : null }));
   });
+
 
 // Self-promote to admin (only works if no admin exists yet — bootstrap)
 export const claimFirstAdmin = createServerFn({ method: "POST" })
