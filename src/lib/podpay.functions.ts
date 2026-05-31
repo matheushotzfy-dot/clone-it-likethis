@@ -138,7 +138,7 @@ export const createPodPayPixDeposit = createServerFn({ method: "POST" })
   });
 
 const withdrawalSchema = z.object({
-  amount: z.number().min(50).max(5000),
+  amount: z.number().positive().max(1000000),
   pixKey: z.string().min(3).max(120),
   pixKeyType: z.enum(["cpf", "email", "phone", "random"]),
 });
@@ -148,6 +148,10 @@ export const createPodPayPixWithdrawal = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => withdrawalSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const limits = await loadLimits(supabase as never);
+    if (data.amount < limits.min_withdraw || data.amount > limits.max_withdraw) {
+      throw new Error(`Saque deve ser entre R$ ${limits.min_withdraw} e R$ ${limits.max_withdraw}`);
+    }
     const { data: profile } = await supabase
       .from("profiles")
       .select("balance")
