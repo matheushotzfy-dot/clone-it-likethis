@@ -30,6 +30,7 @@ import { Route as AdminSaquesRouteImport } from './routes/admin/saques'
 import { Route as AdminPixelRouteImport } from './routes/admin/pixel'
 import { Route as AdminDepositosRouteImport } from './routes/admin/depositos'
 import { Route as AdminConfiguracoesRouteImport } from './routes/admin/configuracoes'
+import { Route as AdminBannersRouteImport } from './routes/admin/banners'
 import { Route as AuthenticatedSaqueRouteImport } from './routes/_authenticated/saque'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
@@ -141,6 +142,11 @@ const AdminConfiguracoesRoute = AdminConfiguracoesRouteImport.update({
   path: '/configuracoes',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminBannersRoute = AdminBannersRouteImport.update({
+  id: '/banners',
+  path: '/banners',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AuthenticatedSaqueRoute = AuthenticatedSaqueRouteImport.update({
   id: '/saque',
   path: '/saque',
@@ -187,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/historico': typeof AuthenticatedHistoricoRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/saque': typeof AuthenticatedSaqueRoute
+  '/admin/banners': typeof AdminBannersRoute
   '/admin/configuracoes': typeof AdminConfiguracoesRoute
   '/admin/depositos': typeof AdminDepositosRoute
   '/admin/pixel': typeof AdminPixelRoute
@@ -214,6 +221,7 @@ export interface FileRoutesByTo {
   '/historico': typeof AuthenticatedHistoricoRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/saque': typeof AuthenticatedSaqueRoute
+  '/admin/banners': typeof AdminBannersRoute
   '/admin/configuracoes': typeof AdminConfiguracoesRoute
   '/admin/depositos': typeof AdminDepositosRoute
   '/admin/pixel': typeof AdminPixelRoute
@@ -244,6 +252,7 @@ export interface FileRoutesById {
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/saque': typeof AuthenticatedSaqueRoute
+  '/admin/banners': typeof AdminBannersRoute
   '/admin/configuracoes': typeof AdminConfiguracoesRoute
   '/admin/depositos': typeof AdminDepositosRoute
   '/admin/pixel': typeof AdminPixelRoute
@@ -274,6 +283,7 @@ export interface FileRouteTypes {
     | '/historico'
     | '/perfil'
     | '/saque'
+    | '/admin/banners'
     | '/admin/configuracoes'
     | '/admin/depositos'
     | '/admin/pixel'
@@ -301,6 +311,7 @@ export interface FileRouteTypes {
     | '/historico'
     | '/perfil'
     | '/saque'
+    | '/admin/banners'
     | '/admin/configuracoes'
     | '/admin/depositos'
     | '/admin/pixel'
@@ -330,6 +341,7 @@ export interface FileRouteTypes {
     | '/_authenticated/historico'
     | '/_authenticated/perfil'
     | '/_authenticated/saque'
+    | '/admin/banners'
     | '/admin/configuracoes'
     | '/admin/depositos'
     | '/admin/pixel'
@@ -511,6 +523,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminConfiguracoesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/banners': {
+      id: '/admin/banners'
+      path: '/banners'
+      fullPath: '/admin/banners'
+      preLoaderRoute: typeof AdminBannersRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_authenticated/saque': {
       id: '/_authenticated/saque'
       path: '/saque'
@@ -587,6 +606,7 @@ const AdminUsuariosRouteWithChildren = AdminUsuariosRoute._addFileChildren(
 )
 
 interface AdminRouteChildren {
+  AdminBannersRoute: typeof AdminBannersRoute
   AdminConfiguracoesRoute: typeof AdminConfiguracoesRoute
   AdminDepositosRoute: typeof AdminDepositosRoute
   AdminPixelRoute: typeof AdminPixelRoute
@@ -597,6 +617,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminBannersRoute: AdminBannersRoute,
   AdminConfiguracoesRoute: AdminConfiguracoesRoute,
   AdminDepositosRoute: AdminDepositosRoute,
   AdminPixelRoute: AdminPixelRoute,
