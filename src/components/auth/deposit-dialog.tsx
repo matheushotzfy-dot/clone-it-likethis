@@ -99,18 +99,18 @@ export function DepositDialog() {
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && close()}>
-      <DialogContent className="max-w-[500px] w-full bg-brand border-white/10 text-white p-0 overflow-hidden shadow-2xl">
-        <div className="relative">
-          <div className="p-6 border-b border-white/5 flex items-center justify-between bg-brand-2/50">
-            <div className="flex items-center gap-4">
+      <DialogContent className="max-w-[500px] w-[calc(100vw-1rem)] sm:w-full bg-brand border-white/10 text-white p-0 overflow-hidden shadow-2xl max-h-[95vh] sm:max-h-[92vh] flex flex-col sm:rounded-2xl">
+        <div className="relative flex flex-col min-h-0 flex-1">
+          <div className="p-4 sm:p-6 border-b border-white/5 flex items-center justify-between bg-brand-2/50 shrink-0">
+            <div className="flex items-center gap-3 sm:gap-4">
               <button
                 onClick={step === "pix" ? () => setStep("form") : close}
-                className="size-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors border border-white/5"
+                className="size-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors border border-white/5 shrink-0"
               >
                 <ArrowLeft className="size-5" />
               </button>
               <div>
-                <h2 className="text-xl font-black uppercase tracking-tight">Depositar</h2>
+                <h2 className="text-lg sm:text-xl font-black uppercase tracking-tight">Depositar</h2>
                 <div className="flex items-center gap-1.5 text-[10px] text-primary font-bold uppercase tracking-wider">
                   <Zap className="size-3 fill-primary" />
                   Processamento Instantâneo
@@ -119,46 +119,53 @@ export function DepositDialog() {
             </div>
           </div>
 
-          <div className="p-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
+          <div className="p-4 sm:p-6 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
             {step === "form" ? (
               <div className="space-y-5">
-                {/* HERO Bonus Banner — always visible while active */}
+                {/* HERO Bonus Banner — sem limite */}
                 {bonusActive && (
-                  <div className="relative overflow-hidden rounded-2xl border-2 border-primary bg-gradient-to-br from-primary/30 via-primary/10 to-transparent p-5 animate-pulse-slow">
-                    <div className="absolute -top-10 -right-10 size-40 bg-primary/30 rounded-full blur-3xl" />
-                    <div className="absolute -bottom-10 -left-10 size-32 bg-yellow-500/20 rounded-full blur-3xl" />
+                  <div className="relative overflow-hidden rounded-2xl border-2 border-primary bg-gradient-to-br from-primary/25 via-primary/5 to-black p-4 sm:p-5">
+                    <div className="absolute -top-12 -right-12 size-44 bg-primary/30 rounded-full blur-3xl pointer-events-none" />
+                    <div className="absolute -bottom-12 -left-12 size-36 bg-yellow-500/20 rounded-full blur-3xl pointer-events-none" />
+
                     <div className="relative space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Sparkles className="size-5 text-primary" />
-                          <span className="text-[10px] font-black uppercase tracking-widest text-primary">Oferta relâmpago</span>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground rounded-full px-2.5 py-1">
+                          <Sparkles className="size-3.5" />
+                          <span className="text-[10px] font-black uppercase tracking-widest">Oferta Exclusiva</span>
                         </div>
-                        <div className="flex items-center gap-1.5 bg-black/60 border border-primary rounded-lg px-2.5 py-1">
+                        <div className="flex items-center gap-1.5 bg-black/70 border border-primary rounded-lg px-2.5 py-1">
                           <Clock className="size-3.5 text-primary" />
-                          <span className="font-mono text-base font-black text-primary tabular-nums">
+                          <span className="font-mono text-sm font-black text-primary tabular-nums">
                             {String(mm).padStart(2, "0")}:{String(ss).padStart(2, "0")}
                           </span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="size-14 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-lg">
-                          <Gift className="size-7" />
+
+                      <div>
+                        <div className="text-[10px] uppercase tracking-widest text-white/60 font-bold">Bônus de boas-vindas</div>
+                        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 mt-0.5">
+                          <span className="text-3xl sm:text-4xl font-black text-primary leading-none drop-shadow-[0_0_20px_rgba(255,215,0,0.4)]">+100%</span>
+                          <span className="text-base sm:text-lg font-black text-white leading-none">SEM LIMITE</span>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-2xl font-black text-white leading-none">+100% BÔNUS</div>
-                          <div className="text-xs text-white/80 font-bold mt-1">Sem rollover · Saque liberado</div>
+                        <p className="text-xs text-white/70 mt-1.5 leading-snug">Dobre seu depósito agora — sem rollover, saque liberado.</p>
+                      </div>
+
+                      <div className="bg-black/50 backdrop-blur rounded-xl p-3 border border-primary/30 flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="text-[10px] uppercase tracking-wider text-white/50 font-bold">Você deposita</div>
+                          <div className="text-base sm:text-lg font-black text-white truncate">R$ {amount.toLocaleString("pt-BR")}</div>
+                        </div>
+                        <TrendingUp className="size-5 text-primary shrink-0" />
+                        <div className="text-right min-w-0">
+                          <div className="text-[10px] uppercase tracking-wider text-primary font-bold">Você recebe</div>
+                          <div className="text-base sm:text-lg font-black text-primary truncate">R$ {doubled.toLocaleString("pt-BR")}</div>
                         </div>
                       </div>
-                      <div className="bg-black/40 rounded-xl p-3 border border-primary/30 flex items-center justify-between">
-                        <div>
-                          <div className="text-[10px] uppercase tracking-wider text-white/60 font-bold">Você deposita</div>
-                          <div className="text-lg font-black text-white">R$ {amount.toLocaleString("pt-BR")}</div>
-                        </div>
-                        <TrendingUp className="size-5 text-primary" />
-                        <div className="text-right">
-                          <div className="text-[10px] uppercase tracking-wider text-primary font-bold">Recebe</div>
-                          <div className="text-lg font-black text-primary">R$ {doubled.toLocaleString("pt-BR")}</div>
-                        </div>
+
+                      <div className="flex items-center gap-2 text-[11px] text-white/70">
+                        <Gift className="size-3.5 text-primary shrink-0" />
+                        <span>Crédito instantâneo após confirmação do PIX</span>
                       </div>
                     </div>
                   </div>
