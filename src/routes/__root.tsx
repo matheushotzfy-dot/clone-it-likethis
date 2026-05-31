@@ -13,6 +13,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthDialogProvider } from "@/components/auth/auth-dialog-context";
 import { AuthDialogs } from "@/components/auth/auth-dialogs";
+import { WithdrawalWatcher } from "@/components/notifications/withdrawal-watcher";
 
 function NotFoundComponent() {
   return (
