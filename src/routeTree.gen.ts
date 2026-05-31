@@ -9,38 +9,304 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TorneiosRouteImport } from './routes/torneios'
+import { Route as RegistroRouteImport } from './routes/registro'
+import { Route as PromocoesRouteImport } from './routes/promocoes'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as IndiqueAmigosRouteImport } from './routes/indique-amigos'
+import { Route as EsportesRouteImport } from './routes/esportes'
+import { Route as CassinoRouteImport } from './routes/cassino'
+import { Route as AoVivoRouteImport } from './routes/ao-vivo'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LegalTermosRouteImport } from './routes/legal/termos'
+import { Route as LegalPrivacidadeRouteImport } from './routes/legal/privacidade'
+import { Route as LegalJogoResponsavelRouteImport } from './routes/legal/jogo-responsavel'
+import { Route as AuthenticatedSaqueRouteImport } from './routes/_authenticated/saque'
+import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
+import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
+import { Route as AuthenticatedDepositoRouteImport } from './routes/_authenticated/deposito'
 
+const TorneiosRoute = TorneiosRouteImport.update({
+  id: '/torneios',
+  path: '/torneios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegistroRoute = RegistroRouteImport.update({
+  id: '/registro',
+  path: '/registro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PromocoesRoute = PromocoesRouteImport.update({
+  id: '/promocoes',
+  path: '/promocoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndiqueAmigosRoute = IndiqueAmigosRouteImport.update({
+  id: '/indique-amigos',
+  path: '/indique-amigos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EsportesRoute = EsportesRouteImport.update({
+  id: '/esportes',
+  path: '/esportes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CassinoRoute = CassinoRouteImport.update({
+  id: '/cassino',
+  path: '/cassino',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AoVivoRoute = AoVivoRouteImport.update({
+  id: '/ao-vivo',
+  path: '/ao-vivo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LegalTermosRoute = LegalTermosRouteImport.update({
+  id: '/legal/termos',
+  path: '/legal/termos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalPrivacidadeRoute = LegalPrivacidadeRouteImport.update({
+  id: '/legal/privacidade',
+  path: '/legal/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalJogoResponsavelRoute = LegalJogoResponsavelRouteImport.update({
+  id: '/legal/jogo-responsavel',
+  path: '/legal/jogo-responsavel',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedSaqueRoute = AuthenticatedSaqueRouteImport.update({
+  id: '/saque',
+  path: '/saque',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedHistoricoRoute = AuthenticatedHistoricoRouteImport.update({
+  id: '/historico',
+  path: '/historico',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedDepositoRoute = AuthenticatedDepositoRouteImport.update({
+  id: '/deposito',
+  path: '/deposito',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ao-vivo': typeof AoVivoRoute
+  '/cassino': typeof CassinoRoute
+  '/esportes': typeof EsportesRoute
+  '/indique-amigos': typeof IndiqueAmigosRoute
+  '/login': typeof LoginRoute
+  '/promocoes': typeof PromocoesRoute
+  '/registro': typeof RegistroRoute
+  '/torneios': typeof TorneiosRoute
+  '/deposito': typeof AuthenticatedDepositoRoute
+  '/historico': typeof AuthenticatedHistoricoRoute
+  '/perfil': typeof AuthenticatedPerfilRoute
+  '/saque': typeof AuthenticatedSaqueRoute
+  '/legal/jogo-responsavel': typeof LegalJogoResponsavelRoute
+  '/legal/privacidade': typeof LegalPrivacidadeRoute
+  '/legal/termos': typeof LegalTermosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ao-vivo': typeof AoVivoRoute
+  '/cassino': typeof CassinoRoute
+  '/esportes': typeof EsportesRoute
+  '/indique-amigos': typeof IndiqueAmigosRoute
+  '/login': typeof LoginRoute
+  '/promocoes': typeof PromocoesRoute
+  '/registro': typeof RegistroRoute
+  '/torneios': typeof TorneiosRoute
+  '/deposito': typeof AuthenticatedDepositoRoute
+  '/historico': typeof AuthenticatedHistoricoRoute
+  '/perfil': typeof AuthenticatedPerfilRoute
+  '/saque': typeof AuthenticatedSaqueRoute
+  '/legal/jogo-responsavel': typeof LegalJogoResponsavelRoute
+  '/legal/privacidade': typeof LegalPrivacidadeRoute
+  '/legal/termos': typeof LegalTermosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/ao-vivo': typeof AoVivoRoute
+  '/cassino': typeof CassinoRoute
+  '/esportes': typeof EsportesRoute
+  '/indique-amigos': typeof IndiqueAmigosRoute
+  '/login': typeof LoginRoute
+  '/promocoes': typeof PromocoesRoute
+  '/registro': typeof RegistroRoute
+  '/torneios': typeof TorneiosRoute
+  '/_authenticated/deposito': typeof AuthenticatedDepositoRoute
+  '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
+  '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
+  '/_authenticated/saque': typeof AuthenticatedSaqueRoute
+  '/legal/jogo-responsavel': typeof LegalJogoResponsavelRoute
+  '/legal/privacidade': typeof LegalPrivacidadeRoute
+  '/legal/termos': typeof LegalTermosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/ao-vivo'
+    | '/cassino'
+    | '/esportes'
+    | '/indique-amigos'
+    | '/login'
+    | '/promocoes'
+    | '/registro'
+    | '/torneios'
+    | '/deposito'
+    | '/historico'
+    | '/perfil'
+    | '/saque'
+    | '/legal/jogo-responsavel'
+    | '/legal/privacidade'
+    | '/legal/termos'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/ao-vivo'
+    | '/cassino'
+    | '/esportes'
+    | '/indique-amigos'
+    | '/login'
+    | '/promocoes'
+    | '/registro'
+    | '/torneios'
+    | '/deposito'
+    | '/historico'
+    | '/perfil'
+    | '/saque'
+    | '/legal/jogo-responsavel'
+    | '/legal/privacidade'
+    | '/legal/termos'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/ao-vivo'
+    | '/cassino'
+    | '/esportes'
+    | '/indique-amigos'
+    | '/login'
+    | '/promocoes'
+    | '/registro'
+    | '/torneios'
+    | '/_authenticated/deposito'
+    | '/_authenticated/historico'
+    | '/_authenticated/perfil'
+    | '/_authenticated/saque'
+    | '/legal/jogo-responsavel'
+    | '/legal/privacidade'
+    | '/legal/termos'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  AoVivoRoute: typeof AoVivoRoute
+  CassinoRoute: typeof CassinoRoute
+  EsportesRoute: typeof EsportesRoute
+  IndiqueAmigosRoute: typeof IndiqueAmigosRoute
+  LoginRoute: typeof LoginRoute
+  PromocoesRoute: typeof PromocoesRoute
+  RegistroRoute: typeof RegistroRoute
+  TorneiosRoute: typeof TorneiosRoute
+  LegalJogoResponsavelRoute: typeof LegalJogoResponsavelRoute
+  LegalPrivacidadeRoute: typeof LegalPrivacidadeRoute
+  LegalTermosRoute: typeof LegalTermosRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/torneios': {
+      id: '/torneios'
+      path: '/torneios'
+      fullPath: '/torneios'
+      preLoaderRoute: typeof TorneiosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/registro': {
+      id: '/registro'
+      path: '/registro'
+      fullPath: '/registro'
+      preLoaderRoute: typeof RegistroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/promocoes': {
+      id: '/promocoes'
+      path: '/promocoes'
+      fullPath: '/promocoes'
+      preLoaderRoute: typeof PromocoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/indique-amigos': {
+      id: '/indique-amigos'
+      path: '/indique-amigos'
+      fullPath: '/indique-amigos'
+      preLoaderRoute: typeof IndiqueAmigosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/esportes': {
+      id: '/esportes'
+      path: '/esportes'
+      fullPath: '/esportes'
+      preLoaderRoute: typeof EsportesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cassino': {
+      id: '/cassino'
+      path: '/cassino'
+      fullPath: '/cassino'
+      preLoaderRoute: typeof CassinoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ao-vivo': {
+      id: '/ao-vivo'
+      path: '/ao-vivo'
+      fullPath: '/ao-vivo'
+      preLoaderRoute: typeof AoVivoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +314,90 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/legal/termos': {
+      id: '/legal/termos'
+      path: '/legal/termos'
+      fullPath: '/legal/termos'
+      preLoaderRoute: typeof LegalTermosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/privacidade': {
+      id: '/legal/privacidade'
+      path: '/legal/privacidade'
+      fullPath: '/legal/privacidade'
+      preLoaderRoute: typeof LegalPrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/jogo-responsavel': {
+      id: '/legal/jogo-responsavel'
+      path: '/legal/jogo-responsavel'
+      fullPath: '/legal/jogo-responsavel'
+      preLoaderRoute: typeof LegalJogoResponsavelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/saque': {
+      id: '/_authenticated/saque'
+      path: '/saque'
+      fullPath: '/saque'
+      preLoaderRoute: typeof AuthenticatedSaqueRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/perfil': {
+      id: '/_authenticated/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof AuthenticatedPerfilRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/historico': {
+      id: '/_authenticated/historico'
+      path: '/historico'
+      fullPath: '/historico'
+      preLoaderRoute: typeof AuthenticatedHistoricoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/deposito': {
+      id: '/_authenticated/deposito'
+      path: '/deposito'
+      fullPath: '/deposito'
+      preLoaderRoute: typeof AuthenticatedDepositoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
+interface AuthenticatedRouteChildren {
+  AuthenticatedDepositoRoute: typeof AuthenticatedDepositoRoute
+  AuthenticatedHistoricoRoute: typeof AuthenticatedHistoricoRoute
+  AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
+  AuthenticatedSaqueRoute: typeof AuthenticatedSaqueRoute
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedDepositoRoute: AuthenticatedDepositoRoute,
+  AuthenticatedHistoricoRoute: AuthenticatedHistoricoRoute,
+  AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
+  AuthenticatedSaqueRoute: AuthenticatedSaqueRoute,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  AoVivoRoute: AoVivoRoute,
+  CassinoRoute: CassinoRoute,
+  EsportesRoute: EsportesRoute,
+  IndiqueAmigosRoute: IndiqueAmigosRoute,
+  LoginRoute: LoginRoute,
+  PromocoesRoute: PromocoesRoute,
+  RegistroRoute: RegistroRoute,
+  TorneiosRoute: TorneiosRoute,
+  LegalJogoResponsavelRoute: LegalJogoResponsavelRoute,
+  LegalPrivacidadeRoute: LegalPrivacidadeRoute,
+  LegalTermosRoute: LegalTermosRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
