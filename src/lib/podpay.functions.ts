@@ -36,8 +36,21 @@ async function podpay<T>(
 }
 
 const depositSchema = z.object({
-  amount: z.number().min(30).max(3000),
+  amount: z.number().positive().max(1000000),
 });
+
+async function loadLimits(supabase: { from: (t: string) => { select: (c: string) => { in: (k: string, v: string[]) => Promise<{ data: { key: string; value: unknown }[] | null }> } } }) {
+  const { data } = await supabase
+    .from("app_settings")
+    .select("key,value")
+    .in("key", ["min_deposit", "max_deposit", "min_withdraw", "max_withdraw"]);
+  const out: Record<string, number> = { min_deposit: 30, max_deposit: 3000, min_withdraw: 50, max_withdraw: 5000 };
+  for (const row of data ?? []) {
+    const n = Number(row.value);
+    if (Number.isFinite(n)) out[row.key] = n;
+  }
+  return out;
+}
 
 type PixTransaction = {
   id: string;
@@ -53,6 +66,10 @@ export const createPodPayPixDeposit = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => depositSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId, claims } = context;
+    const limits = await loadLimits(supabase as never);
+    if (data.amount < limits.min_deposit || data.amount > limits.max_deposit) {
+      throw new Error(`Depósito deve ser entre R$ ${limits.min_deposit} e R$ ${limits.max_deposit}`);
+    }
     const { data: profile } = await supabase
       .from("profiles")
       .select("full_name,cpf,phone")
@@ -121,7 +138,7 @@ export const createPodPayPixDeposit = createServerFn({ method: "POST" })
   });
 
 const withdrawalSchema = z.object({
-  amount: z.number().min(50).max(5000),
+  amount: z.number().positive().max(1000000),
   pixKey: z.string().min(3).max(120),
   pixKeyType: z.enum(["cpf", "email", "phone", "random"]),
 });
@@ -131,6 +148,10 @@ export const createPodPayPixWithdrawal = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => withdrawalSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const limits = await loadLimits(supabase as never);
+    if (data.amount < limits.min_withdraw || data.amount > limits.max_withdraw) {
+      throw new Error(`Saque deve ser entre R$ ${limits.min_withdraw} e R$ ${limits.max_withdraw}`);
+    }
     const { data: profile } = await supabase
       .from("profiles")
       .select("balance")
