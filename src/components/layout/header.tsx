@@ -19,7 +19,6 @@ const nav = [
   { to: "/torneios", label: "Torneios" },
   { to: "/indique-amigos", label: "Clube X" },
   { to: "/promocoes", label: "Promoções" },
-  { to: "/indique-amigos", label: "Indique Amigos" },
 ];
 
 export function Header() {
