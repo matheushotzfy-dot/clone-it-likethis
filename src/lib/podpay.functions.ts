@@ -7,24 +7,30 @@ const PODPAY_BASE = process.env.PODPAY_BASE_URL || "https://api.podpay.app";
 type PodPayResponse<T> = {
   success: boolean;
   data?: T;
-  error?: { code: string; message: string };
+  error?: { code: string; message: string; details?: unknown };
 };
 
-async function podpay<T>(path: string, init: RequestInit & { idempotencyKey?: string } = {}): Promise<T> {
-  const publicKey = process.env.PODPAY_PUBLIC_KEY;
-  const secretKey = process.env.PODPAY_SECRET_KEY;
-  if (!publicKey || !secretKey) throw new Error("PODPAY_PUBLIC_KEY/PODPAY_SECRET_KEY não configurados");
-  const basic = Buffer.from(`${publicKey}:${secretKey}`).toString("base64");
+async function podpay<T>(
+  path: string,
+  init: RequestInit & { idempotencyKey?: string } = {}
+): Promise<T> {
+  const apiKey =
+    process.env.PODPAY_SECRET_KEY ||
+    process.env.PODPAY_API_KEY;
+  if (!apiKey) throw new Error("PODPAY_SECRET_KEY não configurada");
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    Authorization: `Basic ${basic}`,
+    Accept: "application/json",
+    "x-api-key": apiKey,
     ...(init.headers as Record<string, string> | undefined),
   };
   if (init.idempotencyKey) headers["X-Idempotency-Key"] = init.idempotencyKey;
   const res = await fetch(`${PODPAY_BASE}${path}`, { ...init, headers });
-  const json = (await res.json()) as PodPayResponse<T>;
+  const json = (await res.json().catch(() => ({}))) as PodPayResponse<T>;
   if (!res.ok || !json.success) {
-    throw new Error(json.error?.message || `PodPay ${res.status}`);
+    const msg = json.error?.message || `PodPay HTTP ${res.status}`;
+    console.error("PodPay error", res.status, JSON.stringify(json));
+    throw new Error(msg);
   }
   return json.data as T;
 }
@@ -34,10 +40,13 @@ const depositSchema = z.object({
   cpf: z.string().min(11).max(14).optional(),
 });
 
-type PixDeposit = {
+type PixTransaction = {
   id: string;
   status: string;
-  pix?: { qrCode?: string; qrCodeBase64?: string; copyPaste?: string };
+  amount: number;
+  pixQrCode?: string;
+  pixQrCodeImage?: string;
+  createdAt?: string;
 };
 
 export const createPodPayPixDeposit = createServerFn({ method: "POST" })
@@ -45,41 +54,73 @@ export const createPodPayPixDeposit = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => depositSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId, claims } = context;
-    const { data: profile } = await supabase.from("profiles").select("full_name,cpf").eq("id", userId).maybeSingle();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("full_name,cpf,phone")
+      .eq("id", userId)
+      .maybeSingle();
     const cpf = (data.cpf || profile?.cpf || "").replace(/\D/g, "");
-    if (!cpf || cpf.length !== 11) throw new Error("CPF obrigatório no perfil");
+    if (!cpf || cpf.length !== 11) throw new Error("CPF inválido — atualize seu perfil");
 
+    // Persist CPF for next deposits
+    if (!profile?.cpf && data.cpf) {
+      await supabase.from("profiles").update({ cpf }).eq("id", userId);
+    }
+
+    const amountCents = Math.round(data.amount * 100);
     const idempotencyKey = crypto.randomUUID();
-    const result = await podpay<PixDeposit>("/v1/transactions", {
+    const fullName =
+      (profile?.full_name && profile.full_name.trim().length > 2
+        ? profile.full_name
+        : (claims as { email?: string } | undefined)?.email?.split("@")[0]) ||
+      "Cliente";
+    const email =
+      (claims as { email?: string } | undefined)?.email || "no-reply@example.com";
+    const phone = (profile?.phone || "11999999999").replace(/\D/g, "");
+
+    const result = await podpay<PixTransaction>("/v1/transactions", {
       method: "POST",
       idempotencyKey,
       body: JSON.stringify({
-        amount: Math.round(data.amount * 100),
-        paymentMethod: "PIX",
+        amount: amountCents,
+        paymentMethod: "pix",
+        items: [
+          {
+            id: idempotencyKey,
+            title: "Depósito",
+            unitPrice: amountCents,
+            quantity: 1,
+            tangible: false,
+          },
+        ],
         customer: {
-          name: profile?.full_name || claims?.email || "Cliente",
-          email: claims?.email,
-          document: { type: "CPF", number: cpf },
+          name: fullName,
+          email,
+          phone,
+          document: { number: cpf, type: "cpf" },
         },
         metadata: { userId },
       }),
     });
 
-    // Persist a pending transaction
-    const { data: tx, error } = await supabase.from("transactions").insert({
-      user_id: userId,
-      type: "deposit",
-      amount: data.amount,
-      status: "pending",
-      description: `PodPay PIX ${result.id}`,
-    }).select().single();
+    const { data: tx, error } = await supabase
+      .from("transactions")
+      .insert({
+        user_id: userId,
+        type: "deposit",
+        amount: data.amount,
+        status: "pending",
+        description: `PodPay PIX ${result.id}`,
+      })
+      .select()
+      .single();
     if (error) throw new Error(error.message);
 
     return {
       transactionId: tx.id,
       podpayId: result.id,
-      qrCode: result.pix?.qrCodeBase64 || result.pix?.qrCode || "",
-      copyPaste: result.pix?.copyPaste || "",
+      qrCodeImage: result.pixQrCodeImage || "",
+      copyPaste: result.pixQrCode || "",
     };
   });
 
@@ -94,17 +135,26 @@ export const createPodPayPixWithdrawal = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => withdrawalSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { data: profile } = await supabase.from("profiles").select("balance").eq("id", userId).maybeSingle();
-    if (!profile || Number(profile.balance) < data.amount) throw new Error("Saldo insuficiente");
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("balance")
+      .eq("id", userId)
+      .maybeSingle();
+    if (!profile || Number(profile.balance) < data.amount)
+      throw new Error("Saldo insuficiente");
 
-    const { data: tx, error } = await supabase.from("transactions").insert({
-      user_id: userId,
-      type: "withdrawal",
-      amount: data.amount,
-      status: "pending",
-      pix_key: `${data.pixKeyType}:${data.pixKey}`,
-      description: "Saque PIX via PodPay (aguardando aprovação)",
-    }).select().single();
+    const { data: tx, error } = await supabase
+      .from("transactions")
+      .insert({
+        user_id: userId,
+        type: "withdrawal",
+        amount: data.amount,
+        status: "pending",
+        pix_key: `${data.pixKeyType}:${data.pixKey}`,
+        description: "Saque PIX via PodPay (aguardando aprovação)",
+      })
+      .select()
+      .single();
     if (error) throw new Error(error.message);
 
     return { ok: true, transactionId: tx.id };
