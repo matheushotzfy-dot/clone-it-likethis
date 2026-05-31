@@ -17,15 +17,23 @@ import { Route as IndiqueAmigosRouteImport } from './routes/indique-amigos'
 import { Route as EsportesRouteImport } from './routes/esportes'
 import { Route as CassinoRouteImport } from './routes/cassino'
 import { Route as AoVivoRouteImport } from './routes/ao-vivo'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as LegalTermosRouteImport } from './routes/legal/termos'
 import { Route as LegalPrivacidadeRouteImport } from './routes/legal/privacidade'
 import { Route as LegalJogoResponsavelRouteImport } from './routes/legal/jogo-responsavel'
+import { Route as AdminUsuariosRouteImport } from './routes/admin/usuarios'
+import { Route as AdminTransacoesRouteImport } from './routes/admin/transacoes'
+import { Route as AdminSaquesRouteImport } from './routes/admin/saques'
+import { Route as AdminDepositosRouteImport } from './routes/admin/depositos'
+import { Route as AdminConfiguracoesRouteImport } from './routes/admin/configuracoes'
 import { Route as AuthenticatedSaqueRouteImport } from './routes/_authenticated/saque'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
 import { Route as AuthenticatedDepositoRouteImport } from './routes/_authenticated/deposito'
+import { Route as AdminUsuariosIdRouteImport } from './routes/admin/usuarios.$id'
 
 const TorneiosRoute = TorneiosRouteImport.update({
   id: '/torneios',
@@ -67,6 +75,11 @@ const AoVivoRoute = AoVivoRouteImport.update({
   path: '/ao-vivo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
@@ -75,6 +88,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
 } as any)
 const LegalTermosRoute = LegalTermosRouteImport.update({
   id: '/legal/termos',
@@ -90,6 +108,31 @@ const LegalJogoResponsavelRoute = LegalJogoResponsavelRouteImport.update({
   id: '/legal/jogo-responsavel',
   path: '/legal/jogo-responsavel',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminUsuariosRoute = AdminUsuariosRouteImport.update({
+  id: '/usuarios',
+  path: '/usuarios',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTransacoesRoute = AdminTransacoesRouteImport.update({
+  id: '/transacoes',
+  path: '/transacoes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSaquesRoute = AdminSaquesRouteImport.update({
+  id: '/saques',
+  path: '/saques',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminDepositosRoute = AdminDepositosRouteImport.update({
+  id: '/depositos',
+  path: '/depositos',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminConfiguracoesRoute = AdminConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AuthenticatedSaqueRoute = AuthenticatedSaqueRouteImport.update({
   id: '/saque',
@@ -111,9 +154,15 @@ const AuthenticatedDepositoRoute = AuthenticatedDepositoRouteImport.update({
   path: '/deposito',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AdminUsuariosIdRoute = AdminUsuariosIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminUsuariosRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/ao-vivo': typeof AoVivoRoute
   '/cassino': typeof CassinoRoute
   '/esportes': typeof EsportesRoute
@@ -126,9 +175,16 @@ export interface FileRoutesByFullPath {
   '/historico': typeof AuthenticatedHistoricoRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/saque': typeof AuthenticatedSaqueRoute
+  '/admin/configuracoes': typeof AdminConfiguracoesRoute
+  '/admin/depositos': typeof AdminDepositosRoute
+  '/admin/saques': typeof AdminSaquesRoute
+  '/admin/transacoes': typeof AdminTransacoesRoute
+  '/admin/usuarios': typeof AdminUsuariosRouteWithChildren
   '/legal/jogo-responsavel': typeof LegalJogoResponsavelRoute
   '/legal/privacidade': typeof LegalPrivacidadeRoute
   '/legal/termos': typeof LegalTermosRoute
+  '/admin/': typeof AdminIndexRoute
+  '/admin/usuarios/$id': typeof AdminUsuariosIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -144,14 +200,22 @@ export interface FileRoutesByTo {
   '/historico': typeof AuthenticatedHistoricoRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/saque': typeof AuthenticatedSaqueRoute
+  '/admin/configuracoes': typeof AdminConfiguracoesRoute
+  '/admin/depositos': typeof AdminDepositosRoute
+  '/admin/saques': typeof AdminSaquesRoute
+  '/admin/transacoes': typeof AdminTransacoesRoute
+  '/admin/usuarios': typeof AdminUsuariosRouteWithChildren
   '/legal/jogo-responsavel': typeof LegalJogoResponsavelRoute
   '/legal/privacidade': typeof LegalPrivacidadeRoute
   '/legal/termos': typeof LegalTermosRoute
+  '/admin': typeof AdminIndexRoute
+  '/admin/usuarios/$id': typeof AdminUsuariosIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/admin': typeof AdminRouteWithChildren
   '/ao-vivo': typeof AoVivoRoute
   '/cassino': typeof CassinoRoute
   '/esportes': typeof EsportesRoute
@@ -164,14 +228,22 @@ export interface FileRoutesById {
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/saque': typeof AuthenticatedSaqueRoute
+  '/admin/configuracoes': typeof AdminConfiguracoesRoute
+  '/admin/depositos': typeof AdminDepositosRoute
+  '/admin/saques': typeof AdminSaquesRoute
+  '/admin/transacoes': typeof AdminTransacoesRoute
+  '/admin/usuarios': typeof AdminUsuariosRouteWithChildren
   '/legal/jogo-responsavel': typeof LegalJogoResponsavelRoute
   '/legal/privacidade': typeof LegalPrivacidadeRoute
   '/legal/termos': typeof LegalTermosRoute
+  '/admin/': typeof AdminIndexRoute
+  '/admin/usuarios/$id': typeof AdminUsuariosIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/ao-vivo'
     | '/cassino'
     | '/esportes'
@@ -184,9 +256,16 @@ export interface FileRouteTypes {
     | '/historico'
     | '/perfil'
     | '/saque'
+    | '/admin/configuracoes'
+    | '/admin/depositos'
+    | '/admin/saques'
+    | '/admin/transacoes'
+    | '/admin/usuarios'
     | '/legal/jogo-responsavel'
     | '/legal/privacidade'
     | '/legal/termos'
+    | '/admin/'
+    | '/admin/usuarios/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -202,13 +281,21 @@ export interface FileRouteTypes {
     | '/historico'
     | '/perfil'
     | '/saque'
+    | '/admin/configuracoes'
+    | '/admin/depositos'
+    | '/admin/saques'
+    | '/admin/transacoes'
+    | '/admin/usuarios'
     | '/legal/jogo-responsavel'
     | '/legal/privacidade'
     | '/legal/termos'
+    | '/admin'
+    | '/admin/usuarios/$id'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/admin'
     | '/ao-vivo'
     | '/cassino'
     | '/esportes'
@@ -221,14 +308,22 @@ export interface FileRouteTypes {
     | '/_authenticated/historico'
     | '/_authenticated/perfil'
     | '/_authenticated/saque'
+    | '/admin/configuracoes'
+    | '/admin/depositos'
+    | '/admin/saques'
+    | '/admin/transacoes'
+    | '/admin/usuarios'
     | '/legal/jogo-responsavel'
     | '/legal/privacidade'
     | '/legal/termos'
+    | '/admin/'
+    | '/admin/usuarios/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  AdminRoute: typeof AdminRouteWithChildren
   AoVivoRoute: typeof AoVivoRoute
   CassinoRoute: typeof CassinoRoute
   EsportesRoute: typeof EsportesRoute
@@ -300,6 +395,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AoVivoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
@@ -313,6 +415,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/legal/termos': {
       id: '/legal/termos'
@@ -334,6 +443,41 @@ declare module '@tanstack/react-router' {
       fullPath: '/legal/jogo-responsavel'
       preLoaderRoute: typeof LegalJogoResponsavelRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/usuarios': {
+      id: '/admin/usuarios'
+      path: '/usuarios'
+      fullPath: '/admin/usuarios'
+      preLoaderRoute: typeof AdminUsuariosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/transacoes': {
+      id: '/admin/transacoes'
+      path: '/transacoes'
+      fullPath: '/admin/transacoes'
+      preLoaderRoute: typeof AdminTransacoesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/saques': {
+      id: '/admin/saques'
+      path: '/saques'
+      fullPath: '/admin/saques'
+      preLoaderRoute: typeof AdminSaquesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/depositos': {
+      id: '/admin/depositos'
+      path: '/depositos'
+      fullPath: '/admin/depositos'
+      preLoaderRoute: typeof AdminDepositosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/configuracoes': {
+      id: '/admin/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/admin/configuracoes'
+      preLoaderRoute: typeof AdminConfiguracoesRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/_authenticated/saque': {
       id: '/_authenticated/saque'
@@ -363,6 +507,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDepositoRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/admin/usuarios/$id': {
+      id: '/admin/usuarios/$id'
+      path: '/$id'
+      fullPath: '/admin/usuarios/$id'
+      preLoaderRoute: typeof AdminUsuariosIdRouteImport
+      parentRoute: typeof AdminUsuariosRoute
+    }
   }
 }
 
@@ -384,9 +535,42 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
 
+interface AdminUsuariosRouteChildren {
+  AdminUsuariosIdRoute: typeof AdminUsuariosIdRoute
+}
+
+const AdminUsuariosRouteChildren: AdminUsuariosRouteChildren = {
+  AdminUsuariosIdRoute: AdminUsuariosIdRoute,
+}
+
+const AdminUsuariosRouteWithChildren = AdminUsuariosRoute._addFileChildren(
+  AdminUsuariosRouteChildren,
+)
+
+interface AdminRouteChildren {
+  AdminConfiguracoesRoute: typeof AdminConfiguracoesRoute
+  AdminDepositosRoute: typeof AdminDepositosRoute
+  AdminSaquesRoute: typeof AdminSaquesRoute
+  AdminTransacoesRoute: typeof AdminTransacoesRoute
+  AdminUsuariosRoute: typeof AdminUsuariosRouteWithChildren
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminConfiguracoesRoute: AdminConfiguracoesRoute,
+  AdminDepositosRoute: AdminDepositosRoute,
+  AdminSaquesRoute: AdminSaquesRoute,
+  AdminTransacoesRoute: AdminTransacoesRoute,
+  AdminUsuariosRoute: AdminUsuariosRouteWithChildren,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  AdminRoute: AdminRouteWithChildren,
   AoVivoRoute: AoVivoRoute,
   CassinoRoute: CassinoRoute,
   EsportesRoute: EsportesRoute,

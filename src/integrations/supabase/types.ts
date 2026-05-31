@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -125,7 +143,13 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
-      transaction_status: "pending" | "completed" | "failed" | "cancelled"
+      transaction_status:
+        | "pending"
+        | "completed"
+        | "failed"
+        | "cancelled"
+        | "approved"
+        | "rejected"
       transaction_type: "deposit" | "withdrawal" | "bet" | "win" | "bonus"
     }
     CompositeTypes: {
@@ -255,7 +279,14 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
-      transaction_status: ["pending", "completed", "failed", "cancelled"],
+      transaction_status: [
+        "pending",
+        "completed",
+        "failed",
+        "cancelled",
+        "approved",
+        "rejected",
+      ],
       transaction_type: ["deposit", "withdrawal", "bet", "win", "bonus"],
     },
   },
