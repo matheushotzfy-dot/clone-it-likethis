@@ -5,8 +5,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getSportsFeed, type RealMatch } from "@/lib/sports.functions";
 import { cn } from "@/lib/utils";
-import { Trophy, Star, Plus, X, Receipt, TrendingUp, Search, Radio, Calendar } from "lucide-react";
+import { Trophy, Star, Plus, X, Receipt, TrendingUp, Search, Radio, Calendar, Lock, Wallet } from "lucide-react";
 import { toast } from "sonner";
+import { useGameAccess } from "@/hooks/use-game-access";
+import { useAuthDialog } from "@/components/auth/auth-dialog-context";
 
 export const Route = createFileRoute("/esportes")({
   head: () => ({ meta: [{ title: "Esportes — PIXBET" }] }),
