@@ -108,8 +108,10 @@ export function DepositDialog() {
           <div className="p-4 sm:p-6 border-b border-white/5 flex items-center justify-between bg-brand-2/50 shrink-0">
             <div className="flex items-center gap-3 sm:gap-4">
               <button
-                onClick={step === "pix" ? () => setStep("form") : close}
-                className="size-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors border border-white/5 shrink-0"
+                onClick={step === "pix" ? () => pixCopied && setStep("form") : close}
+                disabled={step === "pix" && !pixCopied}
+                className="size-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors border border-white/5 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label={step === "pix" && !pixCopied ? "Copie o PIX antes de voltar" : "Voltar"}
               >
                 <ArrowLeft className="size-5" />
               </button>
@@ -155,17 +157,19 @@ export function DepositDialog() {
                         <p className="text-xs text-white/70 mt-1.5 leading-snug">Dobre seu depósito agora — sem rollover, saque liberado.</p>
                       </div>
 
-                      <div className="bg-black/50 backdrop-blur rounded-xl p-3 border border-primary/30 flex items-center justify-between gap-2">
-                        <div className="min-w-0">
-                          <div className="text-[10px] uppercase tracking-wider text-white/50 font-bold">Você deposita</div>
-                          <div className="text-base sm:text-lg font-black text-white truncate">R$ {amount.toLocaleString("pt-BR")}</div>
+                      {hasSelectedAmount && (
+                        <div className="bg-black/50 backdrop-blur rounded-xl p-3 border border-primary/30 flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="text-[10px] uppercase tracking-wider text-white/50 font-bold">Você deposita</div>
+                            <div className="text-base sm:text-lg font-black text-white truncate">R$ {amount.toLocaleString("pt-BR")}</div>
+                          </div>
+                          <TrendingUp className="size-5 text-primary shrink-0" />
+                          <div className="text-right min-w-0">
+                            <div className="text-[10px] uppercase tracking-wider text-primary font-bold">Valor dobrado</div>
+                            <div className="text-base sm:text-lg font-black text-primary truncate">R$ {doubled.toLocaleString("pt-BR")}</div>
+                          </div>
                         </div>
-                        <TrendingUp className="size-5 text-primary shrink-0" />
-                        <div className="text-right min-w-0">
-                          <div className="text-[10px] uppercase tracking-wider text-primary font-bold">Você recebe</div>
-                          <div className="text-base sm:text-lg font-black text-primary truncate">R$ {doubled.toLocaleString("pt-BR")}</div>
-                        </div>
-                      </div>
+                      )}
 
                       <div className="flex items-center gap-2 text-[11px] text-white/70">
                         <Gift className="size-3.5 text-primary shrink-0" />
