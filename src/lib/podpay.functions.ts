@@ -36,8 +36,21 @@ async function podpay<T>(
 }
 
 const depositSchema = z.object({
-  amount: z.number().min(30).max(3000),
+  amount: z.number().positive().max(1000000),
 });
+
+async function loadLimits(supabase: { from: (t: string) => { select: (c: string) => { in: (k: string, v: string[]) => Promise<{ data: { key: string; value: unknown }[] | null }> } } }) {
+  const { data } = await supabase
+    .from("app_settings")
+    .select("key,value")
+    .in("key", ["min_deposit", "max_deposit", "min_withdraw", "max_withdraw"]);
+  const out: Record<string, number> = { min_deposit: 30, max_deposit: 3000, min_withdraw: 50, max_withdraw: 5000 };
+  for (const row of data ?? []) {
+    const n = Number(row.value);
+    if (Number.isFinite(n)) out[row.key] = n;
+  }
+  return out;
+}
 
 type PixTransaction = {
   id: string;
