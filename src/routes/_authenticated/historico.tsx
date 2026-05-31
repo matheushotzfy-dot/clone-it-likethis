@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { SiteShell } from "@/components/layout/site-shell";
 import { listMyTransactions } from "@/lib/profile.functions";
+import { useAuth } from "@/hooks/use-auth";
 import { ArrowDownToLine, ArrowUpFromLine, Dices, ShieldAlert } from "lucide-react";
 import { KycDialog } from "@/components/auth/kyc-dialog";
 
