@@ -9,7 +9,7 @@ export function GameCard({ game, rank }: Props) {
   return (
     <div className="relative group">
       {rank && (
-        <span className="rank-number absolute -left-2 md:-left-4 top-1/2 -translate-y-1/2 text-6xl md:text-8xl z-0 pointer-events-none select-none">
+        <span className="rank-number absolute left-0 top-1/2 -translate-y-1/2 text-5xl md:text-8xl z-0 pointer-events-none select-none opacity-70">
           {rank}
         </span>
       )}
