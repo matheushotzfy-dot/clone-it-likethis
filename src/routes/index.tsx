@@ -55,14 +55,10 @@ function Index() {
 
         <ProviderStrip />
 
-        {/* Top 10 horizontal scroll */}
+        {/* Top 10 */}
         <section className="space-y-3">
-          <div className="flex gap-4 md:gap-6 overflow-x-auto no-scrollbar pb-2 pl-6">
-          {top10.map((g, i) => (
-            <div key={`top-${g.id}-${i}`} className="shrink-0 w-32 md:w-36">
-              <GameCard game={g} rank={i + 1} />
-            </div>
-          ))}
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2.5 md:gap-3 overflow-hidden">
+            {top10.slice(0, 8).map((g, i) => <GameCard key={`top-${g.id}-${i}`} game={g} rank={i + 1} />)}
           </div>
         </section>
 

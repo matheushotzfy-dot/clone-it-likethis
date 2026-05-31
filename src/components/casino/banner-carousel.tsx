@@ -42,11 +42,11 @@ export function BannerCarousel() {
               src={s.image_url}
               alt={s.title || "Banner promocional"}
               width={1920}
-              height={420}
+              height={512}
               loading={i === 0 ? "eager" : "lazy"}
               fetchPriority={i === 0 ? "high" : "auto"}
               decoding="async"
-              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-out ${i === idx ? "opacity-100" : "opacity-0"}`}
+              className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-700 ease-out ${i === idx ? "opacity-100" : "opacity-0"}`}
             />
           );
           return s.link_url && i === idx ? (
