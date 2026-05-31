@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Banner files public read" ON storage.objects;

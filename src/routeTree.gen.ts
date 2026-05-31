@@ -28,6 +28,7 @@ import { Route as AdminUsuariosRouteImport } from './routes/admin/usuarios'
 import { Route as AdminTransacoesRouteImport } from './routes/admin/transacoes'
 import { Route as AdminSaquesRouteImport } from './routes/admin/saques'
 import { Route as AdminPixelRouteImport } from './routes/admin/pixel'
+import { Route as AdminKycRouteImport } from './routes/admin/kyc'
 import { Route as AdminDepositosRouteImport } from './routes/admin/depositos'
 import { Route as AdminConfiguracoesRouteImport } from './routes/admin/configuracoes'
 import { Route as AdminBannersRouteImport } from './routes/admin/banners'
@@ -132,6 +133,11 @@ const AdminPixelRoute = AdminPixelRouteImport.update({
   path: '/pixel',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminKycRoute = AdminKycRouteImport.update({
+  id: '/kyc',
+  path: '/kyc',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminDepositosRoute = AdminDepositosRouteImport.update({
   id: '/depositos',
   path: '/depositos',
@@ -196,6 +202,7 @@ export interface FileRoutesByFullPath {
   '/admin/banners': typeof AdminBannersRoute
   '/admin/configuracoes': typeof AdminConfiguracoesRoute
   '/admin/depositos': typeof AdminDepositosRoute
+  '/admin/kyc': typeof AdminKycRoute
   '/admin/pixel': typeof AdminPixelRoute
   '/admin/saques': typeof AdminSaquesRoute
   '/admin/transacoes': typeof AdminTransacoesRoute
@@ -224,6 +231,7 @@ export interface FileRoutesByTo {
   '/admin/banners': typeof AdminBannersRoute
   '/admin/configuracoes': typeof AdminConfiguracoesRoute
   '/admin/depositos': typeof AdminDepositosRoute
+  '/admin/kyc': typeof AdminKycRoute
   '/admin/pixel': typeof AdminPixelRoute
   '/admin/saques': typeof AdminSaquesRoute
   '/admin/transacoes': typeof AdminTransacoesRoute
@@ -255,6 +263,7 @@ export interface FileRoutesById {
   '/admin/banners': typeof AdminBannersRoute
   '/admin/configuracoes': typeof AdminConfiguracoesRoute
   '/admin/depositos': typeof AdminDepositosRoute
+  '/admin/kyc': typeof AdminKycRoute
   '/admin/pixel': typeof AdminPixelRoute
   '/admin/saques': typeof AdminSaquesRoute
   '/admin/transacoes': typeof AdminTransacoesRoute
@@ -286,6 +295,7 @@ export interface FileRouteTypes {
     | '/admin/banners'
     | '/admin/configuracoes'
     | '/admin/depositos'
+    | '/admin/kyc'
     | '/admin/pixel'
     | '/admin/saques'
     | '/admin/transacoes'
@@ -314,6 +324,7 @@ export interface FileRouteTypes {
     | '/admin/banners'
     | '/admin/configuracoes'
     | '/admin/depositos'
+    | '/admin/kyc'
     | '/admin/pixel'
     | '/admin/saques'
     | '/admin/transacoes'
@@ -344,6 +355,7 @@ export interface FileRouteTypes {
     | '/admin/banners'
     | '/admin/configuracoes'
     | '/admin/depositos'
+    | '/admin/kyc'
     | '/admin/pixel'
     | '/admin/saques'
     | '/admin/transacoes'
@@ -509,6 +521,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPixelRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/kyc': {
+      id: '/admin/kyc'
+      path: '/kyc'
+      fullPath: '/admin/kyc'
+      preLoaderRoute: typeof AdminKycRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/depositos': {
       id: '/admin/depositos'
       path: '/depositos'
@@ -609,6 +628,7 @@ interface AdminRouteChildren {
   AdminBannersRoute: typeof AdminBannersRoute
   AdminConfiguracoesRoute: typeof AdminConfiguracoesRoute
   AdminDepositosRoute: typeof AdminDepositosRoute
+  AdminKycRoute: typeof AdminKycRoute
   AdminPixelRoute: typeof AdminPixelRoute
   AdminSaquesRoute: typeof AdminSaquesRoute
   AdminTransacoesRoute: typeof AdminTransacoesRoute
@@ -620,6 +640,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminBannersRoute: AdminBannersRoute,
   AdminConfiguracoesRoute: AdminConfiguracoesRoute,
   AdminDepositosRoute: AdminDepositosRoute,
+  AdminKycRoute: AdminKycRoute,
   AdminPixelRoute: AdminPixelRoute,
   AdminSaquesRoute: AdminSaquesRoute,
   AdminTransacoesRoute: AdminTransacoesRoute,

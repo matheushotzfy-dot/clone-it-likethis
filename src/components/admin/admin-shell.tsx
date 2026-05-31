@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
-import { LayoutDashboard, Users, ArrowDownCircle, ArrowUpCircle, Settings, Receipt, Home, LogOut, Target, Image as ImageIcon, Menu, X } from "lucide-react";
+import { LayoutDashboard, Users, ArrowDownCircle, ArrowUpCircle, Settings, Receipt, Home, LogOut, Target, Image as ImageIcon, Menu, X, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 const items = [
@@ -9,6 +9,7 @@ const items = [
   { to: "/admin/depositos", label: "Depósitos", icon: ArrowDownCircle },
   { to: "/admin/saques", label: "Saques", icon: ArrowUpCircle },
   { to: "/admin/transacoes", label: "Transações", icon: Receipt },
+  { to: "/admin/kyc", label: "KYC", icon: ShieldCheck },
   { to: "/admin/banners", label: "Banners", icon: ImageIcon },
   { to: "/admin/pixel", label: "Pixel", icon: Target },
   { to: "/admin/configuracoes", label: "Configurações", icon: Settings },
@@ -53,10 +54,13 @@ export function AdminShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen flex w-full bg-background text-foreground">
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex w-60 flex-col bg-brand border-r border-white/10 sticky top-0 h-screen">
+      <aside className="hidden md:flex w-64 flex-col bg-brand border-r border-white/10 sticky top-0 h-screen">
         <div className="px-5 h-16 flex items-center border-b border-white/10">
-          <span className="text-white font-black text-xl">SANTOS<span className="text-primary">BET</span></span>
-          <span className="ml-2 text-[10px] uppercase font-bold bg-primary text-primary-foreground px-1.5 py-0.5 rounded">ADMIN</span>
+          <div className="size-9 rounded-lg bg-primary/15 flex items-center justify-center mr-3"><ShieldCheck className="size-5 text-primary" /></div>
+          <div className="min-w-0">
+            <span className="block text-white font-black text-xl leading-none">SANTOS<span className="text-primary">BET</span></span>
+            <span className="text-[10px] uppercase font-bold text-white/55 tracking-wide">Admin Center</span>
+          </div>
         </div>
         <NavLinks />
       </aside>
@@ -78,7 +82,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
       )}
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 border-b border-border flex items-center justify-between gap-3 px-3 md:px-8 bg-card">
+        <header className="h-16 border-b border-border flex items-center justify-between gap-3 px-3 md:px-8 bg-card/95 backdrop-blur">
           <div className="flex items-center gap-2 min-w-0">
             <button
               onClick={() => setOpen(true)}
@@ -91,7 +95,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           </div>
           <div className="text-xs md:text-sm text-muted-foreground truncate max-w-[140px] md:max-w-[240px]">{user?.email}</div>
         </header>
-        <main className="flex-1 p-3 md:p-8 overflow-auto">{children}</main>
+        <main className="flex-1 p-3 md:p-8 overflow-auto bg-background">{children}</main>
       </div>
     </div>
   );
