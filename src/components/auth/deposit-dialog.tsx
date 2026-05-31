@@ -11,7 +11,7 @@ import { getSettings } from "@/lib/settings.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
-const presets = [20, 50, 100, 250, 500, 1000];
+const presets = [30, 50, 100, 250, 500, 1000];
 const hots = new Set([50, 250, 1000]);
 
 export function DepositDialog() {
@@ -40,8 +40,8 @@ export function DepositDialog() {
     enabled: !!user && open && step === "pix" && !!pix,
     refetchInterval: 3000,
   });
-  const min = settings?.min_deposit ?? 20;
-  const max = settings?.max_deposit ?? 10000;
+  const min = settings?.min_deposit ?? 30;
+  const max = settings?.max_deposit ?? 3000;
 
   // Auto-close on approval
   useEffect(() => {
