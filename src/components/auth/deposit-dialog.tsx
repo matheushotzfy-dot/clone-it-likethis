@@ -15,8 +15,8 @@ const presets = [30, 50, 100, 250, 500, 1000];
 const hots = new Set([50, 250, 1000]);
 
 export function DepositDialog() {
-  const { current, close } = useAuthDialog();
-  const { user } = useAuth();
+  const { current, close, open: openDialog } = useAuthDialog();
+  const { user, loading: authLoading } = useAuth();
   const [amount, setAmount] = useState(50);
   const [step, setStep] = useState<"form" | "pix">("form");
   const [pix, setPix] = useState<{ qrCodeImage: string; copyPaste: string; transactionId: string } | null>(null);
@@ -27,6 +27,13 @@ export function DepositDialog() {
   const fetchTransactions = useServerFn(listMyTransactions);
   const qc = useQueryClient();
   const open = current === "deposit";
+
+  // Gate: must be logged in to deposit
+  useEffect(() => {
+    if (open && !authLoading && !user) {
+      openDialog("register");
+    }
+  }, [open, authLoading, user, openDialog]);
   const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: () => fetchSettings(), enabled: !!user && open });
   const { data: profile } = useQuery({
     queryKey: ["my-profile"],
@@ -101,9 +108,10 @@ export function DepositDialog() {
   const doubled = amount * 2;
   const hasSelectedAmount = amount >= min;
 
+  const showDialog = open && !!user;
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && (step !== "pix" || pixCopied) && close()}>
-      <DialogContent className="max-w-[500px] w-[calc(100vw-1rem)] sm:w-full bg-brand border-white/10 text-white p-0 overflow-hidden shadow-2xl max-h-[95vh] sm:max-h-[92vh] flex flex-col sm:rounded-2xl">
+    <Dialog open={showDialog} onOpenChange={(o) => !o && (step !== "pix" || pixCopied) && close()}>
+      <DialogContent className="max-w-[440px] w-[calc(100vw-2.5rem)] sm:w-full bg-brand border-white/10 text-white p-0 overflow-hidden shadow-2xl max-h-[88vh] sm:max-h-[92vh] flex flex-col sm:rounded-2xl rounded-2xl">
         <div className="relative flex flex-col min-h-0 flex-1">
           <div className="p-4 sm:p-6 border-b border-white/5 flex items-center justify-between bg-brand-2/50 shrink-0">
             <div className="flex items-center gap-3 sm:gap-4">
