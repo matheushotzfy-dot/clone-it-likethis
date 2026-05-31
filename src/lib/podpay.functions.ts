@@ -11,11 +11,13 @@ type PodPayResponse<T> = {
 };
 
 async function podpay<T>(path: string, init: RequestInit & { idempotencyKey?: string } = {}): Promise<T> {
-  const apiKey = process.env.PODPAY_API_KEY;
-  if (!apiKey) throw new Error("PODPAY_API_KEY não configurado");
+  const publicKey = process.env.PODPAY_PUBLIC_KEY;
+  const secretKey = process.env.PODPAY_SECRET_KEY;
+  if (!publicKey || !secretKey) throw new Error("PODPAY_PUBLIC_KEY/PODPAY_SECRET_KEY não configurados");
+  const basic = Buffer.from(`${publicKey}:${secretKey}`).toString("base64");
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    "x-api-key": apiKey,
+    Authorization: `Basic ${basic}`,
     ...(init.headers as Record<string, string> | undefined),
   };
   if (init.idempotencyKey) headers["X-Idempotency-Key"] = init.idempotencyKey;
