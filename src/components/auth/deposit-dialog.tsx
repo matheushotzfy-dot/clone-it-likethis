@@ -20,6 +20,7 @@ export function DepositDialog() {
   const [amount, setAmount] = useState(50);
   const [step, setStep] = useState<"form" | "pix">("form");
   const [pix, setPix] = useState<{ qrCodeImage: string; copyPaste: string; transactionId: string } | null>(null);
+  const [pixCopied, setPixCopied] = useState(false);
   const createPix = useServerFn(createPodPayPixDeposit);
   const fetchSettings = useServerFn(getSettings);
   const fetchProfile = useServerFn(getMyProfile);
@@ -75,7 +76,8 @@ export function DepositDialog() {
     if (open) {
       setStep("form");
       setPix(null);
-      setAmount((a) => Math.max(min, a || 50));
+      setPixCopied(false);
+      setAmount(0);
     }
   }, [open, min]);
 
@@ -87,6 +89,7 @@ export function DepositDialog() {
         return;
       }
       setPix({ qrCodeImage: res.qrCodeImage, copyPaste: res.copyPaste, transactionId: res.transactionId });
+      setPixCopied(false);
       toast.success("PIX gerado! Pague para creditar o saldo.");
       qc.invalidateQueries({ queryKey: ["transactions"] });
       qc.invalidateQueries({ queryKey: ["my-profile"] });
@@ -96,6 +99,7 @@ export function DepositDialog() {
   });
 
   const doubled = amount * 2;
+  const hasSelectedAmount = amount >= min;
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && close()}>
