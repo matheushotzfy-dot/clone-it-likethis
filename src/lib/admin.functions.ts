@@ -22,17 +22,37 @@ export const getDashboardKPIs = createServerFn({ method: "GET" })
     await assertAdmin(supabase, userId);
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - 6);
 
-    const [{ data: allTx }, { count: userCount }, { data: balances }] = await Promise.all([
-      supabase.from("transactions").select("type,amount,status,created_at"),
+    const [{ data: allTx, error: txError }, { count: userCount, error: usersError }, { data: balances, error: balanceError }, { count: kycPending }] = await Promise.all([
+      supabase.from("transactions").select("type,amount,status,created_at,kyc_required"),
       supabase.from("profiles").select("*", { count: "exact", head: true }),
       supabase.from("profiles").select("balance"),
+      supabase.from("kyc_submissions").select("*", { count: "exact", head: true }).eq("status", "pending"),
     ]);
+    if (txError) throw new Error(txError.message);
+    if (usersError) throw new Error(usersError.message);
+    if (balanceError) throw new Error(balanceError.message);
 
     const tx = allTx ?? [];
     const sum = (filter: (t: any) => boolean) => tx.filter(filter).reduce((a, t) => a + Number(t.amount), 0);
     const todayIso = today.toISOString();
     const monthIso = monthStart.toISOString();
+    const weekIso = weekStart.toISOString();
+    const daily = Array.from({ length: 7 }, (_, i) => {
+      const day = new Date(weekStart);
+      day.setDate(weekStart.getDate() + i);
+      const next = new Date(day);
+      next.setDate(day.getDate() + 1);
+      const start = day.toISOString();
+      const end = next.toISOString();
+      return {
+        date: day.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
+        deposits: sum(t => t.type === "deposit" && t.status === "approved" && t.created_at >= start && t.created_at < end),
+        withdrawals: sum(t => t.type === "withdrawal" && t.status === "approved" && t.created_at >= start && t.created_at < end),
+      };
+    });
 
     return {
       depositsToday: sum(t => t.type === "deposit" && t.status === "approved" && t.created_at >= todayIso),
@@ -41,8 +61,12 @@ export const getDashboardKPIs = createServerFn({ method: "GET" })
       withdrawalsMonth: sum(t => t.type === "withdrawal" && t.status === "approved" && t.created_at >= monthIso),
       pendingDeposits: tx.filter(t => t.type === "deposit" && t.status === "pending").length,
       pendingWithdrawals: tx.filter(t => t.type === "withdrawal" && t.status === "pending").length,
+      kycPending: kycPending ?? 0,
+      kycRequested: tx.filter(t => t.type === "withdrawal" && t.kyc_required).length,
       totalUsers: userCount ?? 0,
       totalBalance: (balances ?? []).reduce((a, p: any) => a + Number(p.balance), 0),
+      weeklyNet: sum(t => t.status === "approved" && t.created_at >= weekIso && t.type === "deposit") - sum(t => t.status === "approved" && t.created_at >= weekIso && t.type === "withdrawal"),
+      chart: daily,
     };
   });
 
