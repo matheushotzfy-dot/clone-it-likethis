@@ -62,7 +62,7 @@ export const createTransaction = createServerFn({ method: "POST" })
     const { data: me } = await supabase.from("profiles").select("is_frozen").eq("id", userId).maybeSingle();
     if (me?.is_frozen) throw new Error("Conta congelada. Entre em contato com o suporte.");
     if (data.type === "deposit") {
-      const min = Number(s.min_deposit ?? 20), max = Number(s.max_deposit ?? 10000);
+      const min = Number(s.min_deposit ?? 30), max = Number(s.max_deposit ?? 3000);
       if (data.amount < min) throw new Error(`Depósito mínimo: R$ ${min.toFixed(2)}`);
       if (data.amount > max) throw new Error(`Depósito máximo: R$ ${max.toFixed(2)}`);
     } else {
