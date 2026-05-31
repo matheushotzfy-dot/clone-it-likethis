@@ -87,7 +87,7 @@ export function DepositDialog() {
         toast.error("Falha ao gerar PIX. Tente novamente.");
         return;
       }
-      setPix({ qrCodeImage: res.qrCodeImage, copyPaste: res.copyPaste });
+      setPix({ qrCodeImage: res.qrCodeImage, copyPaste: res.copyPaste, transactionId: res.transactionId });
       toast.success("PIX gerado! Pague para creditar o saldo.");
       qc.invalidateQueries({ queryKey: ["transactions"] });
       qc.invalidateQueries({ queryKey: ["my-profile"] });
