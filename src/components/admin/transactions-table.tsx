@@ -19,6 +19,9 @@ export function TransactionsTable({ title, type }: { title: string; type: TxType
   const { data, isLoading } = useQuery({
     queryKey: ["admin-tx", type, status],
     queryFn: () => fn({ data: { type, status } }),
+    staleTime: 15_000,
+    placeholderData: keepPreviousData,
+    refetchOnWindowFocus: false,
   });
 
   const mut = useMutation({
