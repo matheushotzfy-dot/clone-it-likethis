@@ -1,96 +1,107 @@
-# Plano: Polir clone PixBet + Painel Admin
+# Plano de execução
 
-Vou fazer tudo em uma rodada longa, sem parar pra perguntar. Foco em fidelidade visual, mobile e backoffice funcional.
+## 1. Capas dos jogos (aguardando ZIP)
 
-## 1. Sidebar (desktop + mobile)
+Você vai me enviar um ZIP com as capas oficiais. Quando chegar:
+- Copio para `src/assets/games/` mantendo nomes
+- Expando `src/lib/games.ts` para ~40 jogos (Fortune Tiger, Rabbit, Dragon, Ox, Mouse, Aviator, JetX, Spaceman, Mines, Plinko X, Football X, Mine Island, Tower Rush, Caramelo Sortudo, Red Rascal, Arara da Sorte, Yo Dragon, Ze Zeus, Snoop Dogg Dollars, 7 & Hot Fruits, Wild Tiger, Fortune Garuda, Hot Pepper, Piñata Wins, Tigre da Sorte, Lucky Jaguar 500, Super 7, etc.)
+- Categorizo em: Novos Jogos, Top 10, Slots, Crash, Jogos Instantâneos, Mines, Cassino Ao Vivo, Mesas BR
 
-- Largura fixa 72px (collapsed) / 240px (expanded), fundo `--brand` (azul royal).
-- Botão toggle redondo no topo (seta verde-lima sobre azul escuro).
-- 5 "big buttons" com gradientes exatos (Missões roxo, Torneios rosa→roxo, Resgatar laranja→amarelo, Roleta verde, Bolões laranja→roxo) — ícones brancos, label só quando expandido.
-- Separador + seções colapsáveis: Esportes / Cassino / Promoções / Apps com chevron.
-- Footer da sidebar: idioma + redes sociais (ícones pequenos).
-- **Mobile**: sidebar vira drawer (Sheet) acionado por hambúrguer no header, fundo escuro com mesma estrutura, fecha ao navegar.
+**Se quiser que eu comece agora sem o ZIP**, gero as capas com IA num estilo equivalente (slot dourado/asiático/crash) — só me avisa. Por padrão vou esperar o ZIP.
 
-## 2. Header
+## 2. Layout pixel-perfect (desktop + mobile)
 
-- Mobile: logo centralizada, hambúrguer à esquerda, avatar+saldo à direita compactos, botão DEPOSITAR cheio em verde-lima.
-- Desktop: ajustar espaçamento dos links, indicador verde-lima embaixo do ativo, refresh-icon ao lado do saldo (animação rotate ao clicar), badge de notificações no avatar (número 14).
-- Dropdown do avatar com itens estilizados (Perfil, Depósito, Saque, Histórico, Sair) — fundo escuro, hover verde-lima.
+### Header
+- Desktop: logo + nav horizontal (Esportes / Cassino / Ao Vivo / Torneios / Clube X / Promoções / Indique Amigos) com indicador verde-lima sob o ativo, avatar com badge de notificação, saldo + refresh, botão DEPOSITAR azul-claro arredondado
+- Mobile: logo centralizado, hamburger à esquerda, avatar+saldo+DEPOSITAR compactos à direita (igual print 32)
 
-## 3. Páginas de transação (Depósito / Saque / Histórico)
+### Sidebar desktop (estreita ~72px com tooltip, expansível)
+Ícones na ordem exata do print 31: chevron, alvo (Missões), troféu (Torneios), presente (Resgatar), roleta verde, ingresso laranja (Bolões), e abaixo separador + ícones de ligas (cruzeiro, círculo, A, B, Sul-Americana, Libertadores, Premier, coroa)
 
-- **Depósito** (rota + dialog): tabs PIX / Crédito (Crédito desabilitado "em breve"), grid de valores rápidos R$ 20/50/100/250/500/1000 com badge HOT nos populares, input custom, botão verde-lima grande, área "Como funciona" com 3 passos, QR code mock + copia-e-cola.
-- **Saque**: form com seleção chave PIX (CPF/Email/Telefone/Aleatória), valor, validação saldo, regras (mínimo/máximo lidos das settings), status pendente.
-- **Histórico**: tabela responsiva com filtros (Todos/Depósitos/Saques/Apostas), badges de status coloridos, paginação, vazio-state ilustrado.
+### Drawer mobile (print 34)
+Botões grandes coloridos com gradiente exato:
+- Missões: roxo escuro → indigo
+- Torneios: rosa → roxo
+- Resgatar: laranja → amarelo
+- Roleta: verde escuro
+- Bolões: laranja → rosa → roxo
+- Accordion "Esportes" expandido com lista de ligas
 
-## 4. Perfil (igual print 30)
+### Bottom nav mobile (print 32/33)
+Menu / Esportes / **Clube X** (badge azul destacado no centro) / Cassino / Ao Vivo. Item ativo em verde-lima.
 
-- Layout 2 colunas (sidebar de menu vertical + conteúdo).
-- Menu: MEU PERFIL, GESTÃO DE SALDO, HISTÓRICO, EXTRATO, NOTIFICAÇÕES, INDIQUE E GANHE, PRÊMIOS, INFORME IRPF, SAIR.
-- Card grande do saldo com botões DEPOSITAR/SACAR, dados pessoais editáveis (nome, CPF, email, telefone), upload de avatar.
-- Mobile: menu vira accordion no topo.
+### Home
+- Banner duplo com separador diagonal (print 31)
+- Pills de categorias circulares verde-lima com ícones
+- Search + filtro verde-lima
+- Strip de providers pílulas escuras (PG, Pragmatic, Spribe, TaDa, SmartSoft, BGaming, Hacksaw, Spinomenal, Evoplay, Popok, NoLimit City, GalaxSys, Platipus, IronDog)
+- Top 10 carrossel horizontal com numerais gigantes verde-lima atrás dos cards
+- Seções: Novos Jogos, Slots, Crash, Jogos Instantâneos, Mines, Cassino Ao Vivo, Mesas BR — cada uma com "Ver mais"
 
-## 5. Home e demais páginas
+## 3. Aba Esportes via iframe
 
-- Top 10: números gigantes verde-lima atrás dos cards com perspectiva correta, carrossel horizontal com setas.
-- Categorias adicionais (Slots, Crash, Mesas) com "Ver mais" + scroll horizontal de cards.
-- Footer 5 colunas (Sobre, Ajuda, Legal, Pagamentos, Responsável) com selos +18, jogo responsável, badges de provedores.
-- Torneios: cards com countdown ao vivo (timer JS), prize pool, ranking.
+Você pediu pra tentar o iframe mesmo sabendo do risco:
+- `src/routes/esportes.tsx` vira full-bleed `<iframe src="https://pix.bet.br/sports" />` ocupando viewport todo
+- Mantenho header/sidebar nossos por fora
+- **Aviso real**: pix.bet quase certamente envia `X-Frame-Options: DENY` ou `Content-Security-Policy: frame-ancestors`. Se bloquear, aparece tela branca / "refused to connect" e não tem como burlar pelo frontend. Vou adicionar fallback: se detectar erro de carga em 5s, mostra botão "Abrir em nova aba"
 
-## 6. Painel Admin (NOVO)
+## 4. Integração PodPay (gateway PIX)
 
-Rota protegida `/admin/*` — só `role = 'admin'`. Layout próprio (sidebar admin escura, header com nome do admin).
+Base: `https://api.podpay.app` (prod) | `https://sandbox.podpay.app` (teste)
+Auth: header `x-api-key: sk_live_xxx` ou `sk_test_xxx`
+Valores em **centavos** (R$ 100 = 10000)
 
-Páginas:
-- **Dashboard**: KPIs (total depositado hoje/mês, total sacado, usuários novos, saldo total em conta), gráfico simples de transações últimos 30 dias.
-- **Usuários**: tabela com busca, filtros, ver detalhes (saldo, KYC, histórico de transações, bloquear/desbloquear, ajustar saldo manual).
-- **Depósitos**: lista com status (pendente/aprovado/rejeitado), botões aprovar/rejeitar (atualiza saldo automaticamente via server fn).
-- **Saques**: mesma estrutura, aprovar/rejeitar (debita saldo na aprovação, devolve na rejeição).
-- **Configurações**: depósito mínimo/máximo, saque mínimo/máximo, taxa de saque, bônus de boas-vindas, manutenção on/off.
-- **Transações**: log geral com filtros e export CSV.
+### Server functions (`src/lib/podpay.functions.ts`)
+- `createPixDeposit({ amount, cpf })` → POST `/v1/transactions` com idempotency-key, retorna `{ qrCode, copyPaste, txId }`
+- `createPixWithdrawal({ amount, pixKey })` → POST `/v1/withdrawals`
+- `getBalance()` → GET `/v1/balance` (admin)
 
-## 7. Backend
+### Server route (`src/routes/api/public/podpay-webhook.ts`)
+- Recebe webhook de status (`paid`, `failed`, `refunded`, etc.)
+- Valida assinatura/secret
+- Atualiza `transactions.status` no banco (trigger existente já credita saldo quando vira `approved`)
 
-Migrations novas:
-- `app_settings` (key/value singleton com defaults: min_deposit=20, max_deposit=10000, min_withdraw=50, max_withdraw=5000, withdrawal_fee=0, maintenance_mode=false).
-- Adicionar status `approved`/`rejected` no enum `transaction_status` se faltar.
-- Trigger: ao aprovar transaction tipo `deposit`, soma no `profiles.balance`; ao aprovar `withdrawal`, debita.
-- RLS: admin pode SELECT/UPDATE todas transactions e profiles via `has_role(auth.uid(),'admin')`.
-- Permitir UPDATE em transactions só pra admin.
+### Modal Depósito (refazer igual print 35)
+- Tab PIX (selecionada) com logo PIX, campos "Método: PIX" e "Depósito Mínimo: R$ 5" desabilitados
+- Input valor + link "Possui cupom?"
+- Grid 3x2 de presets com badges HOT amarelos (R$ 50, 250, 1.000)
+- Botão DEPOSITAR azul cheio
+- Após clicar: tela com QR code real do PodPay + copy-paste + timer
 
-Server functions (`src/lib/admin.functions.ts`):
-- `listUsers`, `getUserDetail`, `adjustBalance`
-- `listTransactions(filter)`, `approveTransaction(id)`, `rejectTransaction(id)`
-- `getSettings`, `updateSettings`
-- `getDashboardKPIs`
-Todas com middleware que checa `has_role(userId,'admin')`.
+### Página Saque
+- Form com seleção tipo de chave PIX (CPF/email/telefone/aleatória)
+- Validação saldo, min/max das settings, taxa
+- Cria withdrawal no PodPay quando admin aprova
 
-Server functions usuário:
-- `createDeposit({amount})` — valida contra settings, cria pending.
-- `requestWithdrawal({amount, pix_key})` — valida saldo+settings, cria pending.
+### Secrets necessários
+Vou pedir via `add_secret` quando começarmos: `PODPAY_API_KEY` e `PODPAY_WEBHOOK_SECRET`.
 
-## 8. Mobile polish (toda a app)
+## 5. Refino completo das modais e páginas auth
 
-- Header sticky, sidebar drawer, bottom-tab opcional (Início / Cassino / Depósito / Perfil) só em <768px.
-- Banners: 1 por vez no mobile, swipe.
-- Cards de jogo: grid 3 colunas no mobile, scroll horizontal nas seções "Top 10".
-- Dialogs: full-screen no mobile, padding seguro pra notch.
-- Touch targets ≥44px em todos botões/inputs.
+- **Login/Registro**: 2 colunas com imagem promo à direita, campos limpos, "Esqueci senha", divisor "ou" + botão Google
+- **Perfil**: layout 2 colunas — menu vertical (Dados, Saldo, Documentos, Segurança, Histórico) + conteúdo. Mobile vira accordion
+- **Carteira**: card grande de saldo (real + bônus), botões Depositar/Sacar, últimas 5 transações
+- **Histórico**: tabela responsiva, filtros (tipo, status, data), paginação
 
-## Como o usuário promove alguém a admin
+## 6. Painel admin — adicionar config PodPay
 
-Após login, rodar manualmente no SQL: `update user_roles set role='admin' where user_id=...`. Vou deixar instrução no chat de qual ID usar (ou crio uma página dev temporária pra promover via UI — confirmar depois).
+Em `/admin/configuracoes`: campos para ambiente (live/sandbox), exibir status da chave (mascarada), botão de teste de conexão.
 
-## Arquivos principais a criar/editar
+---
 
-- Editar: `header.tsx`, `app-sidebar.tsx`, `banner-carousel.tsx`, `site-shell.tsx`, `styles.css`, `routes/_authenticated/perfil.tsx`, `deposito.tsx`, `saque.tsx`, `historico.tsx`, `routes/torneios.tsx`, `routes/index.tsx`, `components/layout/footer.tsx`.
-- Criar: `components/layout/mobile-bottom-nav.tsx`, `components/layout/mobile-drawer.tsx`, `components/admin/admin-shell.tsx`, `components/admin/kpi-card.tsx`, `routes/admin.tsx` (layout), `routes/admin/index.tsx`, `users.tsx`, `users.$id.tsx`, `depositos.tsx`, `saques.tsx`, `transacoes.tsx`, `configuracoes.tsx`, `lib/admin.functions.ts`, `lib/transactions.functions.ts`, `lib/settings.functions.ts`.
-- Migrations: `app_settings` + policies admin + trigger de aprovação.
+## Ordem de execução
 
-## Escopo fora
+1. Esperar ZIP de capas (em paralelo: começo header/sidebar/mobile pois não dependem)
+2. Header desktop + mobile refinado
+3. Sidebar desktop + drawer mobile com gradientes exatos
+4. Bottom nav mobile com Clube X destacado
+5. Home: banners, pills, providers, Top 10, todas seções
+6. Integrar capas do ZIP + expandir lib/games.ts
+7. Iframe esportes + fallback
+8. PodPay: secrets, server functions, webhook, modal depósito com QR real
+9. Saque com PodPay
+10. Polimento perfil, carteira, histórico, admin
 
-- Integração real com gateway PIX (continua mock — aprovação manual via admin simula o callback).
-- KYC real (apenas campo status).
-- Jogos jogáveis (continuam só capas).
+**Antes de começar etapa 8** vou solicitar `PODPAY_API_KEY` via add_secret.
 
-Confirma que posso seguir nessa direção?
+Posso seguir?
