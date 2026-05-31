@@ -32,7 +32,8 @@ export function Header() {
     queryKey: ["my-profile"],
     queryFn: () => fetchProfile(),
     enabled: !!user,
-    refetchOnWindowFocus: true,
+    staleTime: 20_000,
+    refetchOnWindowFocus: false,
   });
 
   const balance = Number(profile?.balance ?? 0);
@@ -95,7 +96,7 @@ export function Header() {
               <DropdownMenuTrigger asChild>
                 <button className="relative size-9 md:size-10 rounded-full bg-brand-2 hover:bg-primary hover:text-primary-foreground transition-colors flex items-center justify-center text-white font-bold border-2 border-primary text-sm">
                   {(profile?.username?.[0] ?? user.email?.[0] ?? "U").toUpperCase()}
-                  <span className="absolute -top-1 -right-1 size-4 rounded-full bg-destructive text-white text-[10px] font-bold flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 size-4 rounded-full bg-destructive text-white text-[10px] font-bold flex items-center justify-center pointer-events-none">
                     1
                   </span>
                 </button>
