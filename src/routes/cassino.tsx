@@ -46,7 +46,7 @@ function Page() {
           ))}
         </div>
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-          {filtered.map((g) => <GameCard key={g.id} game={g} />)}
+          {filtered.map((g, i) => <GameCard key={g.id} game={g} priority={i < 12} />)}
         </div>
       </div>
     </SiteShell>
