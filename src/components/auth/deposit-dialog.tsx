@@ -5,7 +5,8 @@ import { ArrowLeft, Copy, QrCode, CheckCircle2, ShieldCheck, Zap, Gift, Clock } 
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createTransaction, getMyProfile } from "@/lib/profile.functions";
+import { getMyProfile } from "@/lib/profile.functions";
+import { createPodPayPixDeposit } from "@/lib/podpay.functions";
 import { getSettings } from "@/lib/settings.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
