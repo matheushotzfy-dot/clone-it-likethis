@@ -17,7 +17,7 @@ function Page() {
   const upsertFn = useServerFn(upsertBanner);
   const delFn = useServerFn(deleteBanner);
   const qc = useQueryClient();
-  const { data, isLoading } = useQuery({ queryKey: ["admin-banners"], queryFn: () => listFn() });
+  const { data, isLoading } = useQuery({ queryKey: ["admin-banners"], queryFn: () => listFn(), staleTime: 30_000, refetchOnWindowFocus: false });
 
   const [editing, setEditing] = useState<Partial<Banner> | null>(null);
   const [uploading, setUploading] = useState(false);
