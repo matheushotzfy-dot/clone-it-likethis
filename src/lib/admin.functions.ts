@@ -46,6 +46,28 @@ export const getDashboardKPIs = createServerFn({ method: "GET" })
     };
   });
 
+async function fetchEmailMap(ids: string[]): Promise<Map<string, string>> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const map = new Map<string, string>();
+  if (!ids.length) return map;
+  const wanted = new Set(ids);
+  let page = 1;
+  while (wanted.size > 0 && page <= 25) {
+    const res = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 200 });
+    const users = res.data?.users ?? [];
+    if (!users.length) break;
+    for (const u of users) {
+      if (wanted.has(u.id)) {
+        map.set(u.id, u.email ?? "");
+        wanted.delete(u.id);
+      }
+    }
+    if (users.length < 200) break;
+    page++;
+  }
+  return map;
+}
+
 export const listUsers = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ search: z.string().optional() }).parse(d))
@@ -59,7 +81,9 @@ export const listUsers = createServerFn({ method: "POST" })
     }
     const { data: users, error } = await q;
     if (error) throw new Error(error.message);
-    return users ?? [];
+    const list = users ?? [];
+    const emails = await fetchEmailMap(list.map((u: any) => u.id));
+    return list.map((u: any) => ({ ...u, email: emails.get(u.id) ?? "" }));
   });
 
 export const getUserDetail = createServerFn({ method: "POST" })
@@ -72,7 +96,12 @@ export const getUserDetail = createServerFn({ method: "POST" })
       supabase.from("profiles").select("*").eq("id", data.id).maybeSingle(),
       supabase.from("transactions").select("*").eq("user_id", data.id).order("created_at", { ascending: false }).limit(100),
     ]);
-    return { profile, transactions: txs ?? [] };
+    let email = "";
+    if (profile) {
+      const emails = await fetchEmailMap([data.id]);
+      email = emails.get(data.id) ?? "";
+    }
+    return { profile: profile ? { ...profile, email } : null, transactions: txs ?? [] };
   });
 
 export const adjustBalance = createServerFn({ method: "POST" })
@@ -116,9 +145,14 @@ export const listTransactions = createServerFn({ method: "POST" })
     const { data: tx } = await q;
     if (!tx?.length) return [];
     const userIds = [...new Set(tx.map(t => t.user_id))];
-    const { data: users } = await supabase.from("profiles").select("id,username,full_name").in("id", userIds);
-    const map = new Map((users ?? []).map(u => [u.id, u]));
-    return tx.map(t => ({ ...t, user: map.get(t.user_id) ?? null }));
+    const { data: users } = await supabase.from("profiles").select("id,username,full_name,cpf,phone").in("id", userIds);
+    const map = new Map((users ?? []).map((u: any) => [u.id, u]));
+    const emails = await fetchEmailMap(userIds);
+    return tx.map(t => {
+      const u: any = map.get(t.user_id) ?? null;
+      const email = emails.get(t.user_id) ?? "";
+      return { ...t, user: u ? { ...u, email } : { email } };
+    });
   });
 
 export const setTransactionStatus = createServerFn({ method: "POST" })
