@@ -22,7 +22,7 @@ function Section({ title, items }: { title: string; items: typeof games }) {
         </Link>
       </div>
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-        {items.slice(0, 16).map((g) => <GameCard key={g.id} game={g} />)}
+        {items.slice(0, 16).map((g, i) => <GameCard key={`${g.id}-${i}`} game={g} />)}
       </div>
     </section>
   );
@@ -58,11 +58,11 @@ function Index() {
         {/* Top 10 horizontal scroll */}
         <section className="space-y-3">
           <div className="flex gap-4 md:gap-6 overflow-x-auto no-scrollbar pb-2 pl-6">
-            {top10.map((g, i) => (
-              <div key={i} className="shrink-0 w-32 md:w-36">
-                <GameCard game={g} rank={i + 1} />
-              </div>
-            ))}
+          {top10.map((g, i) => (
+            <div key={`top-${g.id}-${i}`} className="shrink-0 w-32 md:w-36">
+              <GameCard game={g} rank={i + 1} />
+            </div>
+          ))}
           </div>
         </section>
 
