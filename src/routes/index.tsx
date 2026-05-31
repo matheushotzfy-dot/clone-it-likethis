@@ -8,7 +8,7 @@ import { ProviderStrip } from "@/components/casino/provider-strip";
 import { games } from "@/lib/games";
 
 export const Route = createFileRoute("/")({
-  head: () => ({ meta: [{ title: "PIXBET — Cassino e Apostas Online" }] }),
+  head: () => ({ meta: [{ title: "SANTOSBET — Cassino e Apostas Online" }] }),
   component: Index,
 });
 

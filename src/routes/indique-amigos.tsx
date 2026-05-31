@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/indique-amigos")({
-  head: () => ({ meta: [{ title: "Indique Amigos — PIXBET" }] }),
+  head: () => ({ meta: [{ title: "Indique Amigos — SANTOSBET" }] }),
   component: Page,
 });
 

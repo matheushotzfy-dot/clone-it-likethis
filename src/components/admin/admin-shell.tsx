@@ -21,7 +21,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen flex w-full bg-background text-foreground">
       <aside className="hidden md:flex w-60 flex-col bg-brand border-r border-white/10 sticky top-0 h-screen">
         <div className="px-5 h-16 flex items-center border-b border-white/10">
-          <span className="text-white font-black text-xl">PIX<span className="text-primary">bet</span></span>
+          <span className="text-white font-black text-xl">SANTOS<span className="text-primary">BET</span></span>
           <span className="ml-2 text-[10px] uppercase font-bold bg-primary text-primary-foreground px-1.5 py-0.5 rounded">ADMIN</span>
         </div>
         <nav className="flex-1 p-2 space-y-0.5">

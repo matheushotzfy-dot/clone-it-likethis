@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { SiteShell } from "@/components/layout/site-shell";
 
 export const Route = createFileRoute("/legal/termos")({
-  head: () => ({ meta: [{ title: "Termos de Uso — PIXBET" }] }),
+  head: () => ({ meta: [{ title: "Termos de Uso — SANTOSBET" }] }),
   component: () => (
     <SiteShell>
       <div className="max-w-3xl mx-auto px-4 py-10 prose prose-invert">

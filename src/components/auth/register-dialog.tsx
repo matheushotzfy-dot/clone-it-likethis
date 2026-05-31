@@ -82,17 +82,14 @@ export function RegisterDialog() {
 
   return (
     <Dialog open={current === "register"} onOpenChange={(o) => !o && close()}>
-      <DialogContent className="p-0 max-w-[860px] w-full bg-brand border-brand overflow-hidden gap-0 flex flex-col md:flex-row h-full md:h-auto max-h-screen md:max-h-[90vh]">
-        <div className="hidden md:block w-[360px]">
-          <PromoSide />
-        </div>
-        
+      <DialogContent className="p-0 max-w-[860px] w-[calc(100vw-1rem)] sm:w-[calc(100vw-2rem)] bg-brand border-brand overflow-hidden gap-0 flex flex-col md:flex-row max-h-[92vh] sm:rounded-2xl">
+        <PromoSide />
+
         <div className="flex-1 p-5 md:p-8 bg-brand text-white overflow-y-auto">
           <div className="flex items-start justify-between mb-6">
-            <span className="text-2xl font-extrabold flex items-center gap-0.5">
-              <span className="text-white">pi</span>
-              <span className="text-primary">x</span>
-              <span className="text-white">bet</span>
+            <span className="text-xl md:text-2xl font-black flex items-center gap-0.5">
+              <span className="text-white">SANTOS</span>
+              <span className="text-primary">BET</span>
             </span>
             <div className="text-right text-xs">
               <p className="text-white/60">Já tem uma conta?</p>

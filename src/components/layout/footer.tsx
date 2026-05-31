@@ -57,7 +57,7 @@ export function Footer() {
           <Logo />
         </div>
         <p className="mt-4 text-xs text-muted-foreground text-center">
-          © {new Date().getFullYear()} PIXBET Clone Demo — Apenas para estudo.
+          © {new Date().getFullYear()} SANTOSBET Clone Demo — Apenas para estudo.
         </p>
       </div>
     </footer>

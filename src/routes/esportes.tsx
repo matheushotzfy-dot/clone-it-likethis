@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 
 export const Route = createFileRoute("/esportes")({
-  head: () => ({ meta: [{ title: "Esportes — PIXBET" }] }),
+  head: () => ({ meta: [{ title: "Esportes — SANTOSBET" }] }),
   component: Page,
 });
 
