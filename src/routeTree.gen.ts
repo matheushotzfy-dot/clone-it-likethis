@@ -33,6 +33,7 @@ import { Route as AuthenticatedSaqueRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
 import { Route as AuthenticatedDepositoRouteImport } from './routes/_authenticated/deposito'
+import { Route as ApiPublicPodpayWebhookRouteImport } from './routes/api/public/podpay-webhook'
 import { Route as AdminUsuariosIdRouteImport } from './routes/admin/usuarios.$id'
 
 const TorneiosRoute = TorneiosRouteImport.update({
@@ -154,6 +155,11 @@ const AuthenticatedDepositoRoute = AuthenticatedDepositoRouteImport.update({
   path: '/deposito',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const ApiPublicPodpayWebhookRoute = ApiPublicPodpayWebhookRouteImport.update({
+  id: '/api/public/podpay-webhook',
+  path: '/api/public/podpay-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminUsuariosIdRoute = AdminUsuariosIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -185,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/legal/termos': typeof LegalTermosRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/usuarios/$id': typeof AdminUsuariosIdRoute
+  '/api/public/podpay-webhook': typeof ApiPublicPodpayWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -210,6 +217,7 @@ export interface FileRoutesByTo {
   '/legal/termos': typeof LegalTermosRoute
   '/admin': typeof AdminIndexRoute
   '/admin/usuarios/$id': typeof AdminUsuariosIdRoute
+  '/api/public/podpay-webhook': typeof ApiPublicPodpayWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -238,6 +246,7 @@ export interface FileRoutesById {
   '/legal/termos': typeof LegalTermosRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/usuarios/$id': typeof AdminUsuariosIdRoute
+  '/api/public/podpay-webhook': typeof ApiPublicPodpayWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -266,6 +275,7 @@ export interface FileRouteTypes {
     | '/legal/termos'
     | '/admin/'
     | '/admin/usuarios/$id'
+    | '/api/public/podpay-webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -291,6 +301,7 @@ export interface FileRouteTypes {
     | '/legal/termos'
     | '/admin'
     | '/admin/usuarios/$id'
+    | '/api/public/podpay-webhook'
   id:
     | '__root__'
     | '/'
@@ -318,6 +329,7 @@ export interface FileRouteTypes {
     | '/legal/termos'
     | '/admin/'
     | '/admin/usuarios/$id'
+    | '/api/public/podpay-webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -335,6 +347,7 @@ export interface RootRouteChildren {
   LegalJogoResponsavelRoute: typeof LegalJogoResponsavelRoute
   LegalPrivacidadeRoute: typeof LegalPrivacidadeRoute
   LegalTermosRoute: typeof LegalTermosRoute
+  ApiPublicPodpayWebhookRoute: typeof ApiPublicPodpayWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -507,6 +520,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDepositoRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/api/public/podpay-webhook': {
+      id: '/api/public/podpay-webhook'
+      path: '/api/public/podpay-webhook'
+      fullPath: '/api/public/podpay-webhook'
+      preLoaderRoute: typeof ApiPublicPodpayWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/usuarios/$id': {
       id: '/admin/usuarios/$id'
       path: '/$id'
@@ -582,6 +602,7 @@ const rootRouteChildren: RootRouteChildren = {
   LegalJogoResponsavelRoute: LegalJogoResponsavelRoute,
   LegalPrivacidadeRoute: LegalPrivacidadeRoute,
   LegalTermosRoute: LegalTermosRoute,
+  ApiPublicPodpayWebhookRoute: ApiPublicPodpayWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
