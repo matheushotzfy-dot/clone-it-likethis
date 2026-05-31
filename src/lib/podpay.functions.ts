@@ -36,7 +36,7 @@ async function podpay<T>(
 }
 
 const depositSchema = z.object({
-  amount: z.number().min(5).max(10000),
+  amount: z.number().min(30).max(3000),
 });
 
 type PixTransaction = {
