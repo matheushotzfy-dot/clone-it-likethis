@@ -5,7 +5,7 @@ import { ArrowLeft, Copy, QrCode, CheckCircle2, ShieldCheck, Zap, Gift, Clock } 
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getMyProfile } from "@/lib/profile.functions";
+import { getMyProfile, listMyTransactions } from "@/lib/profile.functions";
 import { createPodPayPixDeposit } from "@/lib/podpay.functions";
 import { getSettings } from "@/lib/settings.functions";
 import { useAuth } from "@/hooks/use-auth";
@@ -21,19 +21,41 @@ export function DepositDialog() {
   const [amount, setAmount] = useState(50);
   const [cpfInput, setCpfInput] = useState("");
   const [step, setStep] = useState<"form" | "pix">("form");
-  const [pix, setPix] = useState<{ qrCodeImage: string; copyPaste: string } | null>(null);
+  const [pix, setPix] = useState<{ qrCodeImage: string; copyPaste: string; transactionId: string } | null>(null);
   const createPix = useServerFn(createPodPayPixDeposit);
   const fetchSettings = useServerFn(getSettings);
   const fetchProfile = useServerFn(getMyProfile);
+  const fetchTransactions = useServerFn(listMyTransactions);
   const qc = useQueryClient();
   const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: () => fetchSettings(), enabled: !!user });
-  const { data: profile, isLoading: profileLoading } = useQuery({ queryKey: ["my-profile"], queryFn: () => fetchProfile(), enabled: !!user && current === "deposit", refetchInterval: 5000 });
+  const { data: profile, isLoading: profileLoading } = useQuery({ queryKey: ["my-profile"], queryFn: () => fetchProfile(), enabled: !!user && current === "deposit", refetchInterval: 4000 });
+  const { data: txs } = useQuery({
+    queryKey: ["my-tx"],
+    queryFn: () => fetchTransactions(),
+    enabled: !!user && current === "deposit" && step === "pix" && !!pix,
+    refetchInterval: 3000,
+  });
   const min = settings?.min_deposit ?? 20;
   const max = settings?.max_deposit ?? 10000;
   const profileCpf = (profile?.cpf || "").replace(/\D/g, "");
   const hasCpfOnFile = profileCpf.length === 11;
   const needsCpf = !profileLoading && !hasCpfOnFile;
   const cpfValid = hasCpfOnFile || validateCPF(cpfInput);
+
+  // Auto-close when the generated PIX is approved
+  useEffect(() => {
+    if (step !== "pix" || !pix || !txs) return;
+    const found = txs.find((t: any) => t.id === pix.transactionId);
+    if (found && found.status === "approved") {
+      toast.success("Pagamento confirmado! Saldo creditado.");
+      qc.invalidateQueries({ queryKey: ["my-profile"] });
+      qc.invalidateQueries({ queryKey: ["transactions"] });
+      close();
+    } else if (found && found.status === "rejected") {
+      toast.error("Pagamento recusado.");
+      close();
+    }
+  }, [txs, step, pix, qc, close]);
 
   // Bonus countdown
   const bonusExpiresAt = profile?.bonus_expires_at ? new Date(profile.bonus_expires_at).getTime() : 0;
@@ -65,7 +87,7 @@ export function DepositDialog() {
         toast.error("Falha ao gerar PIX. Tente novamente.");
         return;
       }
-      setPix({ qrCodeImage: res.qrCodeImage, copyPaste: res.copyPaste });
+      setPix({ qrCodeImage: res.qrCodeImage, copyPaste: res.copyPaste, transactionId: res.transactionId });
       toast.success("PIX gerado! Pague para creditar o saldo.");
       qc.invalidateQueries({ queryKey: ["transactions"] });
       qc.invalidateQueries({ queryKey: ["my-profile"] });
