@@ -11,7 +11,7 @@ export const Route = createFileRoute("/admin/pixel")({
 
 function PixelPage() {
   const fn = useServerFn(listDepositorsPixel);
-  const { data, isLoading } = useQuery({ queryKey: ["admin-pixel"], queryFn: () => fn() });
+  const { data, isLoading } = useQuery({ queryKey: ["admin-pixel"], queryFn: () => fn(), staleTime: 30_000, refetchOnWindowFocus: false });
 
   function exportCsv() {
     if (!data?.length) return;
