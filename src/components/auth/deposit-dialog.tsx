@@ -102,7 +102,7 @@ export function DepositDialog() {
   const hasSelectedAmount = amount >= min;
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && close()}>
+    <Dialog open={open} onOpenChange={(o) => !o && (step !== "pix" || pixCopied) && close()}>
       <DialogContent className="max-w-[500px] w-[calc(100vw-1rem)] sm:w-full bg-brand border-white/10 text-white p-0 overflow-hidden shadow-2xl max-h-[95vh] sm:max-h-[92vh] flex flex-col sm:rounded-2xl">
         <div className="relative flex flex-col min-h-0 flex-1">
           <div className="p-4 sm:p-6 border-b border-white/5 flex items-center justify-between bg-brand-2/50 shrink-0">
