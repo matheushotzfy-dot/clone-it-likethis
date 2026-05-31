@@ -9,6 +9,7 @@ import { getMyProfile } from "@/lib/profile.functions";
 import { createPodPayPixDeposit } from "@/lib/podpay.functions";
 import { getSettings } from "@/lib/settings.functions";
 import { useAuth } from "@/hooks/use-auth";
+import { maskCPF, validateCPF } from "@/lib/validations";
 import { cn } from "@/lib/utils";
 
 const presets = [20, 50, 100, 250, 500, 1000];
@@ -18,6 +19,7 @@ export function DepositDialog() {
   const { current, close } = useAuthDialog();
   const { user } = useAuth();
   const [amount, setAmount] = useState(50);
+  const [cpfInput, setCpfInput] = useState("");
   const [step, setStep] = useState<"form" | "pix">("form");
   const [pix, setPix] = useState<{ qrCodeImage: string; copyPaste: string } | null>(null);
   const createPix = useServerFn(createPodPayPixDeposit);
@@ -25,9 +27,13 @@ export function DepositDialog() {
   const fetchProfile = useServerFn(getMyProfile);
   const qc = useQueryClient();
   const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: () => fetchSettings(), enabled: !!user });
-  const { data: profile } = useQuery({ queryKey: ["my-profile"], queryFn: () => fetchProfile(), enabled: !!user && current === "deposit", refetchInterval: 5000 });
+  const { data: profile, isLoading: profileLoading } = useQuery({ queryKey: ["my-profile"], queryFn: () => fetchProfile(), enabled: !!user && current === "deposit", refetchInterval: 5000 });
   const min = settings?.min_deposit ?? 20;
   const max = settings?.max_deposit ?? 10000;
+  const profileCpf = (profile?.cpf || "").replace(/\D/g, "");
+  const hasCpfOnFile = profileCpf.length === 11;
+  const needsCpf = !profileLoading && !hasCpfOnFile;
+  const cpfValid = hasCpfOnFile || validateCPF(cpfInput);
 
   // Bonus countdown
   const bonusExpiresAt = profile?.bonus_expires_at ? new Date(profile.bonus_expires_at).getTime() : 0;
@@ -47,20 +53,25 @@ export function DepositDialog() {
     if (current === "deposit") { 
       setStep("form"); 
       setPix(null);
+      setCpfInput("");
       setAmount(Math.max(min, 50)); 
     } 
   }, [current, min]);
 
   const mut = useMutation({
-    mutationFn: () => createPix({ data: { amount, cpf: profile?.cpf ?? undefined } }),
+    mutationFn: () => createPix({ data: { amount, cpf: hasCpfOnFile ? undefined : cpfInput.replace(/\D/g, "") } }),
     onSuccess: (res) => {
+      if (!res.copyPaste) {
+        toast.error("Falha ao gerar PIX. Tente novamente.");
+        return;
+      }
       setPix({ qrCodeImage: res.qrCodeImage, copyPaste: res.copyPaste });
       toast.success("PIX gerado! Pague para creditar o saldo.");
       qc.invalidateQueries({ queryKey: ["transactions"] });
       qc.invalidateQueries({ queryKey: ["my-profile"] });
       setStep("pix");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(e.message || "Erro ao gerar PIX"),
   });
 
   return (
@@ -177,6 +188,23 @@ export function DepositDialog() {
                   ))}
                 </div>
 
+                {/* CPF fallback (only if not on file) */}
+                {needsCpf && (
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-white/60 uppercase tracking-widest ml-1">CPF do titular</label>
+                    <input
+                      value={cpfInput}
+                      onChange={(e) => setCpfInput(maskCPF(e.target.value))}
+                      placeholder="000.000.000-00"
+                      inputMode="numeric"
+                      className="w-full h-12 px-4 rounded-xl bg-brand-2 border-2 border-white/5 focus:border-primary text-white placeholder:text-white/30 focus:outline-none text-base"
+                    />
+                    {cpfInput.length > 0 && !validateCPF(cpfInput) && (
+                      <p className="text-xs text-destructive ml-1">CPF inválido</p>
+                    )}
+                  </div>
+                )}
+
                 {/* Trust Badges */}
                 <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10 space-y-3">
                   <div className="flex items-center gap-3 text-xs text-white/80">
@@ -192,10 +220,10 @@ export function DepositDialog() {
                 {/* Submit Button */}
                 <button
                   onClick={() => mut.mutate()}
-                  disabled={mut.isPending || amount < min || amount > max}
+                  disabled={mut.isPending || amount < min || amount > max || !cpfValid || profileLoading}
                   className="w-full h-16 rounded-2xl bg-primary text-primary-foreground font-black uppercase text-base tracking-widest hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 shadow-xl shadow-primary/20"
                 >
-                  {mut.isPending ? "Processando..." : `Gerar PIX de R$ ${amount.toLocaleString('pt-BR')}`}
+                  {mut.isPending ? "Processando..." : profileLoading ? "Carregando..." : `Gerar PIX de R$ ${amount.toLocaleString('pt-BR')}`}
                 </button>
               </div>
             ) : (
