@@ -1,92 +1,190 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getUserDetail, adjustBalance } from "@/lib/admin.functions";
-import { useState } from "react";
+import { getUserDetail, adjustBalance, updateUserAdmin, deleteUserAdmin, setTransactionStatus } from "@/lib/admin.functions";
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { Snowflake, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/admin/usuarios/$id")({ component: Page });
 
 function Page() {
   const { id } = Route.useParams();
+  const navigate = useNavigate();
   const fn = useServerFn(getUserDetail);
   const adjust = useServerFn(adjustBalance);
+  const updFn = useServerFn(updateUserAdmin);
+  const delFn = useServerFn(deleteUserAdmin);
+  const txStatusFn = useServerFn(setTransactionStatus);
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({ queryKey: ["admin-user", id], queryFn: () => fn({ data: { id } }) });
+
   const [delta, setDelta] = useState("");
   const [reason, setReason] = useState("");
+  const [form, setForm] = useState<any>(null);
 
-  const mut = useMutation({
+  useEffect(() => {
+    if (data?.profile) setForm({
+      full_name: data.profile.full_name ?? "",
+      username: data.profile.username ?? "",
+      cpf: data.profile.cpf ?? "",
+      phone: data.profile.phone ?? "",
+      kyc_status: data.profile.kyc_status ?? "pending",
+      is_frozen: !!data.profile.is_frozen,
+    });
+  }, [data?.profile]);
+
+  const adjustMut = useMutation({
     mutationFn: () => adjust({ data: { userId: id, delta: Number(delta), reason } }),
     onSuccess: () => { toast.success("Saldo ajustado"); setDelta(""); setReason(""); qc.invalidateQueries({ queryKey: ["admin-user", id] }); },
     onError: (e: any) => toast.error(e.message),
   });
 
-  if (isLoading || !data) return <div>Carregando...</div>;
+  const saveMut = useMutation({
+    mutationFn: () => updFn({ data: { userId: id, ...form } }),
+    onSuccess: () => { toast.success("Dados atualizados"); qc.invalidateQueries({ queryKey: ["admin-user", id] }); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const freezeMut = useMutation({
+    mutationFn: (v: boolean) => updFn({ data: { userId: id, is_frozen: v } }),
+    onSuccess: (_d, v) => { toast.success(v ? "Conta congelada" : "Conta descongelada"); qc.invalidateQueries({ queryKey: ["admin-user", id] }); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const delMut = useMutation({
+    mutationFn: () => delFn({ data: { userId: id } }),
+    onSuccess: () => { toast.success("Usuário apagado"); navigate({ to: "/admin/usuarios" }); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const txMut = useMutation({
+    mutationFn: (vars: { id: string; status: "approved" | "rejected" }) => txStatusFn({ data: vars }),
+    onSuccess: () => { toast.success("Transação atualizada"); qc.invalidateQueries({ queryKey: ["admin-user", id] }); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  if (isLoading || !data || !form) return <div>Carregando...</div>;
   const p = data.profile;
   if (!p) return <div>Usuário não encontrado. <Link to="/admin/usuarios" className="text-primary">Voltar</Link></div>;
 
   return (
     <div className="space-y-6">
-      <Link to="/admin/usuarios" className="text-sm text-primary">← Voltar</Link>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-card border border-border rounded-xl p-5 md:col-span-2">
-          <h2 className="text-xl font-bold mb-3">{p.full_name || p.username || "Sem nome"}</h2>
-          <dl className="grid grid-cols-2 gap-3 text-sm">
-            <div><dt className="text-muted-foreground">Email</dt><dd className="font-mono text-xs break-all">{p.email || "—"}</dd></div>
-            <div><dt className="text-muted-foreground">Usuário</dt><dd className="font-mono">{p.username ?? "—"}</dd></div>
-            <div><dt className="text-muted-foreground">CPF</dt><dd className="font-mono">{p.cpf ?? "—"}</dd></div>
-            <div><dt className="text-muted-foreground">Telefone</dt><dd className="font-mono">{p.phone ?? "—"}</dd></div>
-            <div><dt className="text-muted-foreground">KYC</dt><dd className="uppercase font-bold">{p.kyc_status}</dd></div>
-            <div><dt className="text-muted-foreground">Cadastro</dt><dd>{new Date(p.created_at).toLocaleString("pt-BR")}</dd></div>
-            <div><dt className="text-muted-foreground">Saldo bônus</dt><dd>R$ {Number(p.bonus_balance).toFixed(2).replace(".", ",")}</dd></div>
-            <div><dt className="text-muted-foreground">Bônus usado?</dt><dd>{p.bonus_used ? "Sim" : "Não"}</dd></div>
-            <div className="col-span-2 border-t border-border pt-3 mt-1"><dt className="text-muted-foreground text-[10px] uppercase font-bold mb-1">Origem / Tracking</dt></div>
-            <div><dt className="text-muted-foreground">UTM Source</dt><dd>{p.utm_source ?? "—"}</dd></div>
-            <div><dt className="text-muted-foreground">UTM Medium</dt><dd>{p.utm_medium ?? "—"}</dd></div>
-            <div><dt className="text-muted-foreground">UTM Campaign</dt><dd>{p.utm_campaign ?? "—"}</dd></div>
-            <div><dt className="text-muted-foreground">UTM Content</dt><dd>{p.utm_content ?? "—"}</dd></div>
-            <div><dt className="text-muted-foreground">Referrer</dt><dd className="text-xs break-all">{p.referrer ?? "—"}</dd></div>
-            <div><dt className="text-muted-foreground">IP</dt><dd className="font-mono text-xs">{p.signup_ip ?? "—"}</dd></div>
-            <div className="col-span-2"><dt className="text-muted-foreground">User Agent</dt><dd className="text-xs break-all">{p.signup_user_agent ?? "—"}</dd></div>
-            <div><dt className="text-muted-foreground">fbp</dt><dd className="font-mono text-[10px] break-all">{p.fbp ?? "—"}</dd></div>
-            <div><dt className="text-muted-foreground">fbc</dt><dd className="font-mono text-[10px] break-all">{p.fbc ?? "—"}</dd></div>
-          </dl>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <Link to="/admin/usuarios" className="text-sm text-primary">← Voltar</Link>
+        <div className="flex gap-2">
+          <Button variant={form.is_frozen ? "default" : "outline"} onClick={() => freezeMut.mutate(!form.is_frozen)}>
+            <Snowflake className="size-4 mr-2" />
+            {form.is_frozen ? "Descongelar" : "Congelar conta"}
+          </Button>
+          <Button variant="destructive" onClick={() => { if (confirm("Apagar definitivamente este usuário e todos os dados? Esta ação NÃO pode ser desfeita.")) delMut.mutate(); }}>
+            <Trash2 className="size-4 mr-2" /> Apagar usuário
+          </Button>
         </div>
-        <div className="bg-card border border-border rounded-xl p-5">
-          <div className="text-xs uppercase font-bold text-muted-foreground">Saldo atual</div>
-          <div className="text-3xl font-black text-primary">R$ {Number(p.balance).toFixed(2).replace(".", ",")}</div>
-          <div className="mt-4 space-y-2">
+      </div>
+
+      {p.is_frozen && (
+        <div className="bg-destructive/10 border border-destructive/40 text-destructive rounded-lg px-4 py-2 text-sm font-bold">
+          ⚠️ Conta congelada — usuário não consegue depositar nem sacar
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-card border border-border rounded-xl p-5 md:col-span-2 space-y-4">
+          <h2 className="text-xl font-bold">Dados do usuário</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+            <Field label="Email (somente leitura)"><Input value={p.email || "—"} readOnly className="bg-muted/30" /></Field>
+            <Field label="Nome completo"><Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></Field>
+            <Field label="Username"><Input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} /></Field>
+            <Field label="CPF"><Input value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value })} /></Field>
+            <Field label="Telefone"><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
+            <Field label="KYC">
+              <select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={form.kyc_status} onChange={(e) => setForm({ ...form, kyc_status: e.target.value })}>
+                <option value="pending">Pendente</option>
+                <option value="approved">Aprovado</option>
+                <option value="rejected">Rejeitado</option>
+              </select>
+            </Field>
+          </div>
+          <Button onClick={() => saveMut.mutate()} disabled={saveMut.isPending}>
+            {saveMut.isPending ? "Salvando..." : "Salvar alterações"}
+          </Button>
+
+          <details className="text-xs text-muted-foreground">
+            <summary className="cursor-pointer font-bold uppercase tracking-wider mt-3">Tracking / origem</summary>
+            <dl className="grid grid-cols-2 gap-2 mt-3">
+              <div><dt>UTM Source</dt><dd>{p.utm_source ?? "—"}</dd></div>
+              <div><dt>UTM Medium</dt><dd>{p.utm_medium ?? "—"}</dd></div>
+              <div><dt>UTM Campaign</dt><dd>{p.utm_campaign ?? "—"}</dd></div>
+              <div><dt>UTM Content</dt><dd>{p.utm_content ?? "—"}</dd></div>
+              <div><dt>Referrer</dt><dd className="break-all">{p.referrer ?? "—"}</dd></div>
+              <div><dt>IP</dt><dd className="font-mono">{p.signup_ip ?? "—"}</dd></div>
+              <div className="col-span-2"><dt>User Agent</dt><dd className="break-all">{p.signup_user_agent ?? "—"}</dd></div>
+              <div><dt>fbp</dt><dd className="font-mono break-all">{p.fbp ?? "—"}</dd></div>
+              <div><dt>fbc</dt><dd className="font-mono break-all">{p.fbc ?? "—"}</dd></div>
+              <div><dt>Cadastro</dt><dd>{new Date(p.created_at).toLocaleString("pt-BR")}</dd></div>
+            </dl>
+          </details>
+        </div>
+        <div className="bg-card border border-border rounded-xl p-5 space-y-3">
+          <div>
+            <div className="text-xs uppercase font-bold text-muted-foreground">Saldo atual</div>
+            <div className="text-3xl font-black text-primary">R$ {Number(p.balance).toFixed(2).replace(".", ",")}</div>
+          </div>
+          <div className="text-xs text-muted-foreground">
+            Bônus: R$ {Number(p.bonus_balance).toFixed(2).replace(".", ",")} · {p.bonus_used ? "usado" : "disponível"}
+          </div>
+          <div className="space-y-2 border-t border-border pt-3">
+            <div className="text-xs uppercase font-bold text-muted-foreground">Ajustar saldo</div>
             <Input placeholder="Valor (use - para debitar)" value={delta} onChange={(e) => setDelta(e.target.value)} />
             <Input placeholder="Motivo" value={reason} onChange={(e) => setReason(e.target.value)} />
-            <Button className="w-full" disabled={!delta || !reason || mut.isPending} onClick={() => mut.mutate()}>
-              {mut.isPending ? "Aplicando..." : "Ajustar saldo"}
+            <Button className="w-full" disabled={!delta || !reason || adjustMut.isPending} onClick={() => adjustMut.mutate()}>
+              {adjustMut.isPending ? "Aplicando..." : "Aplicar ajuste"}
             </Button>
           </div>
         </div>
       </div>
+
       <div className="bg-card border border-border rounded-xl overflow-x-auto">
-        <h3 className="font-bold p-4">Transações</h3>
+        <h3 className="font-bold p-4">Transações ({data.transactions.length})</h3>
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-left">
-            <tr><th className="px-4 py-2">Data</th><th className="px-4 py-2">Tipo</th><th className="px-4 py-2">Valor</th><th className="px-4 py-2">Status</th><th className="px-4 py-2">Descrição</th></tr>
+            <tr><th className="px-4 py-2">Data</th><th className="px-4 py-2">Tipo</th><th className="px-4 py-2">Valor</th><th className="px-4 py-2">Status</th><th className="px-4 py-2">Descrição</th><th className="px-4 py-2 text-right">Ações</th></tr>
           </thead>
           <tbody>
-            {data.transactions.length === 0 && (<tr><td colSpan={5} className="text-center py-6 text-muted-foreground">Sem transações</td></tr>)}
+            {data.transactions.length === 0 && (<tr><td colSpan={6} className="text-center py-6 text-muted-foreground">Sem transações</td></tr>)}
             {data.transactions.map((t: any) => (
               <tr key={t.id} className="border-t border-border">
-                <td className="px-4 py-2 text-muted-foreground">{new Date(t.created_at).toLocaleString("pt-BR")}</td>
+                <td className="px-4 py-2 text-muted-foreground text-xs">{new Date(t.created_at).toLocaleString("pt-BR")}</td>
                 <td className="px-4 py-2 capitalize">{t.type}</td>
                 <td className="px-4 py-2 font-bold">R$ {Number(t.amount).toFixed(2).replace(".", ",")}</td>
                 <td className="px-4 py-2"><StatusBadge s={t.status} /></td>
-                <td className="px-4 py-2 text-muted-foreground">{t.description}</td>
+                <td className="px-4 py-2 text-muted-foreground text-xs">{t.description}</td>
+                <td className="px-4 py-2 text-right">
+                  {t.status === "pending" && (
+                    <div className="flex gap-1 justify-end">
+                      <Button size="sm" onClick={() => txMut.mutate({ id: t.id, status: "approved" })}>Aprovar</Button>
+                      <Button size="sm" variant="outline" onClick={() => txMut.mutate({ id: t.id, status: "rejected" })}>Rejeitar</Button>
+                    </div>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="text-xs uppercase font-bold text-muted-foreground">{label}</label>
+      <div className="mt-1">{children}</div>
     </div>
   );
 }
