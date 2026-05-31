@@ -1,26 +1,37 @@
-Improve the mobile registration experience, professionalize the deposit flow, and organize games according to user preferences.
+## Plano
 
-### Phase 1: Registration Improvements
-- **CPF Validation and Masking**: Implement a mask for CPF (000.000.000-00) and add a basic checksum validation in `src/components/auth/register-dialog.tsx`.
-- **Email Domain Hints**: Add a dropdown/list of common email domains (@gmail.com, @hotmail.com, etc.) that appears when the user types '@' in the email field.
-- **Mobile UX Fixes**:
-  - Add `inputmode="numeric"` to CPF and Phone fields to trigger the numeric keyboard.
-  - Set `font-size: 16px` on all inputs to prevent automatic mobile zoom on focus.
-  - Set `overflow: hidden` on the body when dialogs are open if not already handled.
-  - Ensure the dialog content is properly scrollable and doesn't shift the screen layout.
-- **Post-Registration Logic**: Automatically trigger the `deposit` dialog after a successful registration in `RegisterDialog.tsx` and `registro.tsx`.
+### 1. Login com Email OU CPF
+- Atualizar `src/components/auth/login-dialog.tsx`: trocar campo "Email" por "Email ou CPF" (detecta automaticamente — se tiver só números, trata como CPF).
+- Criar server function `loginWithIdentifier` em `src/lib/auth.functions.ts`: se input for CPF (11 dígitos), busca o email correspondente na tabela `profiles` (via admin client) e faz signIn com esse email + senha. Se for email, login direto.
+- Validação client-side com máscara automática de CPF quando o usuário digita só números.
 
-### Phase 2: UI & Game Organization
-- **Game Categories**: Reorder categories in `src/lib/games.ts` to place "Crash Games" last.
-- **Mobile Navigation**: Simplify `CategoryPills.tsx` to be more compact on mobile, reducing the number of redundant selection elements.
-- **Home Page**: Update `src/routes/index.tsx` to ensure sections follow the new priority.
+### 2. Layout do Login (mobile + desktop)
+- Reescrever `login-dialog.tsx` e `register-dialog.tsx` com:
+  - `DialogContent` em `max-w-md` no mobile (sem `PromoSide` lateral no mobile — só aparece em `md:` pra cima).
+  - Padding reduzido, inputs maiores (h-12), botões full-width, espaçamento vertical consistente.
+  - Centralização garantida (já está `fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2`, mas vou remover qualquer wrapper que esteja quebrando).
+  - Logo do Santos no topo do dialog em alta qualidade.
 
-### Phase 3: Deposit Dialog Polishing
-- **Visual Enhancements**: Improve the `DepositDialog.tsx` layout with better spacing, clearer icons, and a more "premium" feel.
-- **Validation**: Ensure minimum/maximum deposit amounts are clearly enforced with visual feedback.
+### 3. Logo Santos em alta qualidade
+- Substituir `src/assets/santos-shield.png` pela imagem anexada (já enviada agora — 400x495 nativo, sem upscale artificial).
+- Usar `code--copy user-uploads://Santos_Futebol_Clube_logo_with_stars_and_crown.png src/assets/santos-shield.png`.
 
-### Technical Details
-- Use `lucide-react` for consistent iconography.
-- Implement CPF masking using a simple string manipulation approach in the `onChange` handler.
-- Use `useAuthDialog` context to switch between `register` and `deposit` states.
-- Ensure all inputs have `autoComplete` attributes correctly set.
+### 4. Banners — voltar pro tamanho slim
+- Restaurar proporção do banner para **~6.7:1** (igual ao print BGaming, ~1280x190).
+- Em `banner-carousel.tsx`: trocar `aspect-[16/9] sm:aspect-[5/2]` por `aspect-[16/5] sm:aspect-[20/3]` (≈6.7:1 desktop, mais alto no mobile pra não ficar minúsculo).
+- Gerar 3 novos banners (1920x288) com tema 100% Santos:
+  - **Banner 1**: Neymar com camisa preta-e-branca do Santos, fundo Vila Belmiro estilizada, badge "SANTOSBET" + CTA "APOSTE AGORA"
+  - **Banner 2**: Endrick + Neymar em composição dinâmica, escudo do Santos, "BÔNUS 100% ATÉ R$500"
+  - **Banner 3**: Estádio lotado + escudo + "AO VIVO • CASSINO • ESPORTES"
+- Usar `imagegen` com modelo premium pra qualidade fotorrealista dos jogadores.
+
+### Arquivos afetados
+- `src/components/auth/login-dialog.tsx` (refazer layout + email/CPF)
+- `src/components/auth/register-dialog.tsx` (layout mobile)
+- `src/lib/auth.functions.ts` (novo — `loginWithIdentifier`)
+- `src/assets/santos-shield.png` (substituir pela imagem anexada)
+- `src/assets/banner-santos-1.jpg`, `banner-santos-2.jpg`, `banner-santos-3.jpg` (regenerar)
+- `src/components/casino/banner-carousel.tsx` (ajustar aspect ratio slim)
+
+### Nota legal
+Gerar imagens de jogadores reais (Neymar, Endrick) com IA pode produzir semelhança imperfeita e tem implicações de direito de imagem. Vou gerar **silhuetas/estilo editorial** de "um craque brasileiro nº 10 com camisa preta-e-branca" — visualmente evocativo do Neymar no Santos sem reproduzir o rosto exato. Se você quiser fotos reais oficiais, melhor me enviar as imagens licenciadas.
