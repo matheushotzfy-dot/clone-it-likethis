@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useAuthDialog } from "./auth-dialog-context";
-import { ArrowLeft, Copy, QrCode, CheckCircle2, ShieldCheck, Zap } from "lucide-react";
+import { ArrowLeft, Copy, QrCode, CheckCircle2, ShieldCheck, Zap, Gift, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createTransaction } from "@/lib/profile.functions";
+import { createTransaction, getMyProfile } from "@/lib/profile.functions";
 import { getSettings } from "@/lib/settings.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
@@ -20,10 +20,26 @@ export function DepositDialog() {
   const [step, setStep] = useState<"form" | "pix">("form");
   const create = useServerFn(createTransaction);
   const fetchSettings = useServerFn(getSettings);
+  const fetchProfile = useServerFn(getMyProfile);
   const qc = useQueryClient();
   const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: () => fetchSettings(), enabled: !!user });
+  const { data: profile } = useQuery({ queryKey: ["my-profile"], queryFn: () => fetchProfile(), enabled: !!user && current === "deposit", refetchInterval: 5000 });
   const min = settings?.min_deposit ?? 20;
   const max = settings?.max_deposit ?? 10000;
+
+  // Bonus countdown
+  const bonusExpiresAt = profile?.bonus_expires_at ? new Date(profile.bonus_expires_at).getTime() : 0;
+  const bonusUsed = !!profile?.bonus_used;
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (current !== "deposit" || !bonusExpiresAt || bonusUsed) return;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [current, bonusExpiresAt, bonusUsed]);
+  const msLeft = Math.max(0, bonusExpiresAt - now);
+  const bonusActive = !bonusUsed && msLeft > 0;
+  const mm = Math.floor(msLeft / 60000);
+  const ss = Math.floor((msLeft % 60000) / 1000);
 
   useEffect(() => { 
     if (current === "deposit") { 
