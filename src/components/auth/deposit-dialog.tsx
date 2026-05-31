@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useAuthDialog } from "./auth-dialog-context";
-import { ArrowLeft, Copy, QrCode, CheckCircle2, ShieldCheck, Zap } from "lucide-react";
+import { ArrowLeft, Copy, QrCode, CheckCircle2, ShieldCheck, Zap, Gift, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createTransaction } from "@/lib/profile.functions";
+import { createTransaction, getMyProfile } from "@/lib/profile.functions";
 import { getSettings } from "@/lib/settings.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
@@ -20,10 +20,26 @@ export function DepositDialog() {
   const [step, setStep] = useState<"form" | "pix">("form");
   const create = useServerFn(createTransaction);
   const fetchSettings = useServerFn(getSettings);
+  const fetchProfile = useServerFn(getMyProfile);
   const qc = useQueryClient();
   const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: () => fetchSettings(), enabled: !!user });
+  const { data: profile } = useQuery({ queryKey: ["my-profile"], queryFn: () => fetchProfile(), enabled: !!user && current === "deposit", refetchInterval: 5000 });
   const min = settings?.min_deposit ?? 20;
   const max = settings?.max_deposit ?? 10000;
+
+  // Bonus countdown
+  const bonusExpiresAt = profile?.bonus_expires_at ? new Date(profile.bonus_expires_at).getTime() : 0;
+  const bonusUsed = !!profile?.bonus_used;
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (current !== "deposit" || !bonusExpiresAt || bonusUsed) return;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [current, bonusExpiresAt, bonusUsed]);
+  const msLeft = Math.max(0, bonusExpiresAt - now);
+  const bonusActive = !bonusUsed && msLeft > 0;
+  const mm = Math.floor(msLeft / 60000);
+  const ss = Math.floor((msLeft % 60000) / 1000);
 
   useEffect(() => { 
     if (current === "deposit") { 
@@ -71,10 +87,36 @@ export function DepositDialog() {
           <div className="p-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
             {step === "form" ? (
               <div className="space-y-6">
-                {/* Method Selector */}
-                <div className="flex gap-2 p-1 bg-brand-2 rounded-xl border border-white/5">
-                  <button className="flex-1 h-11 rounded-lg bg-primary text-primary-foreground font-black text-xs uppercase tracking-wider shadow-lg">PIX</button>
-                  <button disabled className="flex-1 h-11 rounded-lg text-white/30 font-bold text-xs uppercase tracking-wider cursor-not-allowed">Cartão</button>
+                {/* Bonus Banner */}
+                {bonusActive && (
+                  <div className="relative overflow-hidden rounded-2xl border-2 border-primary/40 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent p-4">
+                    <div className="absolute -top-8 -right-8 size-32 bg-primary/20 rounded-full blur-2xl" />
+                    <div className="relative flex items-center gap-3">
+                      <div className="size-12 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-lg">
+                        <Gift className="size-6" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[10px] font-black uppercase tracking-widest text-primary">Oferta exclusiva</div>
+                        <div className="text-sm font-black text-white leading-tight">100% de Bônus · Sem Rollover · Saque ou Jogue</div>
+                      </div>
+                      <div className="flex items-center gap-1.5 bg-black/40 border border-primary/30 rounded-lg px-2.5 py-1.5">
+                        <Clock className="size-3.5 text-primary" />
+                        <span className="font-mono text-sm font-black text-primary tabular-nums">
+                          {String(mm).padStart(2, "0")}:{String(ss).padStart(2, "0")}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {bonusUsed && (
+                  <div className="rounded-xl border border-white/5 bg-brand-2/40 p-3 text-xs text-white/60 text-center">
+                    Bônus de boas-vindas já utilizado.
+                  </div>
+                )}
+
+                {/* Method Selector - PIX Only */}
+                <div className="p-1 bg-brand-2 rounded-xl border border-white/5">
+                  <button className="w-full h-11 rounded-lg bg-primary text-primary-foreground font-black text-xs uppercase tracking-wider shadow-lg">PIX</button>
                 </div>
 
                 {/* Limits Info */}

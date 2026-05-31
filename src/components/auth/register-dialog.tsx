@@ -6,6 +6,7 @@ import { PromoSide } from "./promo-side";
 import { User, Mail, Phone, Lock, Eye, EyeOff, Info, Check } from "lucide-react";
 import { toast } from "sonner";
 import { maskCPF, maskPhone, validateCPF, EMAIL_DOMAINS } from "@/lib/validations";
+import { getTrackingMetadata } from "@/lib/tracking";
 import { cn } from "@/lib/utils";
 
 export function RegisterDialog() {
@@ -57,12 +58,17 @@ export function RegisterDialog() {
     if (password.length < 6) { toast.error("Senha mínimo 6 caracteres"); return; }
     
     setLoading(true);
+    const tracking = getTrackingMetadata();
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: window.location.origin,
-        data: { cpf: cpf.replace(/\D/g, ""), phone: phone.replace(/\D/g, "") },
+        data: {
+          cpf: cpf.replace(/\D/g, ""),
+          phone: phone.replace(/\D/g, ""),
+          ...tracking,
+        },
       },
     });
     

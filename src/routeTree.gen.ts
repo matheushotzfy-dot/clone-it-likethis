@@ -27,6 +27,7 @@ import { Route as LegalJogoResponsavelRouteImport } from './routes/legal/jogo-re
 import { Route as AdminUsuariosRouteImport } from './routes/admin/usuarios'
 import { Route as AdminTransacoesRouteImport } from './routes/admin/transacoes'
 import { Route as AdminSaquesRouteImport } from './routes/admin/saques'
+import { Route as AdminPixelRouteImport } from './routes/admin/pixel'
 import { Route as AdminDepositosRouteImport } from './routes/admin/depositos'
 import { Route as AdminConfiguracoesRouteImport } from './routes/admin/configuracoes'
 import { Route as AuthenticatedSaqueRouteImport } from './routes/_authenticated/saque'
@@ -125,6 +126,11 @@ const AdminSaquesRoute = AdminSaquesRouteImport.update({
   path: '/saques',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPixelRoute = AdminPixelRouteImport.update({
+  id: '/pixel',
+  path: '/pixel',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminDepositosRoute = AdminDepositosRouteImport.update({
   id: '/depositos',
   path: '/depositos',
@@ -183,6 +189,7 @@ export interface FileRoutesByFullPath {
   '/saque': typeof AuthenticatedSaqueRoute
   '/admin/configuracoes': typeof AdminConfiguracoesRoute
   '/admin/depositos': typeof AdminDepositosRoute
+  '/admin/pixel': typeof AdminPixelRoute
   '/admin/saques': typeof AdminSaquesRoute
   '/admin/transacoes': typeof AdminTransacoesRoute
   '/admin/usuarios': typeof AdminUsuariosRouteWithChildren
@@ -209,6 +216,7 @@ export interface FileRoutesByTo {
   '/saque': typeof AuthenticatedSaqueRoute
   '/admin/configuracoes': typeof AdminConfiguracoesRoute
   '/admin/depositos': typeof AdminDepositosRoute
+  '/admin/pixel': typeof AdminPixelRoute
   '/admin/saques': typeof AdminSaquesRoute
   '/admin/transacoes': typeof AdminTransacoesRoute
   '/admin/usuarios': typeof AdminUsuariosRouteWithChildren
@@ -238,6 +246,7 @@ export interface FileRoutesById {
   '/_authenticated/saque': typeof AuthenticatedSaqueRoute
   '/admin/configuracoes': typeof AdminConfiguracoesRoute
   '/admin/depositos': typeof AdminDepositosRoute
+  '/admin/pixel': typeof AdminPixelRoute
   '/admin/saques': typeof AdminSaquesRoute
   '/admin/transacoes': typeof AdminTransacoesRoute
   '/admin/usuarios': typeof AdminUsuariosRouteWithChildren
@@ -267,6 +276,7 @@ export interface FileRouteTypes {
     | '/saque'
     | '/admin/configuracoes'
     | '/admin/depositos'
+    | '/admin/pixel'
     | '/admin/saques'
     | '/admin/transacoes'
     | '/admin/usuarios'
@@ -293,6 +303,7 @@ export interface FileRouteTypes {
     | '/saque'
     | '/admin/configuracoes'
     | '/admin/depositos'
+    | '/admin/pixel'
     | '/admin/saques'
     | '/admin/transacoes'
     | '/admin/usuarios'
@@ -321,6 +332,7 @@ export interface FileRouteTypes {
     | '/_authenticated/saque'
     | '/admin/configuracoes'
     | '/admin/depositos'
+    | '/admin/pixel'
     | '/admin/saques'
     | '/admin/transacoes'
     | '/admin/usuarios'
@@ -478,6 +490,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSaquesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/pixel': {
+      id: '/admin/pixel'
+      path: '/pixel'
+      fullPath: '/admin/pixel'
+      preLoaderRoute: typeof AdminPixelRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/depositos': {
       id: '/admin/depositos'
       path: '/depositos'
@@ -570,6 +589,7 @@ const AdminUsuariosRouteWithChildren = AdminUsuariosRoute._addFileChildren(
 interface AdminRouteChildren {
   AdminConfiguracoesRoute: typeof AdminConfiguracoesRoute
   AdminDepositosRoute: typeof AdminDepositosRoute
+  AdminPixelRoute: typeof AdminPixelRoute
   AdminSaquesRoute: typeof AdminSaquesRoute
   AdminTransacoesRoute: typeof AdminTransacoesRoute
   AdminUsuariosRoute: typeof AdminUsuariosRouteWithChildren
@@ -579,6 +599,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminConfiguracoesRoute: AdminConfiguracoesRoute,
   AdminDepositosRoute: AdminDepositosRoute,
+  AdminPixelRoute: AdminPixelRoute,
   AdminSaquesRoute: AdminSaquesRoute,
   AdminTransacoesRoute: AdminTransacoesRoute,
   AdminUsuariosRoute: AdminUsuariosRouteWithChildren,
@@ -607,13 +628,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
