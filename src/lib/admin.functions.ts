@@ -142,3 +142,63 @@ export const setTransactionStatus = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+// Pixel: depositor data for lookalike audiences
+export const listDepositorsPixel = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    // Use admin client to also read auth.users email
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: profiles } = await supabaseAdmin
+      .from("profiles")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(1000);
+    if (!profiles?.length) return [];
+    const ids = profiles.map((p: any) => p.id);
+    const { data: txs } = await supabaseAdmin
+      .from("transactions")
+      .select("user_id,amount,type,status")
+      .in("user_id", ids)
+      .eq("type", "deposit")
+      .eq("status", "approved");
+    const depMap = new Map<string, { total: number; count: number }>();
+    for (const t of txs ?? []) {
+      const cur = depMap.get(t.user_id) ?? { total: 0, count: 0 };
+      cur.total += Number(t.amount);
+      cur.count += 1;
+      depMap.set(t.user_id, cur);
+    }
+    // Fetch emails in chunks
+    const emailMap = new Map<string, string>();
+    for (let i = 0; i < ids.length; i += 200) {
+      const page = await supabaseAdmin.auth.admin.listUsers({ page: Math.floor(i / 200) + 1, perPage: 200 });
+      for (const u of page.data?.users ?? []) {
+        emailMap.set(u.id, u.email ?? "");
+      }
+    }
+    return profiles
+      .map((p: any) => {
+        const d = depMap.get(p.id) ?? { total: 0, count: 0 };
+        return {
+          id: p.id,
+          email: emailMap.get(p.id) ?? "",
+          full_name: p.full_name,
+          cpf: p.cpf,
+          phone: p.phone,
+          total_deposited: d.total,
+          deposits_count: d.count,
+          utm_source: p.utm_source,
+          utm_medium: p.utm_medium,
+          utm_campaign: p.utm_campaign,
+          fbp: p.fbp,
+          fbc: p.fbc,
+          referrer: p.referrer,
+          signup_ip: p.signup_ip,
+          created_at: p.created_at,
+        };
+      })
+      .filter((r: any) => r.deposits_count > 0);
+  });
