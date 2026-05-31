@@ -51,6 +51,8 @@ export function TransactionsTable({ title, type }: { title: string; type: TxType
             <tr>
               <th className="px-4 py-3">Data</th>
               <th className="px-4 py-3">Usuário</th>
+              <th className="px-4 py-3">Email</th>
+              <th className="px-4 py-3">CPF</th>
               {type === "all" && <th className="px-4 py-3">Tipo</th>}
               <th className="px-4 py-3">Valor</th>
               {type !== "deposit" && <th className="px-4 py-3">Chave PIX</th>}
@@ -59,12 +61,14 @@ export function TransactionsTable({ title, type }: { title: string; type: TxType
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={7} className="text-center py-8 text-muted-foreground">Carregando...</td></tr>}
-            {!isLoading && (data ?? []).length === 0 && <tr><td colSpan={7} className="text-center py-8 text-muted-foreground">Nenhuma transação</td></tr>}
+            {isLoading && <tr><td colSpan={9} className="text-center py-8 text-muted-foreground">Carregando...</td></tr>}
+            {!isLoading && (data ?? []).length === 0 && <tr><td colSpan={9} className="text-center py-8 text-muted-foreground">Nenhuma transação</td></tr>}
             {(data ?? []).map((t: any) => (
               <tr key={t.id} className="border-t border-border hover:bg-muted/30">
                 <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{new Date(t.created_at).toLocaleString("pt-BR")}</td>
                 <td className="px-4 py-3">{t.user?.full_name || t.user?.username || t.user_id.slice(0, 8)}</td>
+                <td className="px-4 py-3 text-xs">{t.user?.email || "—"}</td>
+                <td className="px-4 py-3 font-mono text-xs">{t.user?.cpf || "—"}</td>
                 {type === "all" && <td className="px-4 py-3 capitalize">{t.type}</td>}
                 <td className="px-4 py-3 font-bold">R$ {Number(t.amount).toFixed(2).replace(".", ",")}</td>
                 {type !== "deposit" && <td className="px-4 py-3 font-mono text-xs">{t.pix_key ?? "—"}</td>}
