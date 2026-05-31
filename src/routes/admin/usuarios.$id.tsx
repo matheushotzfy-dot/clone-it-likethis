@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Snowflake, Trash2 } from "lucide-react";
+import { FileText, ShieldCheck, Snowflake, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/admin/usuarios/$id")({ component: Page });
 
@@ -20,7 +20,7 @@ function Page() {
   const delFn = useServerFn(deleteUserAdmin);
   const txStatusFn = useServerFn(setTransactionStatus);
   const qc = useQueryClient();
-  const { data, isLoading } = useQuery({ queryKey: ["admin-user", id], queryFn: () => fn({ data: { id } }) });
+  const { data, isLoading, error, refetch } = useQuery({ queryKey: ["admin-user", id], queryFn: () => fn({ data: { id } }), staleTime: 10_000, refetchOnWindowFocus: false });
 
   const [delta, setDelta] = useState("");
   const [reason, setReason] = useState("");
@@ -67,7 +67,8 @@ function Page() {
     onError: (e: any) => toast.error(e.message),
   });
 
-  if (isLoading || !data || !form) return <div>Carregando...</div>;
+  if (isLoading || !data || !form) return <div className="space-y-4">{[96, 280, 220].map((h) => <div key={h} style={{ height: h }} className="animate-pulse rounded-xl border border-border bg-card" />)}</div>;
+  if (error) return <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-5 text-sm text-destructive">Erro ao abrir detalhes: {(error as Error).message}<button onClick={() => refetch()} className="ml-2 font-bold underline">tentar novamente</button></div>;
   const p = data.profile;
   if (!p) return <div>Usuário não encontrado. <Link to="/admin/usuarios" className="text-primary">Voltar</Link></div>;
 
@@ -146,6 +147,26 @@ function Page() {
             </Button>
           </div>
         </div>
+      </div>
+
+      <div className="bg-card border border-border rounded-xl p-5 space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="font-bold flex items-center gap-2"><ShieldCheck className="size-5 text-primary" /> Histórico KYC</h3>
+          <Link to="/admin/kyc" className="text-sm font-bold text-primary hover:underline">Abrir fila KYC</Link>
+        </div>
+        {(data.kyc ?? []).length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nenhum documento enviado por este usuário.</p>
+        ) : (
+          <div className="grid gap-2 md:grid-cols-2">
+            {(data.kyc ?? []).map((k: any) => (
+              <div key={k.id} className="rounded-lg border border-border bg-surface p-3 text-sm">
+                <div className="flex items-center justify-between gap-2"><span className="font-bold"><FileText className="inline size-4 mr-1 text-primary" /> {k.document_type?.toUpperCase()}</span><StatusBadge s={k.status} /></div>
+                <p className="mt-1 text-xs text-muted-foreground">Enviado em {new Date(k.created_at).toLocaleString("pt-BR")}</p>
+                {k.rejection_reason && <p className="mt-2 text-xs text-destructive">{k.rejection_reason}</p>}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="bg-card border border-border rounded-xl overflow-x-auto">
