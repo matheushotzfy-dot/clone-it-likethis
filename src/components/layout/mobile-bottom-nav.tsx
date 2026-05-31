@@ -1,63 +1,74 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Search, Wallet, User as UserIcon, Trophy } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
-import { useAuthDialog } from "@/components/auth/auth-dialog-context";
+import { Menu, Volleyball, Dice5, Radio } from "lucide-react";
+import { useSidebar } from "@/components/ui/sidebar";
 
-const items = [
-  { to: "/", label: "Início", icon: Home },
-  { to: "/cassino", label: "Cassino", icon: Search },
-  { key: "deposit", label: "Depositar", icon: Wallet, primary: true },
-  { to: "/torneios", label: "Torneios", icon: Trophy },
-  { to: "/perfil", label: "Perfil", icon: UserIcon, auth: true },
+const sideItems = [
+  { to: "/esportes", label: "Esportes", icon: Volleyball, side: "left" as const },
+];
+const rightItems = [
+  { to: "/cassino", label: "Cassino", icon: Dice5 },
+  { to: "/ao-vivo", label: "Ao vivo", icon: Radio, dot: true },
 ];
 
 export function MobileBottomNav() {
   const path = useRouterState({ select: (s) => s.location.pathname });
-  const { user } = useAuth();
-  const { open } = useAuthDialog();
+  const { toggleSidebar } = useSidebar();
+
+  const itemClass = (active: boolean) =>
+    `flex flex-col items-center justify-center gap-0.5 h-full text-[11px] font-bold ${
+      active ? "text-primary" : "text-white/85"
+    }`;
 
   return (
     <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-brand border-t border-white/10 pb-[env(safe-area-inset-bottom)]">
       <ul className="grid grid-cols-5 h-16">
-        {items.map((it) => {
-          const active = "to" in it && path === it.to;
-          const Icon = it.icon;
-          const inner = (
-            <span className={`flex flex-col items-center justify-center gap-0.5 h-full text-[10px] font-bold uppercase ${
-              it.primary ? "text-primary-foreground" : active ? "text-primary" : "text-white/80"
-            }`}>
-              {it.primary ? (
-                <span className="-mt-6 size-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg shadow-primary/40 border-4 border-brand">
-                  <Icon className="size-6" />
-                </span>
-              ) : (
-                <Icon className="size-5" />
-              )}
-              <span className={it.primary ? "text-white" : ""}>{it.label}</span>
+        <li>
+          <button onClick={toggleSidebar} className="w-full h-full">
+            <span className={itemClass(false)}>
+              <Menu className="size-5" />
+              <span>Menu</span>
             </span>
-          );
-          if ("key" in it && it.key === "deposit") {
-            return (
-              <li key="dep">
-                <button
-                  className="w-full h-full"
-                  onClick={() => (user ? open("deposit") : open("login"))}
-                >
-                  {inner}
-                </button>
-              </li>
-            );
-          }
-          if (it.auth && !user) {
-            return (
-              <li key={it.label}>
-                <button className="w-full h-full" onClick={() => open("login")}>{inner}</button>
-              </li>
-            );
-          }
+          </button>
+        </li>
+        {sideItems.map((it) => {
+          const active = path === it.to;
+          const Icon = it.icon;
           return (
             <li key={it.label}>
-              <Link to={it.to!} className="block w-full h-full">{inner}</Link>
+              <Link to={it.to} className="block w-full h-full">
+                <span className={itemClass(active)}>
+                  <Icon className="size-5" />
+                  <span>{it.label}</span>
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+        {/* Clube X centerpiece */}
+        <li className="relative">
+          <Link to="/indique-amigos" className="block w-full h-full">
+            <span className="flex flex-col items-center justify-center gap-1 h-full">
+              <span className="-mt-7 h-14 w-14 rounded-md bg-gradient-to-br from-blue-500 to-blue-700 text-white font-extrabold text-[11px] flex flex-col items-center justify-center shadow-lg shadow-blue-900/50 border-4 border-brand">
+                <span className="leading-none tracking-tight">CLUBE</span>
+                <span className="text-2xl leading-none font-black -mt-0.5">X</span>
+              </span>
+            </span>
+          </Link>
+        </li>
+        {rightItems.map((it) => {
+          const active = path === it.to;
+          const Icon = it.icon;
+          return (
+            <li key={it.label}>
+              <Link to={it.to} className="block w-full h-full">
+                <span className={itemClass(active)}>
+                  <span className="relative">
+                    <Icon className="size-5" />
+                    {it.dot && <span className="absolute -top-0.5 -right-1 size-1.5 rounded-full bg-destructive" />}
+                  </span>
+                  <span>{it.label}</span>
+                </span>
+              </Link>
             </li>
           );
         })}
