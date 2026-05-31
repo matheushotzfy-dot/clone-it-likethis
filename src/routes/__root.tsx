@@ -11,6 +11,8 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { AuthDialogProvider } from "@/components/auth/auth-dialog-context";
+import { AuthDialogs } from "@/components/auth/auth-dialogs";
 
 function NotFoundComponent() {
   return (
