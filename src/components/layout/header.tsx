@@ -17,7 +17,7 @@ const nav = [
   { to: "/cassino", label: "Cassino" },
   { to: "/ao-vivo", label: "Ao Vivo" },
   { to: "/torneios", label: "Torneios" },
-  { to: "/indique-amigos", label: "Clube X" },
+  { label: "Depósito", action: "deposit" },
   { to: "/promocoes", label: "Promoções" },
 ];
 
