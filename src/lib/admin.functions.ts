@@ -116,16 +116,20 @@ export const getUserDetail = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
-    const [{ data: profile }, { data: txs }] = await Promise.all([
+    const [{ data: profile, error: profileError }, { data: txs, error: txError }, { data: kyc, error: kycError }] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", data.id).maybeSingle(),
       supabase.from("transactions").select("*").eq("user_id", data.id).order("created_at", { ascending: false }).limit(100),
+      supabase.from("kyc_submissions").select("*").eq("user_id", data.id).order("created_at", { ascending: false }).limit(20),
     ]);
+    if (profileError) throw new Error(profileError.message);
+    if (txError) throw new Error(txError.message);
+    if (kycError) throw new Error(kycError.message);
     let email = "";
     if (profile) {
       const emails = await fetchEmailMap([data.id]);
       email = emails.get(data.id) ?? "";
     }
-    return { profile: profile ? { ...profile, email } : null, transactions: txs ?? [] };
+    return { profile: profile ? { ...profile, email } : null, transactions: txs ?? [], kyc: kyc ?? [] };
   });
 
 export const adjustBalance = createServerFn({ method: "POST" })
@@ -207,7 +211,8 @@ export const listTransactions = createServerFn({ method: "POST" })
     let q = supabase.from("transactions").select("*").order("created_at", { ascending: false }).limit(300);
     if (data.type !== "all") q = q.eq("type", data.type);
     if (data.status !== "all") q = q.eq("status", data.status);
-    const { data: tx } = await q;
+    const { data: tx, error } = await q;
+    if (error) throw new Error(error.message);
     if (!tx?.length) return [];
     const userIds = [...new Set(tx.map(t => t.user_id))];
     const { data: users } = await supabase.from("profiles").select("id,username,full_name,cpf,phone").in("id", userIds);
