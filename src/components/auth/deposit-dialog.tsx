@@ -19,6 +19,7 @@ export function DepositDialog() {
   const { current, close } = useAuthDialog();
   const { user } = useAuth();
   const [amount, setAmount] = useState(50);
+  const [cpfInput, setCpfInput] = useState("");
   const [step, setStep] = useState<"form" | "pix">("form");
   const [pix, setPix] = useState<{ qrCodeImage: string; copyPaste: string } | null>(null);
   const createPix = useServerFn(createPodPayPixDeposit);
@@ -26,9 +27,13 @@ export function DepositDialog() {
   const fetchProfile = useServerFn(getMyProfile);
   const qc = useQueryClient();
   const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: () => fetchSettings(), enabled: !!user });
-  const { data: profile } = useQuery({ queryKey: ["my-profile"], queryFn: () => fetchProfile(), enabled: !!user && current === "deposit", refetchInterval: 5000 });
+  const { data: profile, isLoading: profileLoading } = useQuery({ queryKey: ["my-profile"], queryFn: () => fetchProfile(), enabled: !!user && current === "deposit", refetchInterval: 5000 });
   const min = settings?.min_deposit ?? 20;
   const max = settings?.max_deposit ?? 10000;
+  const profileCpf = (profile?.cpf || "").replace(/\D/g, "");
+  const hasCpfOnFile = profileCpf.length === 11;
+  const needsCpf = !profileLoading && !hasCpfOnFile;
+  const cpfValid = hasCpfOnFile || validateCPF(cpfInput);
 
   // Bonus countdown
   const bonusExpiresAt = profile?.bonus_expires_at ? new Date(profile.bonus_expires_at).getTime() : 0;
@@ -48,20 +53,25 @@ export function DepositDialog() {
     if (current === "deposit") { 
       setStep("form"); 
       setPix(null);
+      setCpfInput("");
       setAmount(Math.max(min, 50)); 
     } 
   }, [current, min]);
 
   const mut = useMutation({
-    mutationFn: () => createPix({ data: { amount, cpf: profile?.cpf ?? undefined } }),
+    mutationFn: () => createPix({ data: { amount, cpf: hasCpfOnFile ? undefined : cpfInput.replace(/\D/g, "") } }),
     onSuccess: (res) => {
+      if (!res.copyPaste) {
+        toast.error("Falha ao gerar PIX. Tente novamente.");
+        return;
+      }
       setPix({ qrCodeImage: res.qrCodeImage, copyPaste: res.copyPaste });
       toast.success("PIX gerado! Pague para creditar o saldo.");
       qc.invalidateQueries({ queryKey: ["transactions"] });
       qc.invalidateQueries({ queryKey: ["my-profile"] });
       setStep("pix");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(e.message || "Erro ao gerar PIX"),
   });
 
   return (
