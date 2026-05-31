@@ -103,7 +103,9 @@ export const listPendingKyc = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     const list = subs ?? [];
     const userIds = [...new Set(list.map((s: any) => s.user_id))];
-    const { data: profiles } = await supabase.from("profiles").select("id,full_name,username,cpf").in("id", userIds);
+    const { data: profiles } = userIds.length
+      ? await supabase.from("profiles").select("id,full_name,username,cpf").in("id", userIds)
+      : { data: [] };
     const profMap = new Map((profiles ?? []).map((p: any) => [p.id, p]));
     // Sign all URLs
     const enriched = await Promise.all(list.map(async (s: any) => ({
