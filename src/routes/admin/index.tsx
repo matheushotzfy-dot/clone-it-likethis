@@ -28,8 +28,8 @@ function Dashboard() {
   const fn = useServerFn(getDashboardKPIs);
   const { data, isLoading, error, refetch } = useQuery({ queryKey: ["admin-kpi"], queryFn: () => fn(), staleTime: 15_000, refetchOnWindowFocus: false });
 
-  if (isLoading || !data) return <DashboardSkeleton />;
   if (error) return <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-5 text-sm text-destructive"><b>Erro ao carregar painel.</b><p className="mt-1">{(error as Error).message}</p><button onClick={() => refetch()} className="mt-3 rounded-md bg-primary px-4 py-2 font-bold text-primary-foreground">Tentar novamente</button></div>;
+  if (isLoading || !data) return <DashboardSkeleton />;
 
   return (
     <div className="space-y-6">
