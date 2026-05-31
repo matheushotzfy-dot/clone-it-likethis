@@ -99,18 +99,18 @@ export function DepositDialog() {
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && close()}>
-      <DialogContent className="max-w-[500px] w-full bg-brand border-white/10 text-white p-0 overflow-hidden shadow-2xl">
-        <div className="relative">
-          <div className="p-6 border-b border-white/5 flex items-center justify-between bg-brand-2/50">
-            <div className="flex items-center gap-4">
+      <DialogContent className="max-w-[500px] w-[calc(100vw-1rem)] sm:w-full bg-brand border-white/10 text-white p-0 overflow-hidden shadow-2xl max-h-[95vh] sm:max-h-[92vh] flex flex-col sm:rounded-2xl">
+        <div className="relative flex flex-col min-h-0 flex-1">
+          <div className="p-4 sm:p-6 border-b border-white/5 flex items-center justify-between bg-brand-2/50 shrink-0">
+            <div className="flex items-center gap-3 sm:gap-4">
               <button
                 onClick={step === "pix" ? () => setStep("form") : close}
-                className="size-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors border border-white/5"
+                className="size-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors border border-white/5 shrink-0"
               >
                 <ArrowLeft className="size-5" />
               </button>
               <div>
-                <h2 className="text-xl font-black uppercase tracking-tight">Depositar</h2>
+                <h2 className="text-lg sm:text-xl font-black uppercase tracking-tight">Depositar</h2>
                 <div className="flex items-center gap-1.5 text-[10px] text-primary font-bold uppercase tracking-wider">
                   <Zap className="size-3 fill-primary" />
                   Processamento Instantâneo
@@ -119,7 +119,7 @@ export function DepositDialog() {
             </div>
           </div>
 
-          <div className="p-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
+          <div className="p-4 sm:p-6 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
             {step === "form" ? (
               <div className="space-y-5">
                 {/* HERO Bonus Banner — always visible while active */}
