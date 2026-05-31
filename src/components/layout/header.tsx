@@ -52,11 +52,22 @@ export function Header() {
         <Logo />
         <nav className="hidden lg:flex items-center gap-1 ml-4 flex-1">
           {nav.map((n) => {
-            const active = path === n.to || (n.to === "/cassino" && path === "/");
+            const active = n.to ? (path === n.to || (n.to === "/cassino" && path === "/")) : false;
+            if ("action" in n) {
+              return (
+                <button
+                  key={n.label}
+                  onClick={() => open(n.action)}
+                  className="relative px-3 py-5 text-sm font-bold uppercase tracking-wide transition-colors text-primary hover:text-primary/80"
+                >
+                  {n.label}
+                </button>
+              );
+            }
             return (
               <Link
                 key={n.label}
-                to={n.to}
+                to={n.to!}
                 className={`relative px-3 py-5 text-sm font-bold uppercase tracking-wide transition-colors ${
                   active ? "text-primary" : "text-white/95 hover:text-primary"
                 }`}
