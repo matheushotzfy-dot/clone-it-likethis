@@ -112,6 +112,7 @@ function RootComponent() {
             <AuthCacheInvalidator />
             <Outlet />
             <AuthDialogs />
+            <WithdrawalWatcher />
             <Toaster />
           </SidebarProvider>
         </AuthDialogProvider>
