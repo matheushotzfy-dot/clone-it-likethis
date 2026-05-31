@@ -19,6 +19,10 @@ function AdminLayout() {
     queryFn: () => check(),
     enabled: !!user,
     retry: 1,
+    staleTime: Infinity,
+    gcTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   useEffect(() => {

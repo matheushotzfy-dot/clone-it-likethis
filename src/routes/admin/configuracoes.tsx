@@ -14,7 +14,7 @@ function Page() {
   const get = useServerFn(getSettings);
   const upd = useServerFn(updateSettings);
   const qc = useQueryClient();
-  const { data } = useQuery({ queryKey: ["settings"], queryFn: () => get() });
+  const { data } = useQuery({ queryKey: ["settings"], queryFn: () => get(), staleTime: 30_000, refetchOnWindowFocus: false });
   const [form, setForm] = useState<any>(null);
   useEffect(() => { if (data) setForm(data); }, [data]);
 
