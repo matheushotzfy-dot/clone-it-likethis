@@ -12,7 +12,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getMyProfile } from "@/lib/profile.functions";
 
-const nav = [
+type NavLink = { to: string; label: string };
+type NavAction = { label: string; action: "deposit" };
+
+const nav: (NavLink | NavAction)[] = [
   { to: "/esportes", label: "Esportes" },
   { to: "/cassino", label: "Cassino" },
   { to: "/ao-vivo", label: "Ao Vivo" },
@@ -52,7 +55,6 @@ export function Header() {
         <Logo />
         <nav className="hidden lg:flex items-center gap-1 ml-4 flex-1">
           {nav.map((n) => {
-            const active = n.to ? (path === n.to || (n.to === "/cassino" && path === "/")) : false;
             if ("action" in n) {
               return (
                 <button
@@ -64,10 +66,11 @@ export function Header() {
                 </button>
               );
             }
+            const active = path === n.to || (n.to === "/cassino" && path === "/");
             return (
               <Link
                 key={n.label}
-                to={n.to!}
+                to={n.to}
                 className={`relative px-3 py-5 text-sm font-bold uppercase tracking-wide transition-colors ${
                   active ? "text-primary" : "text-white/95 hover:text-primary"
                 }`}
