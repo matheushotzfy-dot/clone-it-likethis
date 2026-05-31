@@ -208,7 +208,11 @@ export function DepositDialog() {
                 <div className="relative inline-block group">
                   <div className="absolute inset-0 bg-primary/20 rounded-[2.5rem] blur-3xl group-hover:bg-primary/30 transition-colors" />
                   <div className="relative bg-white rounded-[2rem] p-6 shadow-2xl">
-                    <QrCode className="size-56 text-black" strokeWidth={1.5} />
+                    {pix?.qrCodeImage ? (
+                      <img src={pix.qrCodeImage} alt="QR Code PIX" className="size-56" />
+                    ) : (
+                      <QrCode className="size-56 text-black" strokeWidth={1.5} />
+                    )}
                     <div className="absolute -top-3 -right-3 bg-primary text-primary-foreground size-12 rounded-full flex items-center justify-center shadow-lg border-4 border-brand">
                       <Zap className="size-6 fill-current" />
                     </div>
@@ -219,11 +223,12 @@ export function DepositDialog() {
                   <div className="text-[10px] uppercase font-black text-white/40 tracking-widest">Pix Copia e Cola</div>
                   <div className="relative group">
                     <div className="bg-brand-2 rounded-2xl p-5 text-[11px] font-mono break-all text-left text-white/80 border border-white/10 max-h-24 overflow-y-auto custom-scrollbar leading-relaxed">
-                      {fakePix}
+                      {pix?.copyPaste || "Gerando..."}
                     </div>
                     <button
                       onClick={() => { 
-                        navigator.clipboard.writeText(fakePix); 
+                        if (!pix?.copyPaste) return;
+                        navigator.clipboard.writeText(pix.copyPaste); 
                         toast.success("Código PIX copiado!"); 
                       }}
                       className="absolute right-3 bottom-3 size-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center hover:scale-110 transition-all shadow-lg active:scale-95"
