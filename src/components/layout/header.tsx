@@ -32,7 +32,8 @@ export function Header() {
     queryKey: ["my-profile"],
     queryFn: () => fetchProfile(),
     enabled: !!user,
-    refetchOnWindowFocus: true,
+    staleTime: 20_000,
+    refetchOnWindowFocus: false,
   });
 
   const balance = Number(profile?.balance ?? 0);
