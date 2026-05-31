@@ -62,6 +62,54 @@ export type Database = {
         }
         Relationships: []
       }
+      kyc_submissions: {
+        Row: {
+          created_at: string
+          document_type: string
+          id: string
+          id_back_url: string | null
+          id_front_url: string
+          rejection_reason: string | null
+          residence_url: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          selfie_url: string
+          status: Database["public"]["Enums"]["kyc_submission_status"]
+          transaction_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_type?: string
+          id?: string
+          id_back_url?: string | null
+          id_front_url: string
+          rejection_reason?: string | null
+          residence_url: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          selfie_url: string
+          status?: Database["public"]["Enums"]["kyc_submission_status"]
+          transaction_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          document_type?: string
+          id?: string
+          id_back_url?: string | null
+          id_front_url?: string
+          rejection_reason?: string | null
+          residence_url?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          selfie_url?: string
+          status?: Database["public"]["Enums"]["kyc_submission_status"]
+          transaction_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -77,6 +125,7 @@ export type Database = {
           id: string
           is_frozen: boolean
           kyc_status: string
+          kyc_verified: boolean
           phone: string | null
           referrer: string | null
           signup_ip: string | null
@@ -103,6 +152,7 @@ export type Database = {
           id: string
           is_frozen?: boolean
           kyc_status?: string
+          kyc_verified?: boolean
           phone?: string | null
           referrer?: string | null
           signup_ip?: string | null
@@ -129,6 +179,7 @@ export type Database = {
           id?: string
           is_frozen?: boolean
           kyc_status?: string
+          kyc_verified?: boolean
           phone?: string | null
           referrer?: string | null
           signup_ip?: string | null
@@ -149,6 +200,8 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          kyc_required: boolean
+          kyc_submission_id: string | null
           pix_key: string | null
           status: Database["public"]["Enums"]["transaction_status"]
           type: Database["public"]["Enums"]["transaction_type"]
@@ -159,6 +212,8 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          kyc_required?: boolean
+          kyc_submission_id?: string | null
           pix_key?: string | null
           status?: Database["public"]["Enums"]["transaction_status"]
           type: Database["public"]["Enums"]["transaction_type"]
@@ -169,6 +224,8 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          kyc_required?: boolean
+          kyc_submission_id?: string | null
           pix_key?: string | null
           status?: Database["public"]["Enums"]["transaction_status"]
           type?: Database["public"]["Enums"]["transaction_type"]
@@ -212,6 +269,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      kyc_submission_status: "pending" | "approved" | "rejected"
       transaction_status:
         | "pending"
         | "completed"
@@ -348,6 +406,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      kyc_submission_status: ["pending", "approved", "rejected"],
       transaction_status: [
         "pending",
         "completed",
