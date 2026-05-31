@@ -34,7 +34,7 @@ export function BannerCarousel() {
 
   return (
     <div className="space-y-3">
-      <div className="relative w-full aspect-[15/4] rounded-xl md:rounded-2xl overflow-hidden bg-surface ring-1 ring-primary/20 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.6)]">
+      <div className="relative w-full aspect-[3/2] sm:aspect-[2/1] md:aspect-[5/2] lg:aspect-[3/1] rounded-xl md:rounded-2xl overflow-hidden bg-surface ring-1 ring-primary/20 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.6)]">
         {/* All slides mounted to enable smooth crossfade; eager-load first only */}
         {slides.map((s, i) => {
           const img = (
@@ -46,7 +46,7 @@ export function BannerCarousel() {
               loading={i === 0 ? "eager" : "lazy"}
               fetchPriority={i === 0 ? "high" : "auto"}
               decoding="async"
-              className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-700 ease-out ${i === idx ? "opacity-100" : "opacity-0"}`}
+              className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700 ease-out ${i === idx ? "opacity-100" : "opacity-0"}`}
             />
           );
           return s.link_url && i === idx ? (

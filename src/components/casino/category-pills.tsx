@@ -1,8 +1,8 @@
-import { Dice5, Rocket, Sparkles, Hand, Play, Gift, Target, MonitorPlay } from "lucide-react";
+import { Gamepad2, Rocket, Sparkles, Hand, Play, Gift, Target, MonitorPlay } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const cats = [
-  { id: "slots", label: "Slots", Icon: Dice5 },
+  { id: "slots", label: "Slots", Icon: Gamepad2 },
   { id: "live", label: "Ao Vivo", Icon: MonitorPlay },
   { id: "popok", label: "Popok", Icon: Sparkles },
   { id: "tada", label: "Tada", Icon: Hand },
