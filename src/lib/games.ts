@@ -73,11 +73,11 @@ export const providers = [
 
 export const categories = [
   { id: "slots", label: "Slots", icon: "🎰" },
-  { id: "crash", label: "Crash", icon: "🚀" },
+  { id: "live", label: "Ao Vivo", icon: "🎥" },
   { id: "popok", label: "Popok", icon: "💥" },
   { id: "tada", label: "TaDa", icon: "✋" },
   { id: "drops", label: "Drops", icon: "▶" },
   { id: "promocoes", label: "Promoções", icon: "🎁" },
   { id: "mesas", label: "Mesas BR", icon: "🎯" },
-  { id: "jetx", label: "JetX", icon: "✈" },
+  { id: "crash", label: "Crash", icon: "🚀" },
 ];
