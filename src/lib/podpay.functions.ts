@@ -66,6 +66,10 @@ export const createPodPayPixDeposit = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => depositSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId, claims } = context;
+    const limits = await loadLimits(supabase as never);
+    if (data.amount < limits.min_deposit || data.amount > limits.max_deposit) {
+      throw new Error(`Depósito deve ser entre R$ ${limits.min_deposit} e R$ ${limits.max_deposit}`);
+    }
     const { data: profile } = await supabase
       .from("profiles")
       .select("full_name,cpf,phone")
