@@ -48,7 +48,7 @@ export function MobileBottomNav() {
         })}
         {/* Depósito centerpiece */}
         <li className="relative">
-          <button onClick={() => open("deposit")} className="block w-full h-full">
+          <button onClick={() => open(user ? "deposit" : "register")} className="block w-full h-full">
             <span className="flex flex-col items-center justify-center gap-1 h-full">
               <span className="-mt-7 h-14 w-14 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 text-brand font-extrabold text-[11px] flex flex-col items-center justify-center shadow-lg shadow-yellow-900/50 border-4 border-brand">
                 <Plus className="size-6" />

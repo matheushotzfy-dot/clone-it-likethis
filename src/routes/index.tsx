@@ -22,7 +22,7 @@ function Section({ title, items }: { title: string; items: typeof games }) {
         </Link>
       </div>
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-        {items.slice(0, 16).map((g, i) => <GameCard key={`${g.id}-${i}`} game={g} />)}
+        {items.slice(0, 15).map((g, i) => <GameCard key={`${g.id}-${i}`} game={g} />)}
       </div>
     </section>
   );
