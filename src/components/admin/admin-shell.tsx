@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { LayoutDashboard, Users, ArrowDownCircle, ArrowUpCircle, Settings, Receipt, Home, LogOut, Target } from "lucide-react";
+import { LayoutDashboard, Users, ArrowDownCircle, ArrowUpCircle, Settings, Receipt, Home, LogOut, Target, Image as ImageIcon } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 const items = [
@@ -9,6 +9,7 @@ const items = [
   { to: "/admin/depositos", label: "Depósitos", icon: ArrowDownCircle },
   { to: "/admin/saques", label: "Saques", icon: ArrowUpCircle },
   { to: "/admin/transacoes", label: "Transações", icon: Receipt },
+  { to: "/admin/banners", label: "Banners", icon: ImageIcon },
   { to: "/admin/pixel", label: "Pixel", icon: Target },
   { to: "/admin/configuracoes", label: "Configurações", icon: Settings },
 ];

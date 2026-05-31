@@ -130,6 +130,47 @@ export const adjustBalance = createServerFn({ method: "POST" })
     return { ok: true, balance: next };
   });
 
+const userUpdateSchema = z.object({
+  userId: z.string().uuid(),
+  full_name: z.string().trim().max(120).optional().nullable(),
+  username: z.string().trim().min(3).max(50).regex(/^[a-zA-Z0-9_]+$/).optional().nullable(),
+  cpf: z.string().trim().max(20).optional().nullable(),
+  phone: z.string().trim().max(20).optional().nullable(),
+  kyc_status: z.enum(["pending", "approved", "rejected"]).optional(),
+  is_frozen: z.boolean().optional(),
+});
+
+export const updateUserAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => userUpdateSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    const { userId: target, ...patch } = data;
+    const cleaned: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(patch)) {
+      if (v !== undefined) cleaned[k] = v === "" ? null : v;
+    }
+    if (Object.keys(cleaned).length === 0) return { ok: true };
+    cleaned.updated_at = new Date().toISOString();
+    const { error } = await supabase.from("profiles").update(cleaned).eq("id", target);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const deleteUserAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ userId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    if (data.userId === userId) throw new Error("Você não pode apagar a própria conta");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export const listTransactions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({
