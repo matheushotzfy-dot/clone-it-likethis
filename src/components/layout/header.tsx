@@ -1,7 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Logo } from "./logo";
 import { useAuth } from "@/hooks/use-auth";
-import { Wallet, User as UserIcon, LogOut, Menu, RefreshCw, Bell, Receipt, History, ShieldCheck } from "lucide-react";
+import { Wallet, User as UserIcon, LogOut, Menu, RefreshCw, Bell, Receipt, History, ShieldCheck, ArrowUpFromLine } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -79,6 +79,12 @@ export function Header() {
                 <RefreshCw className={`size-3.5 ${isFetching ? "animate-spin" : ""}`} />
               </button>
             </div>
+            <Link
+              to="/saque"
+              className="hidden sm:inline-flex items-center gap-1.5 h-9 md:h-10 px-3 md:px-4 rounded-md border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground font-bold uppercase text-xs md:text-sm transition-colors"
+            >
+              <ArrowUpFromLine className="size-4" /> Sacar
+            </Link>
             <button
               onClick={() => open("deposit")}
               className="h-9 md:h-10 px-3 md:px-5 rounded-md bg-primary text-primary-foreground hover:brightness-110 font-bold uppercase text-xs md:text-sm transition-all"
