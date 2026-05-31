@@ -12,9 +12,14 @@ export const getMyProfile = createServerFn({ method: "GET" })
       .eq("id", userId)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    // Check admin
     const { data: role } = await supabase.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
-    return { ...data, isAdmin: !!role };
+    const { count: depCount } = await supabase
+      .from("transactions")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("type", "deposit")
+      .eq("status", "approved");
+    return { ...data, isAdmin: !!role, hasDeposited: (depCount ?? 0) > 0 };
   });
 
 const updateSchema = z.object({
