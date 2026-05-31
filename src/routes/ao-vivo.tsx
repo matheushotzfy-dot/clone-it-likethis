@@ -6,16 +6,16 @@ import { games } from "@/lib/games";
 export const Route = createFileRoute("/ao-vivo")({
   head: () => ({ meta: [{ title: "Ao Vivo — PIXBET" }] }),
   component: () => {
-    const live = games.filter((g) => g.category === "live").concat(games.filter((g) => g.category === "live"));
+    const live = games.filter((g) => g.category === "live");
     return (
       <SiteShell>
         <div className="max-w-7xl mx-auto px-3 md:px-6 py-6 space-y-6">
           <div>
             <h1 className="text-2xl font-bold">Cassino Ao Vivo</h1>
-            <p className="text-muted-foreground text-sm mt-1">Jogue com crupiês reais em tempo real</p>
+            <p className="text-muted-foreground text-sm mt-1">{live.length} mesas com crupiês reais em tempo real</p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {live.map((g, i) => <GameCard key={i} game={g} />)}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
+            {live.map((g) => <GameCard key={g.id} game={g} />)}
           </div>
         </div>
       </SiteShell>
