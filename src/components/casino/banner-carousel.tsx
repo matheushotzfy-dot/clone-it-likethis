@@ -46,7 +46,7 @@ export function BannerCarousel() {
               loading={i === 0 ? "eager" : "lazy"}
               fetchPriority={i === 0 ? "high" : "auto"}
               decoding="async"
-              className={`absolute inset-0 w-full h-full object-contain object-center transition-opacity duration-700 ease-out ${i === idx ? "opacity-100" : "opacity-0"}`}
+              className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700 ease-out ${i === idx ? "opacity-100" : "opacity-0"}`}
             />
           );
           return s.link_url && i === idx ? (
