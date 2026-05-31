@@ -39,8 +39,9 @@ function statusLabel(t: any): { label: string; cls: string } {
 }
 
 function Page() {
+  const { user } = useAuth();
   const fn = useServerFn(listMyTransactions);
-  const { data, isLoading } = useQuery({ queryKey: ["transactions"], queryFn: () => fn() });
+  const { data, isLoading } = useQuery({ queryKey: ["transactions"], queryFn: () => fn(), enabled: !!user });
   const [tab, setTab] = useState<(typeof tabs)[number]["k"]>("all");
   const [kycTx, setKycTx] = useState<string | null>(null);
   const filtered = (data ?? []).filter(t => tab === "all" ? true : t.type === tab);
