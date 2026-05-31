@@ -55,6 +55,10 @@ function Page() {
     );
   }
 
+  return <SportsBody />;
+}
+
+function SportsBody() {
   const [tab, setTab] = useState<Tab>("today");
   const [activeLeague, setActiveLeague] = useState<string>("all");
   const [search, setSearch] = useState("");
