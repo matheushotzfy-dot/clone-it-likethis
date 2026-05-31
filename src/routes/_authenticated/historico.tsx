@@ -7,7 +7,7 @@ import { listMyTransactions } from "@/lib/profile.functions";
 import { ArrowDownToLine, ArrowUpFromLine, Dices } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/historico")({
-  head: () => ({ meta: [{ title: "Histórico — PIXBET" }] }),
+  head: () => ({ meta: [{ title: "Histórico — SANTOSBET" }] }),
   component: Page,
 });
 

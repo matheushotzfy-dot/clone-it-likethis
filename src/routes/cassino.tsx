@@ -8,7 +8,7 @@ import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/cassino")({
-  head: () => ({ meta: [{ title: "Cassino — PIXBET" }] }),
+  head: () => ({ meta: [{ title: "Cassino — SANTOSBET" }] }),
   component: Page,
 });
 

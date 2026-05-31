@@ -58,7 +58,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "PIXBET — Cassino, Esportes e Apostas" },
+      { title: "SANTOSBET — Cassino, Esportes e Apostas" },
       { name: "description", content: "Site de apostas e cassino online — projeto de demonstração." },
     ],
     links: [

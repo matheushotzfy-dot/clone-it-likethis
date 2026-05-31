@@ -4,7 +4,7 @@ import { GameCard } from "@/components/casino/game-card";
 import { games } from "@/lib/games";
 
 export const Route = createFileRoute("/ao-vivo")({
-  head: () => ({ meta: [{ title: "Ao Vivo — PIXBET" }] }),
+  head: () => ({ meta: [{ title: "Ao Vivo — SANTOSBET" }] }),
   component: () => {
     const live = games.filter((g) => g.category === "live");
     return (

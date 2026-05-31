@@ -233,7 +233,7 @@ export function DepositDialog() {
                   </div>
                   <div className="flex items-center gap-3 text-xs text-white/80">
                     <ShieldCheck className="size-4 text-primary shrink-0" />
-                    <span>Seus fundos estão protegidos pela <span className="font-bold text-white">PIXBET</span></span>
+                    <span>Seus fundos estão protegidos pela <span className="font-bold text-white">SANTOSBET</span></span>
                   </div>
                 </div>
 

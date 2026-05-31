@@ -3,7 +3,7 @@ import { SiteShell } from "@/components/layout/site-shell";
 import { Trophy } from "lucide-react";
 
 export const Route = createFileRoute("/torneios")({
-  head: () => ({ meta: [{ title: "Torneios — PIXBET" }] }),
+  head: () => ({ meta: [{ title: "Torneios — SANTOSBET" }] }),
   component: () => (
     <SiteShell>
       <div className="max-w-7xl mx-auto px-3 md:px-6 py-6 space-y-6">
