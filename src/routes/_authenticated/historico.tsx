@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { SiteShell } from "@/components/layout/site-shell";
 import { listMyTransactions } from "@/lib/profile.functions";
+import { useAuth } from "@/hooks/use-auth";
 import { ArrowDownToLine, ArrowUpFromLine, Dices, ShieldAlert } from "lucide-react";
 import { KycDialog } from "@/components/auth/kyc-dialog";
 
@@ -38,8 +39,9 @@ function statusLabel(t: any): { label: string; cls: string } {
 }
 
 function Page() {
+  const { user } = useAuth();
   const fn = useServerFn(listMyTransactions);
-  const { data, isLoading } = useQuery({ queryKey: ["transactions"], queryFn: () => fn() });
+  const { data, isLoading } = useQuery({ queryKey: ["transactions"], queryFn: () => fn(), enabled: !!user });
   const [tab, setTab] = useState<(typeof tabs)[number]["k"]>("all");
   const [kycTx, setKycTx] = useState<string | null>(null);
   const filtered = (data ?? []).filter(t => tab === "all" ? true : t.type === tab);
