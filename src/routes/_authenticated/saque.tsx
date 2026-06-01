@@ -125,7 +125,8 @@ function Page() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (!pixKey) return toast.error("Informe sua chave PIX");
+            const err = validatePixKey(keyType, pixKey);
+            if (err) return toast.error(err);
             if (amount > balance) return toast.error("Saldo insuficiente");
             mut.mutate();
           }}
@@ -149,8 +150,22 @@ function Page() {
 
           <div>
             <label className="text-xs uppercase font-bold text-muted-foreground">Chave PIX</label>
-            <Input value={pixKey} onChange={(e) => setPixKey(e.target.value)} placeholder={keyType === "E-mail" ? "voce@email.com" : keyType === "CPF" ? "000.000.000-00" : "Digite a chave"} className="mt-1 bg-surface-2 h-12" />
+            <Input
+              value={pixKey}
+              onChange={(e) => setPixKey(formatPixKey(keyType, e.target.value))}
+              inputMode={keyType === "CPF" || keyType === "Telefone" ? "numeric" : keyType === "E-mail" ? "email" : "text"}
+              placeholder={
+                keyType === "E-mail" ? "voce@email.com" :
+                keyType === "CPF" ? "000.000.000-00" :
+                keyType === "Telefone" ? "(11) 99999-9999" :
+                "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d"
+              }
+              maxLength={keyType === "CPF" ? 14 : keyType === "Telefone" ? 15 : keyType === "Aleatória" ? 36 : 254}
+              className={`mt-1 bg-surface-2 h-12 ${keyError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+            />
+            {keyError && <p className="text-xs text-destructive mt-1">{keyError}</p>}
           </div>
+
 
           <div>
             <label className="text-xs uppercase font-bold text-muted-foreground">Valor a sacar</label>
