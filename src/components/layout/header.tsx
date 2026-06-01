@@ -43,8 +43,9 @@ export function Header() {
   const isAdmin = !!profile?.isAdmin;
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-brand shadow-sm">
-      <div className="flex items-center h-14 md:h-16 px-2 md:px-6 gap-2">
+    <header className="sticky top-0 z-40 w-full bg-brand shadow-sm overflow-x-clip">
+      <div className="flex items-center h-14 md:h-16 px-2 md:px-6 gap-1.5 md:gap-2 min-w-0">
+
         <button
           onClick={toggleSidebar}
           className="lg:hidden text-white p-2 -ml-1 hover:bg-white/10 rounded-md"
