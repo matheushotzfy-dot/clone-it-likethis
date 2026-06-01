@@ -10,6 +10,7 @@ export type AppSettings = {
   withdrawal_fee_pct: number;
   welcome_bonus: number;
   maintenance_mode: boolean;
+  active_gateway: "podpay" | "bspay";
 };
 
 const DEFAULTS: AppSettings = {
@@ -20,6 +21,7 @@ const DEFAULTS: AppSettings = {
   withdrawal_fee_pct: 0,
   welcome_bonus: 0,
   maintenance_mode: false,
+  active_gateway: "podpay",
 };
 
 export const getSettings = createServerFn({ method: "GET" })
@@ -30,7 +32,6 @@ export const getSettings = createServerFn({ method: "GET" })
     const out = { ...DEFAULTS };
     for (const row of data ?? []) {
       const k = row.key as keyof AppSettings;
-      // value is jsonb — already typed
       (out as Record<string, unknown>)[k] = row.value as never;
     }
     return out;
@@ -44,6 +45,7 @@ const updateSchema = z.object({
   withdrawal_fee_pct: z.number().min(0).max(100).optional(),
   welcome_bonus: z.number().min(0).max(100000).optional(),
   maintenance_mode: z.boolean().optional(),
+  active_gateway: z.enum(["podpay", "bspay"]).optional(),
 });
 
 export const updateSettings = createServerFn({ method: "POST" })

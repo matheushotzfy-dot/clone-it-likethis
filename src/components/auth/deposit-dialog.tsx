@@ -7,6 +7,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getMyProfile, listMyTransactions } from "@/lib/profile.functions";
 import { createPodPayPixDeposit } from "@/lib/podpay.functions";
+import { createBSPayPixDeposit } from "@/lib/bspay.functions";
 import { getSettings } from "@/lib/settings.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
@@ -21,7 +22,8 @@ export function DepositDialog() {
   const [step, setStep] = useState<"form" | "pix">("form");
   const [pix, setPix] = useState<{ qrCodeImage: string; copyPaste: string; transactionId: string } | null>(null);
   const [pixCopied, setPixCopied] = useState(false);
-  const createPix = useServerFn(createPodPayPixDeposit);
+  const createPixPod = useServerFn(createPodPayPixDeposit);
+  const createPixBs = useServerFn(createBSPayPixDeposit);
   const fetchSettings = useServerFn(getSettings);
   const fetchProfile = useServerFn(getMyProfile);
   const fetchTransactions = useServerFn(listMyTransactions);
@@ -89,7 +91,7 @@ export function DepositDialog() {
   }, [open, min]);
 
   const mut = useMutation({
-    mutationFn: () => createPix({ data: { amount } }),
+    mutationFn: async (): Promise<{ transactionId: string; qrCodeImage: string; copyPaste: string }> => (settings?.active_gateway === "bspay" ? createPixBs({ data: { amount } }) : createPixPod({ data: { amount } })),
     onSuccess: (res) => {
       if (!res.copyPaste) {
         toast.error("Falha ao gerar PIX. Tente novamente.");
