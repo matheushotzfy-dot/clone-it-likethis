@@ -199,6 +199,36 @@ export const deleteUserAdmin = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const deleteUsersBulkAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ userIds: z.array(z.string().uuid()).min(1).max(200) }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    const targets = data.userIds.filter((id) => id !== userId);
+    if (!targets.length) throw new Error("Nenhum usuário válido (você não pode apagar a si mesmo)");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const errors: string[] = [];
+    for (const id of targets) {
+      const { error } = await supabaseAdmin.auth.admin.deleteUser(id);
+      if (error) errors.push(`${id.slice(0, 8)}: ${error.message}`);
+    }
+    if (errors.length) throw new Error(`Erros: ${errors.join("; ")}`);
+    return { ok: true, deleted: targets.length };
+  });
+
+export const deleteTransactionsBulkAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ ids: z.array(z.string().uuid()).min(1).max(500) }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("transactions").delete().in("id", data.ids);
+    if (error) throw new Error(error.message);
+    return { ok: true, deleted: data.ids.length };
+  });
+
 export const listTransactions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({
