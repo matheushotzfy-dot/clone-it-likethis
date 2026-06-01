@@ -17,11 +17,69 @@ export const Route = createFileRoute("/_authenticated/saque")({
 
 const presets = [50, 100, 250, 500, 1000];
 const keyTypes = ["CPF", "E-mail", "Telefone", "Aleatória"] as const;
+type KeyType = typeof keyTypes[number];
+
+function onlyDigits(s: string) { return s.replace(/\D/g, ""); }
+
+function formatPixKey(type: KeyType, raw: string): string {
+  if (type === "CPF") {
+    const d = onlyDigits(raw).slice(0, 11);
+    return d
+      .replace(/^(\d{3})(\d)/, "$1.$2")
+      .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+      .replace(/\.(\d{3})(\d{1,2})$/, ".$1-$2");
+  }
+  if (type === "Telefone") {
+    const d = onlyDigits(raw).slice(0, 11);
+    if (d.length <= 2) return d.length ? `(${d}` : "";
+    if (d.length <= 7) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+    return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+  }
+  if (type === "E-mail") return raw.trim().toLowerCase();
+  return raw.trim();
+}
+
+function isValidCPF(cpf: string): boolean {
+  const d = onlyDigits(cpf);
+  if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false;
+  let s = 0;
+  for (let i = 0; i < 9; i++) s += Number(d[i]) * (10 - i);
+  let r = (s * 10) % 11; if (r === 10) r = 0;
+  if (r !== Number(d[9])) return false;
+  s = 0;
+  for (let i = 0; i < 10; i++) s += Number(d[i]) * (11 - i);
+  r = (s * 10) % 11; if (r === 10) r = 0;
+  return r === Number(d[10]);
+}
+
+function validatePixKey(type: KeyType, value: string): string | null {
+  const v = value.trim();
+  if (!v) return "Informe sua chave PIX";
+  if (type === "CPF") {
+    if (onlyDigits(v).length !== 11) return "CPF deve ter 11 dígitos";
+    if (!isValidCPF(v)) return "CPF inválido";
+    return null;
+  }
+  if (type === "Telefone") {
+    const d = onlyDigits(v);
+    if (d.length !== 10 && d.length !== 11) return "Telefone deve ter DDD + número (10 ou 11 dígitos)";
+    return null;
+  }
+  if (type === "E-mail") {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return "E-mail inválido";
+    if (v.length > 254) return "E-mail muito longo";
+    return null;
+  }
+  // Aleatória — UUID v4 padrão do BCB
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v))
+    return "Chave aleatória deve estar no formato UUID (ex: 1a2b3c4d-...).";
+  return null;
+}
 
 function Page() {
   const [amount, setAmount] = useState(50);
   const [pixKey, setPixKey] = useState("");
-  const [keyType, setKeyType] = useState<typeof keyTypes[number]>("CPF");
+  const [keyType, setKeyType] = useState<KeyType>("CPF");
   const create = useServerFn(createTransaction);
   const profileFn = useServerFn(getMyProfile);
   const settingsFn = useServerFn(getSettings);
@@ -34,8 +92,10 @@ function Page() {
   const fee = settings?.withdrawal_fee_pct ?? 0;
   const feeAmount = amount * (fee / 100);
   const net = amount - feeAmount;
+  const keyError = pixKey ? validatePixKey(keyType, pixKey) : null;
 
   useEffect(() => { setAmount(min); }, [min]);
+  useEffect(() => { setPixKey(""); }, [keyType]);
 
   const mut = useMutation({
     mutationFn: () => create({ data: { type: "withdrawal", amount, pix_key: `${keyType}: ${pixKey}` } }),
@@ -47,6 +107,7 @@ function Page() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
 
   return (
     <SiteShell>
@@ -64,7 +125,8 @@ function Page() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (!pixKey) return toast.error("Informe sua chave PIX");
+            const err = validatePixKey(keyType, pixKey);
+            if (err) return toast.error(err);
             if (amount > balance) return toast.error("Saldo insuficiente");
             mut.mutate();
           }}
@@ -88,8 +150,22 @@ function Page() {
 
           <div>
             <label className="text-xs uppercase font-bold text-muted-foreground">Chave PIX</label>
-            <Input value={pixKey} onChange={(e) => setPixKey(e.target.value)} placeholder={keyType === "E-mail" ? "voce@email.com" : keyType === "CPF" ? "000.000.000-00" : "Digite a chave"} className="mt-1 bg-surface-2 h-12" />
+            <Input
+              value={pixKey}
+              onChange={(e) => setPixKey(formatPixKey(keyType, e.target.value))}
+              inputMode={keyType === "CPF" || keyType === "Telefone" ? "numeric" : keyType === "E-mail" ? "email" : "text"}
+              placeholder={
+                keyType === "E-mail" ? "voce@email.com" :
+                keyType === "CPF" ? "000.000.000-00" :
+                keyType === "Telefone" ? "(11) 99999-9999" :
+                "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d"
+              }
+              maxLength={keyType === "CPF" ? 14 : keyType === "Telefone" ? 15 : keyType === "Aleatória" ? 36 : 254}
+              className={`mt-1 bg-surface-2 h-12 ${keyError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+            />
+            {keyError && <p className="text-xs text-destructive mt-1">{keyError}</p>}
           </div>
+
 
           <div>
             <label className="text-xs uppercase font-bold text-muted-foreground">Valor a sacar</label>
