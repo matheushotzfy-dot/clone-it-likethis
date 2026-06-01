@@ -27,6 +27,7 @@ function Page() {
       withdrawal_fee_pct: Number(form.withdrawal_fee_pct),
       welcome_bonus: Number(form.welcome_bonus),
       maintenance_mode: !!form.maintenance_mode,
+      active_gateway: (form.active_gateway === "bspay" ? "bspay" : "podpay") as "podpay" | "bspay",
     }}),
     onSuccess: () => { toast.success("Configurações salvas"); qc.invalidateQueries({ queryKey: ["settings"] }); },
     onError: (e: any) => toast.error(e.message),
