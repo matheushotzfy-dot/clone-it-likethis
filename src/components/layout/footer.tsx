@@ -5,10 +5,6 @@ export function Footer() {
   return (
     <footer className="bg-sidebar border-t border-border mt-12">
       <div className="max-w-7xl mx-auto px-4 py-10">
-        <div className="mb-6 p-3 rounded-md bg-surface border border-border text-xs text-muted-foreground text-center">
-          Projeto de demonstração para fins de estudo. Não afiliado a nenhum operador real.
-          <strong className="text-foreground"> Jogue com responsabilidade. +18.</strong>
-        </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           <div>
             <h4 className="font-bold mb-3 text-sm">Apostas</h4>
@@ -57,7 +53,7 @@ export function Footer() {
           <Logo />
         </div>
         <p className="mt-4 text-xs text-muted-foreground text-center">
-          © {new Date().getFullYear()} SANTOSBET Clone Demo — Apenas para estudo.
+          © {new Date().getFullYear()} SANTOSBET — Jogue com responsabilidade. +18.
         </p>
       </div>
     </footer>
