@@ -1,10 +1,11 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
-import { LayoutDashboard, Users, ArrowDownCircle, ArrowUpCircle, Settings, Receipt, Home, LogOut, Target, Image as ImageIcon, Menu, X, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, Users, ArrowDownCircle, ArrowUpCircle, Settings, Receipt, Home, LogOut, Target, Image as ImageIcon, Menu, X, ShieldCheck, LineChart } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 const items = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { to: "/admin/financeiro", label: "Financeiro", icon: LineChart },
   { to: "/admin/usuarios", label: "Usuários", icon: Users },
   { to: "/admin/depositos", label: "Depósitos", icon: ArrowDownCircle },
   { to: "/admin/saques", label: "Saques", icon: ArrowUpCircle },
