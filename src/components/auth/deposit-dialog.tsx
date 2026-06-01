@@ -91,7 +91,7 @@ export function DepositDialog() {
   }, [open, min]);
 
   const mut = useMutation({
-    mutationFn: () => (settings?.active_gateway === "bspay" ? createPixBs({ data: { amount } }) : createPixPod({ data: { amount } })),
+    mutationFn: async (): Promise<{ transactionId: string; qrCodeImage: string; copyPaste: string }> => (settings?.active_gateway === "bspay" ? createPixBs({ data: { amount } }) : createPixPod({ data: { amount } })),
     onSuccess: (res) => {
       if (!res.copyPaste) {
         toast.error("Falha ao gerar PIX. Tente novamente.");
