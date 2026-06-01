@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_spend: {
+        Row: {
+          amount: number
+          campaign: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          platform: string
+          spend_date: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          campaign?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          platform?: string
+          spend_date: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          campaign?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          platform?: string
+          spend_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           key: string
@@ -59,6 +95,39 @@ export type Database = {
           link_url?: string | null
           sort_order?: number
           title?: string | null
+        }
+        Relationships: []
+      }
+      gateway_reconciliation: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          fees: number
+          id: string
+          notes: string | null
+          real_amount: number
+          ref_date: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          fees?: number
+          id?: string
+          notes?: string | null
+          real_amount?: number
+          ref_date: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          fees?: number
+          id?: string
+          notes?: string | null
+          real_amount?: number
+          ref_date?: string
+          updated_at?: string
         }
         Relationships: []
       }
