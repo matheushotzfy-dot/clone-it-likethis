@@ -186,6 +186,16 @@ export const updateUserAdmin = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+async function purgeUserData(supabaseAdmin: { from: (t: string) => { delete: () => { eq: (c: string, v: string) => Promise<{ error: { message: string } | null }> } }; auth: { admin: { deleteUser: (id: string) => Promise<{ error: { message: string } | null }> } } }, id: string) {
+  // Apaga dados relacionados antes de remover o usuário do auth
+  await supabaseAdmin.from("transactions").delete().eq("user_id", id);
+  await supabaseAdmin.from("kyc_submissions").delete().eq("user_id", id);
+  await supabaseAdmin.from("user_roles").delete().eq("user_id", id);
+  await supabaseAdmin.from("profiles").delete().eq("id", id);
+  const { error } = await supabaseAdmin.auth.admin.deleteUser(id);
+  if (error) throw new Error(error.message);
+}
+
 export const deleteUserAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ userId: z.string().uuid() }).parse(d))
@@ -194,8 +204,7 @@ export const deleteUserAdmin = createServerFn({ method: "POST" })
     await assertAdmin(supabase, userId);
     if (data.userId === userId) throw new Error("Você não pode apagar a própria conta");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
-    if (error) throw new Error(error.message);
+    await purgeUserData(supabaseAdmin as never, data.userId);
     return { ok: true };
   });
 
@@ -210,8 +219,11 @@ export const deleteUsersBulkAdmin = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const errors: string[] = [];
     for (const id of targets) {
-      const { error } = await supabaseAdmin.auth.admin.deleteUser(id);
-      if (error) errors.push(`${id.slice(0, 8)}: ${error.message}`);
+      try {
+        await purgeUserData(supabaseAdmin as never, id);
+      } catch (e) {
+        errors.push(`${id.slice(0, 8)}: ${(e as Error).message}`);
+      }
     }
     if (errors.length) throw new Error(`Erros: ${errors.join("; ")}`);
     return { ok: true, deleted: targets.length };
