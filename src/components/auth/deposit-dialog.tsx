@@ -22,7 +22,8 @@ export function DepositDialog() {
   const [step, setStep] = useState<"form" | "pix">("form");
   const [pix, setPix] = useState<{ qrCodeImage: string; copyPaste: string; transactionId: string } | null>(null);
   const [pixCopied, setPixCopied] = useState(false);
-  const createPix = useServerFn(createPodPayPixDeposit);
+  const createPixPod = useServerFn(createPodPayPixDeposit);
+  const createPixBs = useServerFn(createBSPayPixDeposit);
   const fetchSettings = useServerFn(getSettings);
   const fetchProfile = useServerFn(getMyProfile);
   const fetchTransactions = useServerFn(listMyTransactions);
