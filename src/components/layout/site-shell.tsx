@@ -3,8 +3,10 @@ import { AppSidebar } from "./app-sidebar";
 import { Header } from "./header";
 import { Footer } from "./footer";
 import { MobileBottomNav } from "./mobile-bottom-nav";
+import { useTransactionNotifications } from "@/hooks/use-transaction-notifications";
 
 export function SiteShell({ children }: { children: ReactNode }) {
+  useTransactionNotifications();
   return (
     <div className="flex min-h-screen w-full bg-background">
       <AppSidebar />
@@ -17,3 +19,4 @@ export function SiteShell({ children }: { children: ReactNode }) {
     </div>
   );
 }
+
