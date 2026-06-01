@@ -70,7 +70,23 @@ export const createTransaction = createServerFn({ method: "POST" })
       if (data.amount < min) throw new Error(`Saque mínimo: R$ ${min.toFixed(2)}`);
       if (data.amount > max) throw new Error(`Saque máximo: R$ ${max.toFixed(2)}`);
       const { data: prof } = await supabase.from("profiles").select("balance").eq("id", userId).maybeSingle();
-      if (!prof || Number(prof.balance) < data.amount) throw new Error("Saldo insuficiente");
+      if (!prof) throw new Error("Perfil não encontrado");
+      // Reserve balance against other pending withdrawals to block spam-requests
+      const { data: pendings } = await supabase
+        .from("transactions")
+        .select("amount")
+        .eq("user_id", userId)
+        .eq("type", "withdrawal")
+        .eq("status", "pending");
+      const reserved = (pendings ?? []).reduce((sum, t: any) => sum + Number(t.amount), 0);
+      const available = Number(prof.balance) - reserved;
+      if (available < data.amount) {
+        throw new Error(
+          reserved > 0
+            ? `Você já tem R$ ${reserved.toFixed(2)} em saques pendentes. Saldo disponível: R$ ${Math.max(0, available).toFixed(2)}.`
+            : "Saldo insuficiente"
+        );
+      }
       if (!data.pix_key) throw new Error("Chave PIX obrigatória");
     }
     const { error } = await supabase.from("transactions").insert({
