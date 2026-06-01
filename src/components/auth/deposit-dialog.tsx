@@ -7,6 +7,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getMyProfile, listMyTransactions } from "@/lib/profile.functions";
 import { createPodPayPixDeposit } from "@/lib/podpay.functions";
+import { createBSPayPixDeposit } from "@/lib/bspay.functions";
 import { getSettings } from "@/lib/settings.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
