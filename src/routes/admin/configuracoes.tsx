@@ -48,6 +48,36 @@ function Page() {
   return (
     <div className="max-w-2xl space-y-6">
       <h1 className="text-2xl font-bold">Configurações</h1>
+
+      <div className="bg-card border border-border rounded-xl p-5 space-y-4">
+        <div>
+          <h2 className="font-bold">Gateway de pagamento ativo</h2>
+          <p className="text-sm text-muted-foreground">Define qual gateway processa novos depósitos PIX.</p>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {(["podpay", "bspay"] as const).map((g) => (
+            <button
+              key={g}
+              type="button"
+              onClick={() => setForm({ ...form, active_gateway: g })}
+              className={`h-16 rounded-xl border-2 font-black uppercase tracking-wider text-sm transition-all ${
+                form.active_gateway === g
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border bg-card text-muted-foreground hover:border-muted-foreground"
+              }`}
+            >
+              {g === "podpay" ? "PodPay" : "BSPay"}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          As credenciais (Client ID, Client Secret e Webhook Secret) são definidas via secrets do servidor:
+          <br />• PodPay: <code>PODPAY_SECRET_KEY</code>, <code>PODPAY_WEBHOOK_SECRET</code>
+          <br />• BSPay: <code>BSPAY_CLIENT_ID</code>, <code>BSPAY_CLIENT_SECRET</code>, <code>BSPAY_WEBHOOK_SECRET</code>
+          <br />Webhook URL BSPay: <code>/api/public/bspay-webhook</code>
+        </p>
+      </div>
+
       <div className="bg-card border border-border rounded-xl p-5 space-y-4">
         <h2 className="font-bold">Depósitos</h2>
         <div className="grid grid-cols-2 gap-3">
