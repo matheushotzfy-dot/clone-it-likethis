@@ -37,7 +37,7 @@ import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
 import { Route as AuthenticatedDepositoRouteImport } from './routes/_authenticated/deposito'
 import { Route as ApiPublicPodpayWebhookRouteImport } from './routes/api/public/podpay-webhook'
-import { Route as AdminUsuariosIdRouteImport } from './routes/admin/usuarios.$id'
+import { Route as AdminUsuariosIdRouteImport } from './routes/admin/usuarios_.$id'
 
 const TorneiosRoute = TorneiosRouteImport.update({
   id: '/torneios',
@@ -179,9 +179,9 @@ const ApiPublicPodpayWebhookRoute = ApiPublicPodpayWebhookRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminUsuariosIdRoute = AdminUsuariosIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AdminUsuariosRoute,
+  id: '/usuarios_/$id',
+  path: '/usuarios/$id',
+  getParentRoute: () => AdminRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -206,7 +206,7 @@ export interface FileRoutesByFullPath {
   '/admin/pixel': typeof AdminPixelRoute
   '/admin/saques': typeof AdminSaquesRoute
   '/admin/transacoes': typeof AdminTransacoesRoute
-  '/admin/usuarios': typeof AdminUsuariosRouteWithChildren
+  '/admin/usuarios': typeof AdminUsuariosRoute
   '/legal/jogo-responsavel': typeof LegalJogoResponsavelRoute
   '/legal/privacidade': typeof LegalPrivacidadeRoute
   '/legal/termos': typeof LegalTermosRoute
@@ -235,7 +235,7 @@ export interface FileRoutesByTo {
   '/admin/pixel': typeof AdminPixelRoute
   '/admin/saques': typeof AdminSaquesRoute
   '/admin/transacoes': typeof AdminTransacoesRoute
-  '/admin/usuarios': typeof AdminUsuariosRouteWithChildren
+  '/admin/usuarios': typeof AdminUsuariosRoute
   '/legal/jogo-responsavel': typeof LegalJogoResponsavelRoute
   '/legal/privacidade': typeof LegalPrivacidadeRoute
   '/legal/termos': typeof LegalTermosRoute
@@ -267,12 +267,12 @@ export interface FileRoutesById {
   '/admin/pixel': typeof AdminPixelRoute
   '/admin/saques': typeof AdminSaquesRoute
   '/admin/transacoes': typeof AdminTransacoesRoute
-  '/admin/usuarios': typeof AdminUsuariosRouteWithChildren
+  '/admin/usuarios': typeof AdminUsuariosRoute
   '/legal/jogo-responsavel': typeof LegalJogoResponsavelRoute
   '/legal/privacidade': typeof LegalPrivacidadeRoute
   '/legal/termos': typeof LegalTermosRoute
   '/admin/': typeof AdminIndexRoute
-  '/admin/usuarios/$id': typeof AdminUsuariosIdRoute
+  '/admin/usuarios_/$id': typeof AdminUsuariosIdRoute
   '/api/public/podpay-webhook': typeof ApiPublicPodpayWebhookRoute
 }
 export interface FileRouteTypes {
@@ -364,7 +364,7 @@ export interface FileRouteTypes {
     | '/legal/privacidade'
     | '/legal/termos'
     | '/admin/'
-    | '/admin/usuarios/$id'
+    | '/admin/usuarios_/$id'
     | '/api/public/podpay-webhook'
   fileRoutesById: FileRoutesById
 }
@@ -584,12 +584,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPodpayWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/usuarios/$id': {
-      id: '/admin/usuarios/$id'
-      path: '/$id'
+    '/admin/usuarios_/$id': {
+      id: '/admin/usuarios_/$id'
+      path: '/usuarios/$id'
       fullPath: '/admin/usuarios/$id'
       preLoaderRoute: typeof AdminUsuariosIdRouteImport
-      parentRoute: typeof AdminUsuariosRoute
+      parentRoute: typeof AdminRoute
     }
   }
 }
@@ -612,18 +612,6 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
 
-interface AdminUsuariosRouteChildren {
-  AdminUsuariosIdRoute: typeof AdminUsuariosIdRoute
-}
-
-const AdminUsuariosRouteChildren: AdminUsuariosRouteChildren = {
-  AdminUsuariosIdRoute: AdminUsuariosIdRoute,
-}
-
-const AdminUsuariosRouteWithChildren = AdminUsuariosRoute._addFileChildren(
-  AdminUsuariosRouteChildren,
-)
-
 interface AdminRouteChildren {
   AdminBannersRoute: typeof AdminBannersRoute
   AdminConfiguracoesRoute: typeof AdminConfiguracoesRoute
@@ -632,8 +620,9 @@ interface AdminRouteChildren {
   AdminPixelRoute: typeof AdminPixelRoute
   AdminSaquesRoute: typeof AdminSaquesRoute
   AdminTransacoesRoute: typeof AdminTransacoesRoute
-  AdminUsuariosRoute: typeof AdminUsuariosRouteWithChildren
+  AdminUsuariosRoute: typeof AdminUsuariosRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminUsuariosIdRoute: typeof AdminUsuariosIdRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -644,8 +633,9 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminPixelRoute: AdminPixelRoute,
   AdminSaquesRoute: AdminSaquesRoute,
   AdminTransacoesRoute: AdminTransacoesRoute,
-  AdminUsuariosRoute: AdminUsuariosRouteWithChildren,
+  AdminUsuariosRoute: AdminUsuariosRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminUsuariosIdRoute: AdminUsuariosIdRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)

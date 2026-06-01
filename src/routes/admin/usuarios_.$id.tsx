@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { FileText, ShieldCheck, Snowflake, Trash2 } from "lucide-react";
 
-export const Route = createFileRoute("/admin/usuarios/$id")({ component: Page });
+export const Route = createFileRoute("/admin/usuarios_/$id")({ component: Page });
 
 function Page() {
   const { id } = Route.useParams();
