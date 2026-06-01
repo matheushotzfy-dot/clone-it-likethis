@@ -43,8 +43,9 @@ export function Header() {
   const isAdmin = !!profile?.isAdmin;
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-brand shadow-sm">
-      <div className="flex items-center h-14 md:h-16 px-2 md:px-6 gap-2">
+    <header className="sticky top-0 z-40 w-full bg-brand shadow-sm overflow-x-clip">
+      <div className="flex items-center h-14 md:h-16 px-2 md:px-6 gap-1.5 md:gap-2 min-w-0">
+
         <button
           onClick={toggleSidebar}
           className="lg:hidden text-white p-2 -ml-1 hover:bg-white/10 rounded-md"
@@ -151,20 +152,21 @@ export function Header() {
             </DropdownMenu>
           </>
         ) : (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
             <button
               onClick={() => open("login")}
-              className="h-9 md:h-10 px-3 md:px-5 rounded-md border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground font-bold uppercase text-xs md:text-sm transition-colors"
+              className="h-9 md:h-10 px-2.5 md:px-5 rounded-md border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground font-bold uppercase text-[11px] md:text-sm transition-colors whitespace-nowrap"
             >
               Entrar
             </button>
             <button
               onClick={() => open("register")}
-              className="h-9 md:h-10 px-3 md:px-5 rounded-md bg-primary text-primary-foreground hover:brightness-110 font-bold uppercase text-xs md:text-sm transition-all"
+              className="h-9 md:h-10 px-2.5 md:px-5 rounded-md bg-primary text-primary-foreground hover:brightness-110 font-bold uppercase text-[11px] md:text-sm transition-all whitespace-nowrap"
             >
               Registrar
             </button>
           </div>
+
         )}
       </div>
     </header>

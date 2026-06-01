@@ -8,13 +8,13 @@ export function Logo({ className = "" }: { className?: string }) {
       aria-label="SANTOSBET"
       className={`flex h-12 md:h-14 items-center overflow-visible shrink-0 ${className}`}
     >
-      <span className="flex md:hidden items-center gap-2 font-black text-xl tracking-tight">
+      <span className="flex md:hidden items-center gap-1.5 font-black text-base tracking-tight">
         <img
           src={shield}
           alt="Santos FC"
           width={40}
           height={50}
-          className="h-7 w-auto object-contain drop-shadow shrink-0"
+          className="h-6 w-auto object-contain drop-shadow shrink-0"
           fetchPriority="high"
           decoding="async"
         />
@@ -23,6 +23,7 @@ export function Logo({ className = "" }: { className?: string }) {
           <span className="text-primary">BET</span>
         </span>
       </span>
+
 
       <span className="hidden md:flex items-center gap-2.5 h-full min-w-[188px] max-w-[210px] overflow-visible">
         <span className="flex h-full w-10 items-center justify-center overflow-visible shrink-0">
