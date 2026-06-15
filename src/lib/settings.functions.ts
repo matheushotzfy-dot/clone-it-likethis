@@ -26,9 +26,9 @@ const DEFAULTS: AppSettings = {
 
 export const getSettings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<AppSettings> => {
-    const { supabase } = context;
-    const { data } = await supabase.from("app_settings").select("key,value");
+  .handler(async (): Promise<AppSettings> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin.from("app_settings").select("key,value");
     const out = { ...DEFAULTS };
     for (const row of data ?? []) {
       const k = row.key as keyof AppSettings;
