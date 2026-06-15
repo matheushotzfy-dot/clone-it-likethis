@@ -2,6 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getSettings, updateSettings } from "@/lib/settings.functions";
+import {
+  getGatewayCredentials,
+  updateGatewayCredentials,
+} from "@/lib/gateway-credentials.functions";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,13 +14,20 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/configuracoes")({ component: Page });
 
+type Gateway = "podpay" | "bspay" | "veopag";
+
 function Page() {
   const get = useServerFn(getSettings);
   const upd = useServerFn(updateSettings);
+  const getCreds = useServerFn(getGatewayCredentials);
+  const updCreds = useServerFn(updateGatewayCredentials);
   const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ["settings"], queryFn: () => get(), staleTime: 30_000, refetchOnWindowFocus: false });
+  const { data: creds } = useQuery({ queryKey: ["gateway-credentials"], queryFn: () => getCreds(), staleTime: 30_000, refetchOnWindowFocus: false });
   const [form, setForm] = useState<any>(null);
+  const [credForm, setCredForm] = useState({ veopag_client_id: "", veopag_client_secret: "", veopag_webhook_signature: "" });
   useEffect(() => { if (data) setForm(data); }, [data]);
+  useEffect(() => { if (creds) setCredForm(creds); }, [creds]);
 
   const mut = useMutation({
     mutationFn: () => upd({ data: {
@@ -27,9 +38,15 @@ function Page() {
       withdrawal_fee_pct: Number(form.withdrawal_fee_pct),
       welcome_bonus: Number(form.welcome_bonus),
       maintenance_mode: !!form.maintenance_mode,
-      active_gateway: (form.active_gateway === "bspay" ? "bspay" : "podpay") as "podpay" | "bspay",
+      active_gateway: (["podpay", "bspay", "veopag"].includes(form.active_gateway) ? form.active_gateway : "veopag") as Gateway,
     }}),
     onSuccess: () => { toast.success("Configurações salvas"); qc.invalidateQueries({ queryKey: ["settings"] }); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const credMut = useMutation({
+    mutationFn: () => updCreds({ data: credForm }),
+    onSuccess: () => { toast.success("Credenciais VeoPag salvas"); qc.invalidateQueries({ queryKey: ["gateway-credentials"] }); },
     onError: (e: any) => toast.error(e.message),
   });
 
@@ -45,6 +62,8 @@ function Page() {
     </div>
   );
 
+  const gatewayLabel: Record<Gateway, string> = { podpay: "PodPay", bspay: "BSPay", veopag: "VeoPag" };
+
   return (
     <div className="max-w-2xl space-y-6">
       <h1 className="text-2xl font-bold">Configurações</h1>
@@ -54,8 +73,8 @@ function Page() {
           <h2 className="font-bold">Gateway de pagamento ativo</h2>
           <p className="text-sm text-muted-foreground">Define qual gateway processa novos depósitos PIX.</p>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          {(["podpay", "bspay"] as const).map((g) => (
+        <div className="grid grid-cols-3 gap-3">
+          {(["veopag", "podpay", "bspay"] as const).map((g) => (
             <button
               key={g}
               type="button"
@@ -66,15 +85,41 @@ function Page() {
                   : "border-border bg-card text-muted-foreground hover:border-muted-foreground"
               }`}
             >
-              {g === "podpay" ? "PodPay" : "BSPay"}
+              {gatewayLabel[g]}
             </button>
           ))}
         </div>
-        <p className="text-xs text-muted-foreground">
-          As credenciais (Client ID, Client Secret e Webhook Secret) são definidas via secrets do servidor:
-          <br />• PodPay: <code>PODPAY_SECRET_KEY</code>, <code>PODPAY_WEBHOOK_SECRET</code>
-          <br />• BSPay: <code>BSPAY_CLIENT_ID</code>, <code>BSPAY_CLIENT_SECRET</code>, <code>BSPAY_WEBHOOK_SECRET</code>
-          <br />Webhook URL BSPay: <code>/api/public/bspay-webhook</code>
+      </div>
+
+      <div className="bg-card border border-border rounded-xl p-5 space-y-4">
+        <div>
+          <h2 className="font-bold">Credenciais VeoPag</h2>
+          <p className="text-sm text-muted-foreground">
+            Configure em <a href="https://dashboard.veopag.com/credentials" target="_blank" rel="noreferrer" className="text-primary underline">dashboard.veopag.com</a>. Cadastre o IP do servidor na whitelist para saques.
+          </p>
+        </div>
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs uppercase font-bold text-muted-foreground">Client ID</label>
+            <Input className="mt-1" placeholder="cli_..." value={credForm.veopag_client_id} onChange={(e) => setCredForm({ ...credForm, veopag_client_id: e.target.value })} />
+          </div>
+          <div>
+            <label className="text-xs uppercase font-bold text-muted-foreground">Client Secret</label>
+            <Input className="mt-1" type="password" placeholder="••••••••" value={credForm.veopag_client_secret} onChange={(e) => setCredForm({ ...credForm, veopag_client_secret: e.target.value })} />
+          </div>
+          <div>
+            <label className="text-xs uppercase font-bold text-muted-foreground">Webhook Signature (opcional)</label>
+            <Input className="mt-1" type="password" placeholder="segredo do header X-Webhook-Signature" value={credForm.veopag_webhook_signature} onChange={(e) => setCredForm({ ...credForm, veopag_webhook_signature: e.target.value })} />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            URL do webhook (configure no portal VeoPag): <code>{typeof window !== "undefined" ? window.location.origin : ""}/api/public/veopag-webhook</code>
+          </p>
+          <Button onClick={() => credMut.mutate()} disabled={credMut.isPending}>
+            {credMut.isPending ? "Salvando..." : "Salvar credenciais VeoPag"}
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground border-t border-border pt-3">
+          PodPay / BSPay continuam configurados via secrets do servidor.
         </p>
       </div>
 

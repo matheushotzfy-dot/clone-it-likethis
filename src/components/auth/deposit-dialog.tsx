@@ -2,12 +2,14 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useAuthDialog } from "./auth-dialog-context";
 import { ArrowLeft, Copy, QrCode, CheckCircle2, ShieldCheck, Zap, Gift, Clock, Sparkles, TrendingUp } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getMyProfile, listMyTransactions } from "@/lib/profile.functions";
 import { createPodPayPixDeposit } from "@/lib/podpay.functions";
 import { createBSPayPixDeposit } from "@/lib/bspay.functions";
+import { createVeoPagPixDeposit } from "@/lib/veopag.functions";
 import { getSettings } from "@/lib/settings.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
@@ -24,6 +26,7 @@ export function DepositDialog() {
   const [pixCopied, setPixCopied] = useState(false);
   const createPixPod = useServerFn(createPodPayPixDeposit);
   const createPixBs = useServerFn(createBSPayPixDeposit);
+  const createPixVeo = useServerFn(createVeoPagPixDeposit);
   const fetchSettings = useServerFn(getSettings);
   const fetchProfile = useServerFn(getMyProfile);
   const fetchTransactions = useServerFn(listMyTransactions);
@@ -91,7 +94,12 @@ export function DepositDialog() {
   }, [open, min]);
 
   const mut = useMutation({
-    mutationFn: async (): Promise<{ transactionId: string; qrCodeImage: string; copyPaste: string }> => (settings?.active_gateway === "bspay" ? createPixBs({ data: { amount } }) : createPixPod({ data: { amount } })),
+    mutationFn: async (): Promise<{ transactionId: string; qrCodeImage: string; copyPaste: string }> => {
+      const g = settings?.active_gateway;
+      if (g === "bspay") return createPixBs({ data: { amount } });
+      if (g === "podpay") return createPixPod({ data: { amount } });
+      return createPixVeo({ data: { amount } });
+    },
     onSuccess: (res) => {
       if (!res.copyPaste) {
         toast.error("Falha ao gerar PIX. Tente novamente.");
@@ -282,6 +290,8 @@ export function DepositDialog() {
                   <div className="relative bg-white rounded-[2rem] p-4 sm:p-6 shadow-2xl">
                     {pix?.qrCodeImage ? (
                       <img src={pix.qrCodeImage} alt="QR Code PIX" className="size-48 sm:size-56" />
+                    ) : pix?.copyPaste ? (
+                      <QRCodeSVG value={pix.copyPaste} size={224} level="M" className="size-48 sm:size-56" />
                     ) : (
                       <QrCode className="size-48 sm:size-56 text-black" strokeWidth={1.5} />
                     )}
