@@ -37,6 +37,7 @@ import { Route as AuthenticatedSaqueRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
 import { Route as AuthenticatedDepositoRouteImport } from './routes/_authenticated/deposito'
+import { Route as ApiPublicVeopagWebhookRouteImport } from './routes/api/public/veopag-webhook'
 import { Route as ApiPublicPodpayWebhookRouteImport } from './routes/api/public/podpay-webhook'
 import { Route as ApiPublicBspayWebhookRouteImport } from './routes/api/public/bspay-webhook'
 import { Route as AdminUsuariosIdRouteImport } from './routes/admin/usuarios_.$id'
@@ -180,6 +181,11 @@ const AuthenticatedDepositoRoute = AuthenticatedDepositoRouteImport.update({
   path: '/deposito',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const ApiPublicVeopagWebhookRoute = ApiPublicVeopagWebhookRouteImport.update({
+  id: '/api/public/veopag-webhook',
+  path: '/api/public/veopag-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPodpayWebhookRoute = ApiPublicPodpayWebhookRouteImport.update({
   id: '/api/public/podpay-webhook',
   path: '/api/public/podpay-webhook',
@@ -227,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/admin/usuarios/$id': typeof AdminUsuariosIdRoute
   '/api/public/bspay-webhook': typeof ApiPublicBspayWebhookRoute
   '/api/public/podpay-webhook': typeof ApiPublicPodpayWebhookRoute
+  '/api/public/veopag-webhook': typeof ApiPublicVeopagWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -258,6 +265,7 @@ export interface FileRoutesByTo {
   '/admin/usuarios/$id': typeof AdminUsuariosIdRoute
   '/api/public/bspay-webhook': typeof ApiPublicBspayWebhookRoute
   '/api/public/podpay-webhook': typeof ApiPublicPodpayWebhookRoute
+  '/api/public/veopag-webhook': typeof ApiPublicVeopagWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -292,6 +300,7 @@ export interface FileRoutesById {
   '/admin/usuarios_/$id': typeof AdminUsuariosIdRoute
   '/api/public/bspay-webhook': typeof ApiPublicBspayWebhookRoute
   '/api/public/podpay-webhook': typeof ApiPublicPodpayWebhookRoute
+  '/api/public/veopag-webhook': typeof ApiPublicVeopagWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -326,6 +335,7 @@ export interface FileRouteTypes {
     | '/admin/usuarios/$id'
     | '/api/public/bspay-webhook'
     | '/api/public/podpay-webhook'
+    | '/api/public/veopag-webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -357,6 +367,7 @@ export interface FileRouteTypes {
     | '/admin/usuarios/$id'
     | '/api/public/bspay-webhook'
     | '/api/public/podpay-webhook'
+    | '/api/public/veopag-webhook'
   id:
     | '__root__'
     | '/'
@@ -390,6 +401,7 @@ export interface FileRouteTypes {
     | '/admin/usuarios_/$id'
     | '/api/public/bspay-webhook'
     | '/api/public/podpay-webhook'
+    | '/api/public/veopag-webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -409,6 +421,7 @@ export interface RootRouteChildren {
   LegalTermosRoute: typeof LegalTermosRoute
   ApiPublicBspayWebhookRoute: typeof ApiPublicBspayWebhookRoute
   ApiPublicPodpayWebhookRoute: typeof ApiPublicPodpayWebhookRoute
+  ApiPublicVeopagWebhookRoute: typeof ApiPublicVeopagWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -609,6 +622,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDepositoRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/api/public/veopag-webhook': {
+      id: '/api/public/veopag-webhook'
+      path: '/api/public/veopag-webhook'
+      fullPath: '/api/public/veopag-webhook'
+      preLoaderRoute: typeof ApiPublicVeopagWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/podpay-webhook': {
       id: '/api/public/podpay-webhook'
       path: '/api/public/podpay-webhook'
@@ -698,6 +718,7 @@ const rootRouteChildren: RootRouteChildren = {
   LegalTermosRoute: LegalTermosRoute,
   ApiPublicBspayWebhookRoute: ApiPublicBspayWebhookRoute,
   ApiPublicPodpayWebhookRoute: ApiPublicPodpayWebhookRoute,
+  ApiPublicVeopagWebhookRoute: ApiPublicVeopagWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

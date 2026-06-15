@@ -8,6 +8,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getMyProfile, listMyTransactions } from "@/lib/profile.functions";
 import { createPodPayPixDeposit } from "@/lib/podpay.functions";
 import { createBSPayPixDeposit } from "@/lib/bspay.functions";
+import { createVeoPagPixDeposit } from "@/lib/veopag.functions";
 import { getSettings } from "@/lib/settings.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
@@ -24,6 +25,7 @@ export function DepositDialog() {
   const [pixCopied, setPixCopied] = useState(false);
   const createPixPod = useServerFn(createPodPayPixDeposit);
   const createPixBs = useServerFn(createBSPayPixDeposit);
+  const createPixVeo = useServerFn(createVeoPagPixDeposit);
   const fetchSettings = useServerFn(getSettings);
   const fetchProfile = useServerFn(getMyProfile);
   const fetchTransactions = useServerFn(listMyTransactions);
@@ -91,7 +93,12 @@ export function DepositDialog() {
   }, [open, min]);
 
   const mut = useMutation({
-    mutationFn: async (): Promise<{ transactionId: string; qrCodeImage: string; copyPaste: string }> => (settings?.active_gateway === "bspay" ? createPixBs({ data: { amount } }) : createPixPod({ data: { amount } })),
+    mutationFn: async (): Promise<{ transactionId: string; qrCodeImage: string; copyPaste: string }> => {
+      const g = settings?.active_gateway;
+      if (g === "bspay") return createPixBs({ data: { amount } });
+      if (g === "podpay") return createPixPod({ data: { amount } });
+      return createPixVeo({ data: { amount } });
+    },
     onSuccess: (res) => {
       if (!res.copyPaste) {
         toast.error("Falha ao gerar PIX. Tente novamente.");
