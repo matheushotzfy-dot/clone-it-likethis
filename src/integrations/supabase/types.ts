@@ -98,6 +98,24 @@ export type Database = {
         }
         Relationships: []
       }
+      gateway_credentials: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: []
+      }
       gateway_reconciliation: {
         Row: {
           created_at: string
