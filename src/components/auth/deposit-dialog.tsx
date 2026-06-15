@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useAuthDialog } from "./auth-dialog-context";
 import { ArrowLeft, Copy, QrCode, CheckCircle2, ShieldCheck, Zap, Gift, Clock, Sparkles, TrendingUp } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -289,6 +290,8 @@ export function DepositDialog() {
                   <div className="relative bg-white rounded-[2rem] p-4 sm:p-6 shadow-2xl">
                     {pix?.qrCodeImage ? (
                       <img src={pix.qrCodeImage} alt="QR Code PIX" className="size-48 sm:size-56" />
+                    ) : pix?.copyPaste ? (
+                      <QRCodeSVG value={pix.copyPaste} size={224} level="M" className="size-48 sm:size-56" />
                     ) : (
                       <QrCode className="size-48 sm:size-56 text-black" strokeWidth={1.5} />
                     )}
