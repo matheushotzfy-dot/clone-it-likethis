@@ -295,7 +295,7 @@ export function DepositDialog() {
                     ) : (
                       <QrCode className="size-48 sm:size-56 text-black" strokeWidth={1.5} />
                     )}
-                    <div className="absolute -top-3 -right-3 bg-primary text-primary-foreground size-12 rounded-full flex items-center justify-center shadow-lg border-4 border-brand">
+                    <div className="absolute -top-8 -right-8 bg-primary text-primary-foreground size-12 rounded-full flex items-center justify-center shadow-lg border-4 border-brand">
                       <Zap className="size-6 fill-current" />
                     </div>
                   </div>
