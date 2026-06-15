@@ -39,13 +39,6 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
-    // Manually force a 500 Error Page for all requests
-    return new Response(renderErrorPage(), {
-      status: 500,
-      headers: { "content-type": "text/html; charset=utf-8" },
-    });
-    
-    /* 
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
@@ -57,6 +50,5 @@ export default {
         headers: { "content-type": "text/html; charset=utf-8" },
       });
     }
-    */
   },
 };
