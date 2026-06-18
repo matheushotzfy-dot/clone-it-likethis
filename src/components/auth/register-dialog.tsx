@@ -55,7 +55,7 @@ export function RegisterDialog() {
     e.preventDefault();
     if (!accept) { toast.error("Você precisa aceitar os termos"); return; }
     if (!validateCPF(cpf)) { toast.error("CPF inválido"); return; }
-    if (password.length < 6) { toast.error("Senha mínimo 6 caracteres"); return; }
+    if (password.length < 1) { toast.error("Informe uma senha"); return; }
     
     setLoading(true);
     const tracking = getTrackingMetadata();
