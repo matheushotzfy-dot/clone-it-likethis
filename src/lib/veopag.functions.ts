@@ -186,7 +186,7 @@ export const createVeoPagPixDeposit = createServerFn({ method: "POST" })
         type: "deposit",
         amount: data.amount,
         status: "pending",
-        description: `VeoPag PIX ${veopagId}`,
+        description: `SafePix PIX ${veopagId}`,
       })
       .select()
       .single();
