@@ -14,8 +14,8 @@ import { getSettings } from "@/lib/settings.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
-const presets = [30, 50, 150, 250, 350, 500];
-const hots = new Set([50, 250, 500]);
+const presets = [30, 50, 100, 250, 500, 1000];
+const hots = new Set([50, 250, 1000]);
 
 export function DepositDialog() {
   const { current, close, open: openDialog } = useAuthDialog();
