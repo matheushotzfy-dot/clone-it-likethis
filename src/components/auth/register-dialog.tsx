@@ -73,7 +73,22 @@ export function RegisterDialog() {
     });
     
     setLoading(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      const msg = error.message?.toLowerCase() || "";
+      let friendly = error.message;
+      if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
+        friendly = "Este email já está cadastrado. Faça login.";
+      } else if (msg.includes("weak") || msg.includes("pwned") || msg.includes("compromised")) {
+        friendly = "Senha muito fraca ou vazada. Use uma senha mais forte.";
+      } else if (msg.includes("invalid") && msg.includes("email")) {
+        friendly = "Email inválido. Verifique e tente novamente.";
+      } else if (msg.includes("rate") || msg.includes("limit")) {
+        friendly = "Muitas tentativas. Aguarde alguns segundos.";
+      }
+      toast.error(friendly);
+      return;
+    }
+    
     
     toast.success("Conta criada! Bem-vindo.");
     // Abrir depósito imediatamente após cadastro
