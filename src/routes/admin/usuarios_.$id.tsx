@@ -72,6 +72,22 @@ function Page() {
   const p = data.profile;
   if (!p) return <div>Usuário não encontrado. <Link to="/admin/usuarios" className="text-primary">Voltar</Link></div>;
 
+  const txs: any[] = data.transactions ?? [];
+  const sumBy = (fn: (t: any) => boolean) => txs.filter(fn).reduce((a, t) => a + Number(t.amount), 0);
+  const countBy = (fn: (t: any) => boolean) => txs.filter(fn).length;
+  const totalDeposited = sumBy(t => t.type === "deposit" && t.status === "approved");
+  const totalWithdrawn = sumBy(t => t.type === "withdrawal" && t.status === "approved");
+  const pendingWithdrawals = sumBy(t => t.type === "withdrawal" && t.status === "pending");
+  const pendingDeposits = sumBy(t => t.type === "deposit" && t.status === "pending");
+  const rejectedWithdrawals = sumBy(t => t.type === "withdrawal" && t.status === "rejected");
+  const totalBonus = sumBy(t => t.type === "bonus" && t.status === "approved");
+  const depositCount = countBy(t => t.type === "deposit" && t.status === "approved");
+  const withdrawCount = countBy(t => t.type === "withdrawal" && t.status === "approved");
+  const lastDeposit = txs.find(t => t.type === "deposit" && t.status === "approved");
+  const lastWithdraw = txs.find(t => t.type === "withdrawal" && t.status === "approved");
+  const fmt = (v: number) => "R$ " + v.toFixed(2).replace(".", ",");
+  const net = totalDeposited - totalWithdrawn;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-2">
