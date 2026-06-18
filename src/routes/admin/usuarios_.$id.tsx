@@ -185,8 +185,19 @@ function Page() {
         )}
       </div>
 
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <StatCard label="Total depositado" value={fmt(totalDeposited)} sub={`${depositCount} depósitos`} tone="green" />
+        <StatCard label="Total sacado" value={fmt(totalWithdrawn)} sub={`${withdrawCount} saques`} tone="red" />
+        <StatCard label="Saldo líquido (dep - saq)" value={fmt(net)} sub={net >= 0 ? "GGR positivo" : "GGR negativo"} tone={net >= 0 ? "green" : "red"} />
+        <StatCard label="Bônus recebido" value={fmt(totalBonus)} sub={p.bonus_used ? "bônus usado" : "disponível"} tone="primary" />
+        <StatCard label="Saques pendentes" value={fmt(pendingWithdrawals)} sub={`${countBy(t => t.type === "withdrawal" && t.status === "pending")} pendentes`} tone="yellow" />
+        <StatCard label="Depósitos pendentes" value={fmt(pendingDeposits)} sub={`${countBy(t => t.type === "deposit" && t.status === "pending")} aguardando`} tone="yellow" />
+        <StatCard label="Saques recusados" value={fmt(rejectedWithdrawals)} sub={`${countBy(t => t.type === "withdrawal" && t.status === "rejected")} rejeitados`} tone="muted" />
+        <StatCard label="Última atividade" value={lastDeposit || lastWithdraw ? new Date((lastDeposit ?? lastWithdraw).created_at).toLocaleDateString("pt-BR") : "—"} sub={lastDeposit ? `Últ. depósito ${fmt(Number(lastDeposit.amount))}` : "sem depósitos"} tone="muted" />
+      </div>
+
       <div className="bg-card border border-border rounded-xl overflow-x-auto">
-        <h3 className="font-bold p-4">Transações ({data.transactions.length})</h3>
+        <h3 className="font-bold p-4">Transações ({txs.length})</h3>
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-left">
             <tr><th className="px-4 py-2">Data</th><th className="px-4 py-2">Tipo</th><th className="px-4 py-2">Valor</th><th className="px-4 py-2">Status</th><th className="px-4 py-2">Descrição</th><th className="px-4 py-2 text-right">Ações</th></tr>
