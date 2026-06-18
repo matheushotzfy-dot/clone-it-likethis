@@ -1,0 +1,1 @@
+UPDATE public.app_settings SET value = '1'::jsonb WHERE key = 'password_min_length';
