@@ -237,6 +237,23 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
+function StatCard({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: "green" | "red" | "yellow" | "primary" | "muted" }) {
+  const toneMap: Record<string, string> = {
+    green: "text-green-400",
+    red: "text-red-400",
+    yellow: "text-yellow-400",
+    primary: "text-primary",
+    muted: "text-foreground",
+  };
+  return (
+    <div className="bg-card border border-border rounded-xl p-4">
+      <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">{label}</div>
+      <div className={`text-lg font-black mt-1 ${toneMap[tone ?? "muted"]}`}>{value}</div>
+      {sub && <div className="text-[11px] text-muted-foreground mt-0.5">{sub}</div>}
+    </div>
+  );
+}
+
 function StatusBadge({ s }: { s: string }) {
   const map: Record<string, string> = {
     pending: "bg-yellow-500/20 text-yellow-400",
