@@ -120,7 +120,7 @@ export function TransactionsTable({ title, type }: { title: string; type: TxType
               <tr key={t.id} className={`border-t border-border hover:bg-muted/30 ${selected.has(t.id) ? "bg-primary/5" : ""}`}>
                 <td className="px-3 py-3"><Checkbox checked={selected.has(t.id)} onCheckedChange={() => toggle(t.id)} aria-label="Selecionar" /></td>
                 <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{new Date(t.created_at).toLocaleString("pt-BR")}</td>
-                <td className="px-4 py-3"><Link to="/admin/usuarios_/$id" params={{ id: t.user_id }} className="font-bold hover:text-primary">{t.user?.full_name || t.user?.username || t.user_id.slice(0, 8)}</Link></td>
+                <td className="px-4 py-3"><Link to="/admin/usuarios/$id" params={{ id: t.user_id }} className="font-bold hover:text-primary">{t.user?.full_name || t.user?.username || t.user_id.slice(0, 8)}</Link></td>
                 <td className="px-4 py-3 text-xs">{t.user?.email || "—"}</td>
                 <td className="px-4 py-3 font-mono text-xs">{t.user?.cpf || "—"}</td>
                 {type === "all" && <td className="px-4 py-3 capitalize">{t.type}</td>}
@@ -166,7 +166,7 @@ export function TransactionsTable({ title, type }: { title: string; type: TxType
               <Checkbox className="mt-1" checked={selected.has(t.id)} onCheckedChange={() => toggle(t.id)} />
               <div className="flex-1 min-w-0 space-y-0.5">
                 <div className="flex items-center justify-between gap-2">
-                  <Link to="/admin/usuarios_/$id" params={{ id: t.user_id }} className="font-bold truncate hover:text-primary">
+                  <Link to="/admin/usuarios/$id" params={{ id: t.user_id }} className="font-bold truncate hover:text-primary">
                     {t.user?.full_name || t.user?.username || t.user_id.slice(0, 8)}
                   </Link>
                   <StatusBadge s={t.status} />

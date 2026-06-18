@@ -72,6 +72,22 @@ function Page() {
   const p = data.profile;
   if (!p) return <div>Usuário não encontrado. <Link to="/admin/usuarios" className="text-primary">Voltar</Link></div>;
 
+  const txs: any[] = data.transactions ?? [];
+  const sumBy = (fn: (t: any) => boolean) => txs.filter(fn).reduce((a, t) => a + Number(t.amount), 0);
+  const countBy = (fn: (t: any) => boolean) => txs.filter(fn).length;
+  const totalDeposited = sumBy(t => t.type === "deposit" && t.status === "approved");
+  const totalWithdrawn = sumBy(t => t.type === "withdrawal" && t.status === "approved");
+  const pendingWithdrawals = sumBy(t => t.type === "withdrawal" && t.status === "pending");
+  const pendingDeposits = sumBy(t => t.type === "deposit" && t.status === "pending");
+  const rejectedWithdrawals = sumBy(t => t.type === "withdrawal" && t.status === "rejected");
+  const totalBonus = sumBy(t => t.type === "bonus" && t.status === "approved");
+  const depositCount = countBy(t => t.type === "deposit" && t.status === "approved");
+  const withdrawCount = countBy(t => t.type === "withdrawal" && t.status === "approved");
+  const lastDeposit = txs.find(t => t.type === "deposit" && t.status === "approved");
+  const lastWithdraw = txs.find(t => t.type === "withdrawal" && t.status === "approved");
+  const fmt = (v: number) => "R$ " + v.toFixed(2).replace(".", ",");
+  const net = totalDeposited - totalWithdrawn;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-2">
@@ -169,8 +185,19 @@ function Page() {
         )}
       </div>
 
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <StatCard label="Total depositado" value={fmt(totalDeposited)} sub={`${depositCount} depósitos`} tone="green" />
+        <StatCard label="Total sacado" value={fmt(totalWithdrawn)} sub={`${withdrawCount} saques`} tone="red" />
+        <StatCard label="Saldo líquido (dep - saq)" value={fmt(net)} sub={net >= 0 ? "GGR positivo" : "GGR negativo"} tone={net >= 0 ? "green" : "red"} />
+        <StatCard label="Bônus recebido" value={fmt(totalBonus)} sub={p.bonus_used ? "bônus usado" : "disponível"} tone="primary" />
+        <StatCard label="Saques pendentes" value={fmt(pendingWithdrawals)} sub={`${countBy(t => t.type === "withdrawal" && t.status === "pending")} pendentes`} tone="yellow" />
+        <StatCard label="Depósitos pendentes" value={fmt(pendingDeposits)} sub={`${countBy(t => t.type === "deposit" && t.status === "pending")} aguardando`} tone="yellow" />
+        <StatCard label="Saques recusados" value={fmt(rejectedWithdrawals)} sub={`${countBy(t => t.type === "withdrawal" && t.status === "rejected")} rejeitados`} tone="muted" />
+        <StatCard label="Última atividade" value={lastDeposit || lastWithdraw ? new Date((lastDeposit ?? lastWithdraw).created_at).toLocaleDateString("pt-BR") : "—"} sub={lastDeposit ? `Últ. depósito ${fmt(Number(lastDeposit.amount))}` : "sem depósitos"} tone="muted" />
+      </div>
+
       <div className="bg-card border border-border rounded-xl overflow-x-auto">
-        <h3 className="font-bold p-4">Transações ({data.transactions.length})</h3>
+        <h3 className="font-bold p-4">Transações ({txs.length})</h3>
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-left">
             <tr><th className="px-4 py-2">Data</th><th className="px-4 py-2">Tipo</th><th className="px-4 py-2">Valor</th><th className="px-4 py-2">Status</th><th className="px-4 py-2">Descrição</th><th className="px-4 py-2 text-right">Ações</th></tr>
@@ -206,6 +233,23 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <div>
       <label className="text-xs uppercase font-bold text-muted-foreground">{label}</label>
       <div className="mt-1">{children}</div>
+    </div>
+  );
+}
+
+function StatCard({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: "green" | "red" | "yellow" | "primary" | "muted" }) {
+  const toneMap: Record<string, string> = {
+    green: "text-green-400",
+    red: "text-red-400",
+    yellow: "text-yellow-400",
+    primary: "text-primary",
+    muted: "text-foreground",
+  };
+  return (
+    <div className="bg-card border border-border rounded-xl p-4">
+      <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">{label}</div>
+      <div className={`text-lg font-black mt-1 ${toneMap[tone ?? "muted"]}`}>{value}</div>
+      {sub && <div className="text-[11px] text-muted-foreground mt-0.5">{sub}</div>}
     </div>
   );
 }

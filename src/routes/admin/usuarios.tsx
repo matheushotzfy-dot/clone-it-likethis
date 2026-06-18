@@ -115,7 +115,7 @@ function Page() {
                 <td className="px-4 py-3"><span className={`text-xs uppercase font-bold ${u.kyc_status === "approved" ? "text-success" : "text-muted-foreground"}`}>{u.kyc_status}</span></td>
                 <td className="px-4 py-3 text-muted-foreground">{new Date(u.created_at).toLocaleDateString("pt-BR")}</td>
                 <td className="px-4 py-3 text-right">
-                  <Link to="/admin/usuarios_/$id" params={{ id: u.id }} className="text-primary font-bold hover:underline">Ver</Link>
+                  <Link to="/admin/usuarios/$id" params={{ id: u.id }} className="text-primary font-bold hover:underline">Ver</Link>
                 </td>
               </tr>
             ))}
@@ -137,7 +137,7 @@ function Page() {
           <div key={u.id} className={`rounded-xl border bg-card p-3 ${selected.has(u.id) ? "border-primary/50 bg-primary/5" : "border-border"}`}>
             <div className="flex items-start gap-3">
               <Checkbox className="mt-1" checked={selected.has(u.id)} onCheckedChange={() => toggle(u.id)} aria-label="Selecionar" />
-              <Link to="/admin/usuarios_/$id" params={{ id: u.id }} className="flex-1 min-w-0 flex items-center gap-2">
+              <Link to="/admin/usuarios/$id" params={{ id: u.id }} className="flex-1 min-w-0 flex items-center gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="font-bold truncate">{u.full_name || u.username || "—"}</div>
                   <div className="text-xs text-muted-foreground truncate">{u.email || u.username}</div>
