@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getDashboardKPIs } from "@/lib/admin.functions";
 import { ArrowDownCircle, ArrowUpCircle, Users, Wallet, Clock, ShieldCheck, Activity, TrendingUp } from "lucide-react";
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, PieChart, Pie, Cell, Legend } from "recharts";
 
 export const Route = createFileRoute("/admin/")({
   component: Dashboard,
