@@ -1,0 +1,1 @@
+ALTER TABLE public.transactions ADD COLUMN IF NOT EXISTS gateway_qrcode text; ALTER TABLE public.transactions ADD COLUMN IF NOT EXISTS gateway_external_id text; CREATE INDEX IF NOT EXISTS idx_transactions_user_pending_deposit ON public.transactions(user_id, created_at DESC) WHERE type='deposit' AND status='pending';
