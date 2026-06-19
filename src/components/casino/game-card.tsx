@@ -33,8 +33,7 @@ export function GameCard({ game, rank, priority }: Props) {
             alt={game.name}
             loading={priority ? "eager" : "lazy"}
             decoding="async"
-            // @ts-expect-error fetchpriority is valid HTML attr
-            fetchpriority={priority ? "high" : "auto"}
+            fetchPriority={priority ? "high" : "auto"}
             width={300}
             height={400}
             sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 180px"
