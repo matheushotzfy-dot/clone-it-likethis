@@ -48,7 +48,9 @@ export function BannerCarousel() {
                 loading={i === 0 ? "eager" : "lazy"}
                 fetchPriority={i === 0 ? "high" : "auto"}
                 decoding="async"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                 className="h-full w-full object-cover object-center"
+                draggable={false}
               />
             </picture>
           );
