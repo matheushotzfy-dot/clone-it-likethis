@@ -28,7 +28,8 @@ export function TransactionsTable({ title, type }: { title: string; type: TxType
     refetchOnWindowFocus: false,
   });
 
-  const rows = (data ?? []) as any[];
+  const allRows = (data ?? []) as any[];
+  const rows = pageSize === "all" ? allRows : allRows.slice(0, pageSize);
   const allIds = useMemo(() => rows.map((t) => t.id), [rows]);
   const allSelected = allIds.length > 0 && allIds.every((id) => selected.has(id));
   const toggle = (id: string) =>
