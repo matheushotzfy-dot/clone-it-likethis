@@ -249,6 +249,11 @@ export const createVeoPagPixDeposit = createServerFn({ method: "POST" })
     };
     if (!res.ok) {
       console.error("VeoPag deposit error", res.status, JSON.stringify(j));
+      const admin = await getAdminClient();
+      await admin
+        .from("transactions")
+        .update({ status: "rejected", description: `SafePix PIX ${externalId} (falha ao gerar)` })
+        .eq("id", pendingTx.id);
       throw new Error(j.message || `VeoPag HTTP ${res.status}`);
     }
 
@@ -257,20 +262,23 @@ export const createVeoPagPixDeposit = createServerFn({ method: "POST" })
     const copyPaste = j.qrCodeResponse?.qrcode || j.qrcode || "";
     if (!copyPaste) {
       console.error("VeoPag deposit empty qrcode", JSON.stringify(j));
+      const admin = await getAdminClient();
+      await admin
+        .from("transactions")
+        .update({ status: "rejected", description: `SafePix PIX ${veopagId} (sem código PIX)` })
+        .eq("id", pendingTx.id);
       throw new Error("VeoPag não retornou o código PIX");
     }
 
-    const { data: tx, error } = await supabase
+    const admin = await getAdminClient();
+    const { data: tx, error } = await admin
       .from("transactions")
-      .insert({
-        user_id: userId,
-        type: "deposit",
-        amount: data.amount,
-        status: "pending",
+      .update({
         description: `SafePix PIX ${veopagId}`,
         gateway_qrcode: copyPaste,
         gateway_external_id: veopagId,
       })
+      .eq("id", pendingTx.id)
       .select()
       .single();
     if (error) throw new Error(error.message);
