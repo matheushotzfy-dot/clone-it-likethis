@@ -67,8 +67,9 @@ export const Route = createFileRoute("/api/public/veopag-webhook")({
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const veopagId = payload.transaction_id;
         const externalId = payload.external_id;
+        const eventId = veopagId || externalId;
         const status = (payload.status || "").toUpperCase();
-        if (!veopagId || !status) {
+        if (!eventId || !status) {
           return new Response("Missing id/status", {
             status: 400,
             headers: corsHeaders,
@@ -102,13 +103,13 @@ export const Route = createFileRoute("/api/public/veopag-webhook")({
           const { data } = await supabaseAdmin
             .from("transactions")
             .select("id,status")
-            .ilike("description", `%${veopagId}%`)
+            .ilike("description", `%${eventId}%`)
             .maybeSingle();
           tx = data as WebhookTx | null;
         }
 
         if (!tx) {
-          console.warn("VeoPag webhook: no matching tx for", veopagId);
+          console.warn("VeoPag webhook: no matching tx for", eventId);
           return new Response("ok", { status: 200, headers: corsHeaders });
         }
 
