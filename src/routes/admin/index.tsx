@@ -87,21 +87,25 @@ function Dashboard() {
   );
 }
 
-function DeviceBreakdown({ devices }: { devices: { android: number; ios: number; desktop: number; unknown: number; total: number; androidPct: number; iosPct: number; desktopPct: number; unknownPct: number } }) {
+function DeviceBreakdown({ devices }: { devices: { android: number; ios: number; desktop: number; unknown: number; total: number; androidPct: number; iosPct: number; desktopPct: number; unknownPct: number; androidDeposits: number; iosDeposits: number; desktopDeposits: number; unknownDeposits: number } }) {
   const COLORS = { android: "#34d399", ios: "#60a5fa", desktop: "#f59e0b", unknown: "#64748b" };
   const pieData = [
-    { name: "Android", value: devices.android, pct: devices.androidPct, color: COLORS.android },
-    { name: "iOS", value: devices.ios, pct: devices.iosPct, color: COLORS.ios },
-    { name: "Desktop", value: devices.desktop, pct: devices.desktopPct, color: COLORS.desktop },
-    { name: "Outro", value: devices.unknown, pct: devices.unknownPct, color: COLORS.unknown },
+    { name: "Android", value: devices.android, pct: devices.androidPct, deposits: devices.androidDeposits, color: COLORS.android },
+    { name: "iOS", value: devices.ios, pct: devices.iosPct, deposits: devices.iosDeposits, color: COLORS.ios },
+    { name: "Desktop", value: devices.desktop, pct: devices.desktopPct, deposits: devices.desktopDeposits, color: COLORS.desktop },
+    { name: "Outro", value: devices.unknown, pct: devices.unknownPct, deposits: devices.unknownDeposits, color: COLORS.unknown },
   ].filter(d => d.value > 0);
+  const tooltipStyle = { background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, color: "hsl(var(--foreground))" };
+  const itemStyle = { color: "hsl(var(--foreground))" };
+  const labelStyle = { color: "hsl(var(--foreground))", fontWeight: 700 };
+  const totalDeposits = devices.androidDeposits + devices.iosDeposits + devices.desktopDeposits + devices.unknownDeposits;
 
   return (
     <div className="rounded-xl border border-border bg-card p-5">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h2 className="font-black">Dispositivos dos usuários</h2>
-          <p className="text-xs text-muted-foreground">Plataforma usada no cadastro ({devices.total} usuários)</p>
+          <p className="text-xs text-muted-foreground">Plataforma usada no cadastro ({devices.total} usuários · {brl(totalDeposits)} depositado)</p>
         </div>
       </div>
       {devices.total === 0 ? (
@@ -114,8 +118,16 @@ function DeviceBreakdown({ devices }: { devices: { android: number; ios: number;
                 <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={95} paddingAngle={2} stroke="none">
                   {pieData.map((d, i) => <Cell key={i} fill={d.color} />)}
                 </Pie>
-                <Tooltip formatter={(v: number, n) => [`${v} usuários`, n]} contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12 }} />
-                <Legend />
+                <Tooltip
+                  contentStyle={tooltipStyle}
+                  itemStyle={itemStyle}
+                  labelStyle={labelStyle}
+                  formatter={(v: number, _n, entry: any) => {
+                    const dep = entry?.payload?.deposits ?? 0;
+                    return [`${v} usuários · ${brl(Number(dep))} depositado`, entry?.payload?.name];
+                  }}
+                />
+                <Legend wrapperStyle={{ color: "hsl(var(--foreground))" }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -123,7 +135,10 @@ function DeviceBreakdown({ devices }: { devices: { android: number; ios: number;
             {pieData.map((d) => (
               <div key={d.name} className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2">
                 <span className="size-3 rounded-full" style={{ background: d.color }} />
-                <span className="font-bold flex-1">{d.name}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold">{d.name}</div>
+                  <div className="text-xs text-muted-foreground">{brl(d.deposits)} depositado</div>
+                </div>
                 <span className="text-sm text-muted-foreground">{d.value}</span>
                 <span className="font-black text-lg w-14 text-right">{d.pct}%</span>
               </div>

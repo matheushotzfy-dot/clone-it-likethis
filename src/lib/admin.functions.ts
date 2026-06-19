@@ -26,31 +26,51 @@ export const getDashboardKPIs = createServerFn({ method: "GET" })
     weekStart.setDate(today.getDate() - 6);
 
     const [{ data: allTx, error: txError }, { count: userCount, error: usersError }, { data: balances, error: balanceError }, { count: kycPending }, { data: agents, error: agentsError }] = await Promise.all([
-      supabase.from("transactions").select("type,amount,status,created_at,kyc_required"),
+      supabase.from("transactions").select("user_id,type,amount,status,created_at,kyc_required"),
       supabase.from("profiles").select("*", { count: "exact", head: true }),
       supabase.from("profiles").select("balance"),
       supabase.from("kyc_submissions").select("*", { count: "exact", head: true }).eq("status", "pending"),
-      supabase.from("profiles").select("signup_user_agent"),
+      supabase.from("profiles").select("id,signup_user_agent"),
     ]);
     if (txError) throw new Error(txError.message);
     if (usersError) throw new Error(usersError.message);
     if (balanceError) throw new Error(balanceError.message);
     if (agentsError) throw new Error(agentsError.message);
 
+    const platformOf = (ua: string): "android" | "ios" | "desktop" | "unknown" => {
+      const s = (ua ?? "").toLowerCase();
+      if (!s) return "unknown";
+      if (/iphone|ipad|ipod|ios/.test(s)) return "ios";
+      if (/android/.test(s)) return "android";
+      if (/windows|macintosh|mac os x|linux|x11/.test(s)) return "desktop";
+      return "unknown";
+    };
+    const userPlatform = new Map<string, "android" | "ios" | "desktop" | "unknown">();
     let android = 0, ios = 0, desktop = 0, unknown = 0;
     for (const row of (agents ?? []) as any[]) {
-      const ua = String(row?.signup_user_agent ?? "").toLowerCase();
-      if (!ua) { unknown++; continue; }
-      if (/iphone|ipad|ipod|ios/.test(ua)) ios++;
-      else if (/android/.test(ua)) android++;
-      else if (/windows|macintosh|mac os x|linux|x11/.test(ua)) desktop++;
+      const p = platformOf(String(row?.signup_user_agent ?? ""));
+      userPlatform.set(row.id, p);
+      if (p === "ios") ios++;
+      else if (p === "android") android++;
+      else if (p === "desktop") desktop++;
       else unknown++;
     }
     const deviceTotal = android + ios + desktop + unknown;
     const pct = (n: number) => deviceTotal ? Math.round((n / deviceTotal) * 100) : 0;
+    const depByPlatform: Record<"android" | "ios" | "desktop" | "unknown", number> = { android: 0, ios: 0, desktop: 0, unknown: 0 };
+    for (const t of (allTx ?? []) as any[]) {
+      if (t.type === "deposit" && t.status === "approved") {
+        const p = userPlatform.get(t.user_id) ?? "unknown";
+        depByPlatform[p] += Number(t.amount);
+      }
+    }
     const devices = {
       android, ios, desktop, unknown, total: deviceTotal,
       androidPct: pct(android), iosPct: pct(ios), desktopPct: pct(desktop), unknownPct: pct(unknown),
+      androidDeposits: depByPlatform.android,
+      iosDeposits: depByPlatform.ios,
+      desktopDeposits: depByPlatform.desktop,
+      unknownDeposits: depByPlatform.unknown,
     };
 
     const tx = allTx ?? [];
