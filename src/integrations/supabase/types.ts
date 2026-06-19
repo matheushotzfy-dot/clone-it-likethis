@@ -286,6 +286,8 @@ export type Database = {
           amount: number
           created_at: string
           description: string | null
+          gateway_external_id: string | null
+          gateway_qrcode: string | null
           id: string
           kyc_required: boolean
           kyc_submission_id: string | null
@@ -298,6 +300,8 @@ export type Database = {
           amount: number
           created_at?: string
           description?: string | null
+          gateway_external_id?: string | null
+          gateway_qrcode?: string | null
           id?: string
           kyc_required?: boolean
           kyc_submission_id?: string | null
@@ -310,6 +314,8 @@ export type Database = {
           amount?: number
           created_at?: string
           description?: string | null
+          gateway_external_id?: string | null
+          gateway_qrcode?: string | null
           id?: string
           kyc_required?: boolean
           kyc_submission_id?: string | null
