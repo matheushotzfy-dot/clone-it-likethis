@@ -88,7 +88,7 @@ type DepositResponse = {
 
 const PENDING_PIX_MAX_AGE_MS = 20 * 60_000;
 const PIX_GENERATION_GRACE_MS = 90_000;
-type AdminClient = typeof import("@/integrations/supabase/client.server")["supabaseAdmin"];
+type AdminClient = (typeof import("@/integrations/supabase/client.server"))["supabaseAdmin"];
 
 export const createVeoPagPixDeposit = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -186,16 +186,13 @@ export const createVeoPagPixDeposit = createServerFn({ method: "POST" })
           copyPaste: pending.gateway_qrcode,
         };
       }
-      throw new Error(
-        "Seu PIX já está sendo gerado. Aguarde alguns segundos e tente novamente.",
-      );
+      throw new Error("Seu PIX já está sendo gerado. Aguarde alguns segundos e tente novamente.");
     }
 
     const fullName =
       (profile?.full_name && profile.full_name.trim().length > 2
         ? profile.full_name
-        : (claims as { email?: string } | undefined)?.email?.split("@")[0]) ||
-      "Cliente";
+        : (claims as { email?: string } | undefined)?.email?.split("@")[0]) || "Cliente";
     const email = (claims as { email?: string } | undefined)?.email || "no-reply@example.com";
     const phone = (profile?.phone || "").replace(/\D/g, "") || undefined;
 
