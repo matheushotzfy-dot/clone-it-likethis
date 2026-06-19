@@ -85,6 +85,7 @@ export const getDashboardKPIs = createServerFn({ method: "GET" })
       totalBalance: (balances ?? []).reduce((a, p: any) => a + Number(p.balance), 0),
       weeklyNet: sum(t => t.status === "approved" && t.created_at >= weekIso && t.type === "deposit") - sum(t => t.status === "approved" && t.created_at >= weekIso && t.type === "withdrawal"),
       chart: daily,
+      devices,
     };
   });
 
