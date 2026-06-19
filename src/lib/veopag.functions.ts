@@ -211,10 +211,22 @@ export const createVeoPagPixDeposit = createServerFn({ method: "POST" })
         amount: data.amount,
         status: "pending",
         description: `SafePix PIX ${veopagId}`,
+        gateway_qrcode: copyPaste,
+        gateway_external_id: veopagId,
       })
       .select()
       .single();
     if (error) throw new Error(error.message);
+
+    return {
+      transactionId: tx.id,
+      veopagId,
+      // VeoPag returns the EMV (Copia e Cola); the client renders the QR from it.
+      qrCodeImage: "",
+      copyPaste,
+    };
+  });
+
 
     return {
       transactionId: tx.id,
