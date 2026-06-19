@@ -226,13 +226,3 @@ export const createVeoPagPixDeposit = createServerFn({ method: "POST" })
       copyPaste,
     };
   });
-
-
-    return {
-      transactionId: tx.id,
-      veopagId,
-      // VeoPag returns the EMV (Copia e Cola); the client renders the QR from it.
-      qrCodeImage: "",
-      copyPaste,
-    };
-  });
