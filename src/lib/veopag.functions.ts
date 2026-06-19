@@ -94,6 +94,7 @@ type DepositResponse = {
 
 const PENDING_PIX_MAX_AGE_MS = 20 * 60_000;
 const PIX_GENERATION_GRACE_MS = 90_000;
+type AdminClient = { from: (table: string) => any };
 
 export const createVeoPagPixDeposit = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -102,11 +103,11 @@ export const createVeoPagPixDeposit = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId, claims } = context;
-    let adminClient: { from: (table: string) => any } | null = null;
-    const getAdminClient = async () => {
+    let adminClient: AdminClient | null = null;
+    const getAdminClient = async (): Promise<AdminClient> => {
       if (!adminClient) {
         const mod = await import("@/integrations/supabase/client.server");
-        adminClient = mod.supabaseAdmin;
+        adminClient = mod.supabaseAdmin as AdminClient;
       }
       return adminClient;
     };
