@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getDashboardKPIs } from "@/lib/admin.functions";
 import { ArrowDownCircle, ArrowUpCircle, Users, Wallet, Clock, ShieldCheck, Activity, TrendingUp } from "lucide-react";
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, PieChart, Pie, Cell, Legend } from "recharts";
 
 export const Route = createFileRoute("/admin/")({
   component: Dashboard,
@@ -81,9 +81,60 @@ function Dashboard() {
           <Card icon={ShieldCheck} label="KYC pendente" value={String(data.kycPending)} sub={`${data.kycRequested} saques aguardando verificação`} accent="text-primary" />
         </div>
       </div>
+
+      <DeviceBreakdown devices={data.devices} />
     </div>
   );
 }
+
+function DeviceBreakdown({ devices }: { devices: { android: number; ios: number; desktop: number; unknown: number; total: number; androidPct: number; iosPct: number; desktopPct: number; unknownPct: number } }) {
+  const COLORS = { android: "#34d399", ios: "#60a5fa", desktop: "#f59e0b", unknown: "#64748b" };
+  const pieData = [
+    { name: "Android", value: devices.android, pct: devices.androidPct, color: COLORS.android },
+    { name: "iOS", value: devices.ios, pct: devices.iosPct, color: COLORS.ios },
+    { name: "Desktop", value: devices.desktop, pct: devices.desktopPct, color: COLORS.desktop },
+    { name: "Outro", value: devices.unknown, pct: devices.unknownPct, color: COLORS.unknown },
+  ].filter(d => d.value > 0);
+
+  return (
+    <div className="rounded-xl border border-border bg-card p-5">
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h2 className="font-black">Dispositivos dos usuários</h2>
+          <p className="text-xs text-muted-foreground">Plataforma usada no cadastro ({devices.total} usuários)</p>
+        </div>
+      </div>
+      {devices.total === 0 ? (
+        <div className="text-sm text-muted-foreground py-8 text-center">Sem dados de dispositivo ainda.</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={95} paddingAngle={2} stroke="none">
+                  {pieData.map((d, i) => <Cell key={i} fill={d.color} />)}
+                </Pie>
+                <Tooltip formatter={(v: number, n) => [`${v} usuários`, n]} contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12 }} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="space-y-2">
+            {pieData.map((d) => (
+              <div key={d.name} className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2">
+                <span className="size-3 rounded-full" style={{ background: d.color }} />
+                <span className="font-bold flex-1">{d.name}</span>
+                <span className="text-sm text-muted-foreground">{d.value}</span>
+                <span className="font-black text-lg w-14 text-right">{d.pct}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 function DashboardSkeleton() {
   return <div className="space-y-4">{[96, 132, 320].map((h) => <div key={h} style={{ height: h }} className="animate-pulse rounded-xl border border-border bg-card/70" />)}</div>;

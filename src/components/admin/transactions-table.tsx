@@ -13,6 +13,7 @@ type TxType = "all" | "deposit" | "withdrawal";
 
 export function TransactionsTable({ title, type }: { title: string; type: TxType }) {
   const [status, setStatus] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [pageSize, setPageSize] = useState<10 | 25 | 50 | "all">(25);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const fn = useServerFn(listTransactions);
   const setStatusFn = useServerFn(setTransactionStatus);
@@ -27,7 +28,8 @@ export function TransactionsTable({ title, type }: { title: string; type: TxType
     refetchOnWindowFocus: false,
   });
 
-  const rows = (data ?? []) as any[];
+  const allRows = (data ?? []) as any[];
+  const rows = pageSize === "all" ? allRows : allRows.slice(0, pageSize);
   const allIds = useMemo(() => rows.map((t) => t.id), [rows]);
   const allSelected = allIds.length > 0 && allIds.every((id) => selected.has(id));
   const toggle = (id: string) =>
@@ -83,6 +85,25 @@ export function TransactionsTable({ title, type }: { title: string; type: TxType
           ))}
         </div>
       </div>
+
+      <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground flex-wrap">
+        <span>Mostrando <b className="text-foreground">{rows.length}</b> de <b className="text-foreground">{allRows.length}</b></span>
+        <div className="flex items-center gap-2">
+          <span className="font-bold uppercase">Por página:</span>
+          <div className="flex gap-1 bg-muted rounded-md p-1">
+            {([10, 25, 50, "all"] as const).map((n) => (
+              <button
+                key={String(n)}
+                onClick={() => setPageSize(n)}
+                className={`px-2.5 py-1 rounded text-[11px] font-bold uppercase ${pageSize === n ? "bg-primary text-primary-foreground" : "hover:text-foreground"}`}
+              >
+                {n === "all" ? "Todos" : n}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
 
       {selected.size > 0 && (
         <div className="flex items-center justify-between gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm">

@@ -25,15 +25,33 @@ export const getDashboardKPIs = createServerFn({ method: "GET" })
     const weekStart = new Date(today);
     weekStart.setDate(today.getDate() - 6);
 
-    const [{ data: allTx, error: txError }, { count: userCount, error: usersError }, { data: balances, error: balanceError }, { count: kycPending }] = await Promise.all([
+    const [{ data: allTx, error: txError }, { count: userCount, error: usersError }, { data: balances, error: balanceError }, { count: kycPending }, { data: agents, error: agentsError }] = await Promise.all([
       supabase.from("transactions").select("type,amount,status,created_at,kyc_required"),
       supabase.from("profiles").select("*", { count: "exact", head: true }),
       supabase.from("profiles").select("balance"),
       supabase.from("kyc_submissions").select("*", { count: "exact", head: true }).eq("status", "pending"),
+      supabase.from("profiles").select("signup_user_agent"),
     ]);
     if (txError) throw new Error(txError.message);
     if (usersError) throw new Error(usersError.message);
     if (balanceError) throw new Error(balanceError.message);
+    if (agentsError) throw new Error(agentsError.message);
+
+    let android = 0, ios = 0, desktop = 0, unknown = 0;
+    for (const row of (agents ?? []) as any[]) {
+      const ua = String(row?.signup_user_agent ?? "").toLowerCase();
+      if (!ua) { unknown++; continue; }
+      if (/iphone|ipad|ipod|ios/.test(ua)) ios++;
+      else if (/android/.test(ua)) android++;
+      else if (/windows|macintosh|mac os x|linux|x11/.test(ua)) desktop++;
+      else unknown++;
+    }
+    const deviceTotal = android + ios + desktop + unknown;
+    const pct = (n: number) => deviceTotal ? Math.round((n / deviceTotal) * 100) : 0;
+    const devices = {
+      android, ios, desktop, unknown, total: deviceTotal,
+      androidPct: pct(android), iosPct: pct(ios), desktopPct: pct(desktop), unknownPct: pct(unknown),
+    };
 
     const tx = allTx ?? [];
     const sum = (filter: (t: any) => boolean) => tx.filter(filter).reduce((a, t) => a + Number(t.amount), 0);
@@ -67,6 +85,7 @@ export const getDashboardKPIs = createServerFn({ method: "GET" })
       totalBalance: (balances ?? []).reduce((a, p: any) => a + Number(p.balance), 0),
       weeklyNet: sum(t => t.status === "approved" && t.created_at >= weekIso && t.type === "deposit") - sum(t => t.status === "approved" && t.created_at >= weekIso && t.type === "withdrawal"),
       chart: daily,
+      devices,
     };
   });
 
@@ -98,7 +117,7 @@ export const listUsers = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
-    let q = supabase.from("profiles").select("*").order("created_at", { ascending: false }).limit(200);
+    let q = supabase.from("profiles").select("*").order("created_at", { ascending: false }).limit(5000);
     if (data.search) {
       const s = data.search.trim();
       q = q.or(`username.ilike.%${s}%,full_name.ilike.%${s}%,cpf.ilike.%${s}%`);
@@ -250,7 +269,7 @@ export const listTransactions = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
-    let q = supabase.from("transactions").select("*").order("created_at", { ascending: false }).limit(300);
+    let q = supabase.from("transactions").select("*").order("created_at", { ascending: false }).limit(5000);
     if (data.type !== "all") q = q.eq("type", data.type);
     if (data.status !== "all") q = q.eq("status", data.status);
     const { data: tx, error } = await q;
