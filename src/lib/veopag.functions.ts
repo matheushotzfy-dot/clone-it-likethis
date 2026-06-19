@@ -19,12 +19,9 @@ async function loadCreds(): Promise<Creds> {
     if (row.value) map[row.key] = row.value;
   }
   const clientId = map.veopag_client_id || process.env.VEOPAG_CLIENT_ID || "";
-  const clientSecret =
-    map.veopag_client_secret || process.env.VEOPAG_CLIENT_SECRET || "";
+  const clientSecret = map.veopag_client_secret || process.env.VEOPAG_CLIENT_SECRET || "";
   if (!clientId || !clientSecret) {
-    throw new Error(
-      "Credenciais VeoPag não configuradas. Defina em Admin → Configurações.",
-    );
+    throw new Error("Credenciais VeoPag não configuradas. Defina em Admin → Configurações.");
   }
   return { clientId, clientSecret };
 }
@@ -58,10 +55,7 @@ async function getToken(): Promise<string> {
 async function loadLimits(supabase: {
   from: (t: string) => {
     select: (c: string) => {
-      in: (
-        k: string,
-        v: string[],
-      ) => Promise<{ data: { key: string; value: unknown }[] | null }>;
+      in: (k: string, v: string[]) => Promise<{ data: { key: string; value: unknown }[] | null }>;
     };
   };
 }) {
@@ -94,13 +88,11 @@ type DepositResponse = {
 
 const PENDING_PIX_MAX_AGE_MS = 20 * 60_000;
 const PIX_GENERATION_GRACE_MS = 90_000;
-type AdminClient = { from: (table: string) => any };
+type AdminClient = typeof import("@/integrations/supabase/client.server")["supabaseAdmin"];
 
 export const createVeoPagPixDeposit = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
-    z.object({ amount: z.number().positive().max(1000000) }).parse(d),
-  )
+  .inputValidator((d: unknown) => z.object({ amount: z.number().positive().max(1000000) }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId, claims } = context;
     let adminClient: AdminClient | null = null;
