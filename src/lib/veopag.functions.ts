@@ -105,6 +105,29 @@ export const createVeoPagPixDeposit = createServerFn({ method: "POST" })
         `Depósito deve ser entre R$ ${limits.min_deposit} e R$ ${limits.max_deposit}`,
       );
     }
+
+    // Reuse any pending deposit from the last 15 minutes (any amount) to avoid
+    // generating multiple PIX codes that confuse the user and pollute history.
+    const fifteenMinAgo = new Date(Date.now() - 15 * 60_000).toISOString();
+    const { data: existing } = await supabase
+      .from("transactions")
+      .select("id,amount,gateway_qrcode,gateway_external_id,description")
+      .eq("user_id", userId)
+      .eq("type", "deposit")
+      .eq("status", "pending")
+      .gte("created_at", fifteenMinAgo)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (existing && existing.gateway_qrcode) {
+      return {
+        transactionId: existing.id,
+        veopagId: existing.gateway_external_id || "",
+        qrCodeImage: "",
+        copyPaste: existing.gateway_qrcode,
+      };
+    }
+
     const { data: profile } = await supabase
       .from("profiles")
       .select("full_name,cpf,phone")
@@ -115,6 +138,7 @@ export const createVeoPagPixDeposit = createServerFn({ method: "POST" })
       throw new Error("CPF não encontrado no cadastro. Atualize seu perfil.");
 
     const externalId = `dep-${userId.slice(0, 8)}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
     const fullName =
       (profile?.full_name && profile.full_name.trim().length > 2
         ? profile.full_name
