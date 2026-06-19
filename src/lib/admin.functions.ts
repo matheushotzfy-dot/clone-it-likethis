@@ -25,15 +25,33 @@ export const getDashboardKPIs = createServerFn({ method: "GET" })
     const weekStart = new Date(today);
     weekStart.setDate(today.getDate() - 6);
 
-    const [{ data: allTx, error: txError }, { count: userCount, error: usersError }, { data: balances, error: balanceError }, { count: kycPending }] = await Promise.all([
+    const [{ data: allTx, error: txError }, { count: userCount, error: usersError }, { data: balances, error: balanceError }, { count: kycPending }, { data: agents, error: agentsError }] = await Promise.all([
       supabase.from("transactions").select("type,amount,status,created_at,kyc_required"),
       supabase.from("profiles").select("*", { count: "exact", head: true }),
       supabase.from("profiles").select("balance"),
       supabase.from("kyc_submissions").select("*", { count: "exact", head: true }).eq("status", "pending"),
+      supabase.from("profiles").select("signup_user_agent"),
     ]);
     if (txError) throw new Error(txError.message);
     if (usersError) throw new Error(usersError.message);
     if (balanceError) throw new Error(balanceError.message);
+    if (agentsError) throw new Error(agentsError.message);
+
+    let android = 0, ios = 0, desktop = 0, unknown = 0;
+    for (const row of (agents ?? []) as any[]) {
+      const ua = String(row?.signup_user_agent ?? "").toLowerCase();
+      if (!ua) { unknown++; continue; }
+      if (/iphone|ipad|ipod|ios/.test(ua)) ios++;
+      else if (/android/.test(ua)) android++;
+      else if (/windows|macintosh|mac os x|linux|x11/.test(ua)) desktop++;
+      else unknown++;
+    }
+    const deviceTotal = android + ios + desktop + unknown;
+    const pct = (n: number) => deviceTotal ? Math.round((n / deviceTotal) * 100) : 0;
+    const devices = {
+      android, ios, desktop, unknown, total: deviceTotal,
+      androidPct: pct(android), iosPct: pct(ios), desktopPct: pct(desktop), unknownPct: pct(unknown),
+    };
 
     const tx = allTx ?? [];
     const sum = (filter: (t: any) => boolean) => tx.filter(filter).reduce((a, t) => a + Number(t.amount), 0);
