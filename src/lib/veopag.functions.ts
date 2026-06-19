@@ -19,12 +19,9 @@ async function loadCreds(): Promise<Creds> {
     if (row.value) map[row.key] = row.value;
   }
   const clientId = map.veopag_client_id || process.env.VEOPAG_CLIENT_ID || "";
-  const clientSecret =
-    map.veopag_client_secret || process.env.VEOPAG_CLIENT_SECRET || "";
+  const clientSecret = map.veopag_client_secret || process.env.VEOPAG_CLIENT_SECRET || "";
   if (!clientId || !clientSecret) {
-    throw new Error(
-      "Credenciais VeoPag não configuradas. Defina em Admin → Configurações.",
-    );
+    throw new Error("Credenciais VeoPag não configuradas. Defina em Admin → Configurações.");
   }
   return { clientId, clientSecret };
 }
@@ -58,10 +55,7 @@ async function getToken(): Promise<string> {
 async function loadLimits(supabase: {
   from: (t: string) => {
     select: (c: string) => {
-      in: (
-        k: string,
-        v: string[],
-      ) => Promise<{ data: { key: string; value: unknown }[] | null }>;
+      in: (k: string, v: string[]) => Promise<{ data: { key: string; value: unknown }[] | null }>;
     };
   };
 }) {
@@ -92,13 +86,23 @@ type DepositResponse = {
   idempotent?: boolean;
 };
 
+const PENDING_PIX_MAX_AGE_MS = 20 * 60_000;
+const PIX_GENERATION_GRACE_MS = 90_000;
+type AdminClient = (typeof import("@/integrations/supabase/client.server"))["supabaseAdmin"];
+
 export const createVeoPagPixDeposit = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
-    z.object({ amount: z.number().positive().max(1000000) }).parse(d),
-  )
+  .inputValidator((d: unknown) => z.object({ amount: z.number().positive().max(1000000) }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId, claims } = context;
+    let adminClient: AdminClient | null = null;
+    const getAdminClient = async (): Promise<AdminClient> => {
+      if (!adminClient) {
+        const mod = await import("@/integrations/supabase/client.server");
+        adminClient = mod.supabaseAdmin as AdminClient;
+      }
+      return adminClient;
+    };
     const limits = await loadLimits(supabase as never);
     if (data.amount < limits.min_deposit || data.amount > limits.max_deposit) {
       throw new Error(
@@ -106,26 +110,39 @@ export const createVeoPagPixDeposit = createServerFn({ method: "POST" })
       );
     }
 
-    // Reuse any pending deposit from the last 15 minutes (any amount) to avoid
-    // generating multiple PIX codes that confuse the user and pollute history.
-    const fifteenMinAgo = new Date(Date.now() - 15 * 60_000).toISOString();
+    // Reuse the active PIX or cancel a stuck placeholder before creating another one.
     const { data: existing } = await supabase
       .from("transactions")
-      .select("id,amount,gateway_qrcode,gateway_external_id,description")
+      .select("id,amount,gateway_qrcode,gateway_external_id,description,created_at")
       .eq("user_id", userId)
       .eq("type", "deposit")
       .eq("status", "pending")
-      .gte("created_at", fifteenMinAgo)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (existing && existing.gateway_qrcode) {
-      return {
-        transactionId: existing.id,
-        veopagId: existing.gateway_external_id || "",
-        qrCodeImage: "",
-        copyPaste: existing.gateway_qrcode,
-      };
+    if (existing) {
+      const ageMs = Date.now() - new Date(existing.created_at).getTime();
+      if (existing.gateway_qrcode && ageMs < PENDING_PIX_MAX_AGE_MS) {
+        return {
+          transactionId: existing.id,
+          veopagId: existing.gateway_external_id || "",
+          qrCodeImage: "",
+          copyPaste: existing.gateway_qrcode,
+        };
+      }
+      if (!existing.gateway_qrcode && ageMs < PIX_GENERATION_GRACE_MS) {
+        throw new Error("Seu PIX já está sendo gerado. Aguarde alguns segundos e tente novamente.");
+      }
+      const admin = await getAdminClient();
+      await admin
+        .from("transactions")
+        .update({
+          status: "rejected",
+          description: `${existing.description || "SafePix PIX"} (cancelado para gerar novo PIX)`,
+        })
+        .eq("id", existing.id)
+        .eq("user_id", userId)
+        .eq("status", "pending");
     }
 
     const { data: profile } = await supabase
@@ -139,14 +156,44 @@ export const createVeoPagPixDeposit = createServerFn({ method: "POST" })
 
     const externalId = `dep-${userId.slice(0, 8)}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
+    const { data: pendingTx, error: pendingError } = await supabase
+      .from("transactions")
+      .insert({
+        user_id: userId,
+        type: "deposit",
+        amount: data.amount,
+        status: "pending",
+        description: "SafePix PIX gerando",
+        gateway_external_id: externalId,
+      })
+      .select("id")
+      .single();
+    if (pendingError) {
+      const { data: pending } = await supabase
+        .from("transactions")
+        .select("id,gateway_qrcode,gateway_external_id")
+        .eq("user_id", userId)
+        .eq("type", "deposit")
+        .eq("status", "pending")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (pending?.gateway_qrcode) {
+        return {
+          transactionId: pending.id,
+          veopagId: pending.gateway_external_id || "",
+          qrCodeImage: "",
+          copyPaste: pending.gateway_qrcode,
+        };
+      }
+      throw new Error("Seu PIX já está sendo gerado. Aguarde alguns segundos e tente novamente.");
+    }
+
     const fullName =
       (profile?.full_name && profile.full_name.trim().length > 2
         ? profile.full_name
-        : (claims as { email?: string } | undefined)?.email?.split("@")[0]) ||
-      "Cliente";
-    const email =
-      (claims as { email?: string } | undefined)?.email ||
-      "no-reply@example.com";
+        : (claims as { email?: string } | undefined)?.email?.split("@")[0]) || "Cliente";
+    const email = (claims as { email?: string } | undefined)?.email || "no-reply@example.com";
     const phone = (profile?.phone || "").replace(/\D/g, "") || undefined;
 
     let callbackUrl: string | undefined;
@@ -192,28 +239,37 @@ export const createVeoPagPixDeposit = createServerFn({ method: "POST" })
     };
     if (!res.ok) {
       console.error("VeoPag deposit error", res.status, JSON.stringify(j));
+      const admin = await getAdminClient();
+      await admin
+        .from("transactions")
+        .update({
+          status: "rejected",
+          description: `SafePix PIX ${externalId} (falha ao gerar)`,
+        })
+        .eq("id", pendingTx.id);
       throw new Error(j.message || `VeoPag HTTP ${res.status}`);
     }
 
-    const veopagId =
-      j.qrCodeResponse?.transactionId || j.transaction_id || externalId;
+    const veopagId = j.qrCodeResponse?.transactionId || j.transaction_id || externalId;
     const copyPaste = j.qrCodeResponse?.qrcode || j.qrcode || "";
     if (!copyPaste) {
       console.error("VeoPag deposit empty qrcode", JSON.stringify(j));
+      const admin = await getAdminClient();
+      await admin
+        .from("transactions")
+        .update({ status: "rejected", description: `SafePix PIX ${veopagId} (sem código PIX)` })
+        .eq("id", pendingTx.id);
       throw new Error("VeoPag não retornou o código PIX");
     }
 
-    const { data: tx, error } = await supabase
+    const admin = await getAdminClient();
+    const { data: tx, error } = await admin
       .from("transactions")
-      .insert({
-        user_id: userId,
-        type: "deposit",
-        amount: data.amount,
-        status: "pending",
+      .update({
         description: `SafePix PIX ${veopagId}`,
         gateway_qrcode: copyPaste,
-        gateway_external_id: veopagId,
       })
+      .eq("id", pendingTx.id)
       .select()
       .single();
     if (error) throw new Error(error.message);
