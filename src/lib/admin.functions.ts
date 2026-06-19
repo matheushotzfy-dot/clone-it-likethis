@@ -20,10 +20,13 @@ export const getDashboardKPIs = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-    const weekStart = new Date(today);
-    weekStart.setDate(today.getDate() - 6);
+    // Compute "today" in São Paulo (UTC-3, no DST) so the dashboard matches Brazilian local time
+    const BR_OFFSET_MS = 3 * 60 * 60 * 1000;
+    const nowBR = new Date(Date.now() - BR_OFFSET_MS);
+    // Midnight BR expressed as a UTC instant
+    const today = new Date(Date.UTC(nowBR.getUTCFullYear(), nowBR.getUTCMonth(), nowBR.getUTCDate()) + BR_OFFSET_MS);
+    const monthStart = new Date(Date.UTC(nowBR.getUTCFullYear(), nowBR.getUTCMonth(), 1) + BR_OFFSET_MS);
+    const weekStart = new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000);
 
     const [{ data: allTx, error: txError }, { count: userCount, error: usersError }, { data: balances, error: balanceError }, { count: kycPending }, { data: agents, error: agentsError }] = await Promise.all([
       supabase.from("transactions").select("user_id,type,amount,status,created_at,kyc_required"),
@@ -78,15 +81,17 @@ export const getDashboardKPIs = createServerFn({ method: "GET" })
     const todayIso = today.toISOString();
     const monthIso = monthStart.toISOString();
     const weekIso = weekStart.toISOString();
+    const DAY_MS = 24 * 60 * 60 * 1000;
     const daily = Array.from({ length: 7 }, (_, i) => {
-      const day = new Date(weekStart);
-      day.setDate(weekStart.getDate() + i);
-      const next = new Date(day);
-      next.setDate(day.getDate() + 1);
+      const day = new Date(weekStart.getTime() + i * DAY_MS);
+      const next = new Date(day.getTime() + DAY_MS);
       const start = day.toISOString();
       const end = next.toISOString();
+      const labelDate = new Date(day.getTime() - BR_OFFSET_MS);
+      const dd = String(labelDate.getUTCDate()).padStart(2, "0");
+      const mm = String(labelDate.getUTCMonth() + 1).padStart(2, "0");
       return {
-        date: day.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
+        date: `${dd}/${mm}`,
         deposits: sum(t => t.type === "deposit" && t.status === "approved" && t.created_at >= start && t.created_at < end),
         withdrawals: sum(t => t.type === "withdrawal" && t.status === "approved" && t.created_at >= start && t.created_at < end),
       };
