@@ -8,40 +8,66 @@ import { useAuth } from "@/hooks/use-auth";
 
 type Tx = { id: string; type: string; status: string; amount: number; created_at: string };
 
+const SHOWN_KEY = "withdrawal_shown_ids";
+const RECENT_WINDOW_MS = 24 * 60 * 60 * 1000; // notify if approved in last 24h and not yet shown
+
+function loadShown(): Set<string> {
+  try {
+    const raw = localStorage.getItem(SHOWN_KEY);
+    if (!raw) return new Set();
+    return new Set(JSON.parse(raw) as string[]);
+  } catch {
+    return new Set();
+  }
+}
+function saveShown(set: Set<string>) {
+  try {
+    // keep at most 200 ids
+    const arr = Array.from(set).slice(-200);
+    localStorage.setItem(SHOWN_KEY, JSON.stringify(arr));
+  } catch {
+    /* ignore */
+  }
+}
+
 export function WithdrawalWatcher() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const fetchTxs = useServerFn(listMyTransactions);
-  const seenRef = useRef<Record<string, string>>({});
-  const initRef = useRef(false);
+  const shownRef = useRef<Set<string>>(new Set());
   const [approved, setApproved] = useState<Tx | null>(null);
 
+  useEffect(() => {
+    shownRef.current = loadShown();
+  }, [user?.id]);
+
   const { data: txs } = useQuery({
-    queryKey: ["my-tx-watcher"],
+    queryKey: ["my-tx-watcher", user?.id],
     queryFn: () => fetchTxs(),
     enabled: !!user,
-    refetchInterval: 15_000,
+    refetchInterval: 8_000,
     refetchOnWindowFocus: true,
   });
 
   useEffect(() => {
-    if (!txs) return;
+    if (!txs || !user) return;
     const list = txs as Tx[];
-    // Bootstrap snapshot on first load — don't notify for pre-existing approvals
-    if (!initRef.current) {
-      list.forEach((t) => { seenRef.current[t.id] = t.status; });
-      initRef.current = true;
-      return;
+    const now = Date.now();
+    // Find the most recent approved withdrawal in the last 24h that we haven't shown yet
+    const candidate = list.find(
+      (t) =>
+        t.type === "withdrawal" &&
+        t.status === "approved" &&
+        !shownRef.current.has(t.id) &&
+        now - new Date(t.created_at).getTime() <= RECENT_WINDOW_MS,
+    );
+    if (candidate) {
+      shownRef.current.add(candidate.id);
+      saveShown(shownRef.current);
+      setApproved(candidate);
+      qc.invalidateQueries({ queryKey: ["my-profile"] });
     }
-    for (const t of list) {
-      const prev = seenRef.current[t.id];
-      if (t.type === "withdrawal" && t.status === "approved" && prev && prev !== "approved") {
-        setApproved(t);
-        qc.invalidateQueries({ queryKey: ["my-profile"] });
-      }
-      seenRef.current[t.id] = t.status;
-    }
-  }, [txs, qc]);
+  }, [txs, qc, user]);
 
   if (!user) return null;
 
