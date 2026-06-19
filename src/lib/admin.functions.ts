@@ -81,15 +81,17 @@ export const getDashboardKPIs = createServerFn({ method: "GET" })
     const todayIso = today.toISOString();
     const monthIso = monthStart.toISOString();
     const weekIso = weekStart.toISOString();
+    const DAY_MS = 24 * 60 * 60 * 1000;
     const daily = Array.from({ length: 7 }, (_, i) => {
-      const day = new Date(weekStart);
-      day.setDate(weekStart.getDate() + i);
-      const next = new Date(day);
-      next.setDate(day.getDate() + 1);
+      const day = new Date(weekStart.getTime() + i * DAY_MS);
+      const next = new Date(day.getTime() + DAY_MS);
       const start = day.toISOString();
       const end = next.toISOString();
+      const labelDate = new Date(day.getTime() - BR_OFFSET_MS);
+      const dd = String(labelDate.getUTCDate()).padStart(2, "0");
+      const mm = String(labelDate.getUTCMonth() + 1).padStart(2, "0");
       return {
-        date: day.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
+        date: `${dd}/${mm}`,
         deposits: sum(t => t.type === "deposit" && t.status === "approved" && t.created_at >= start && t.created_at < end),
         withdrawals: sum(t => t.type === "withdrawal" && t.status === "approved" && t.created_at >= start && t.created_at < end),
       };
