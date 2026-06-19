@@ -4,8 +4,7 @@ import { timingSafeEqual } from "crypto";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers":
-    "Content-Type, Authorization, x-webhook-signature",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, x-webhook-signature",
 };
 
 type VeoPagEvent = {
@@ -34,8 +33,7 @@ async function loadSignatureSecret(): Promise<string> {
 export const Route = createFileRoute("/api/public/veopag-webhook")({
   server: {
     handlers: {
-      OPTIONS: async () =>
-        new Response(null, { status: 204, headers: corsHeaders }),
+      OPTIONS: async () => new Response(null, { status: 204, headers: corsHeaders }),
       POST: async ({ request }) => {
         const body = await request.text();
 
@@ -114,10 +112,7 @@ export const Route = createFileRoute("/api/public/veopag-webhook")({
         }
 
         if (newStatus !== "pending" && tx.status === "pending") {
-          await supabaseAdmin
-            .from("transactions")
-            .update({ status: newStatus })
-            .eq("id", tx.id);
+          await supabaseAdmin.from("transactions").update({ status: newStatus }).eq("id", tx.id);
         }
 
         return new Response("ok", { status: 200, headers: corsHeaders });
