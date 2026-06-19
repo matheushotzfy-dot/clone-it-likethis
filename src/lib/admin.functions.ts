@@ -20,10 +20,13 @@ export const getDashboardKPIs = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-    const weekStart = new Date(today);
-    weekStart.setDate(today.getDate() - 6);
+    // Compute "today" in São Paulo (UTC-3, no DST) so the dashboard matches Brazilian local time
+    const BR_OFFSET_MS = 3 * 60 * 60 * 1000;
+    const nowBR = new Date(Date.now() - BR_OFFSET_MS);
+    // Midnight BR expressed as a UTC instant
+    const today = new Date(Date.UTC(nowBR.getUTCFullYear(), nowBR.getUTCMonth(), nowBR.getUTCDate()) + BR_OFFSET_MS);
+    const monthStart = new Date(Date.UTC(nowBR.getUTCFullYear(), nowBR.getUTCMonth(), 1) + BR_OFFSET_MS);
+    const weekStart = new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000);
 
     const [{ data: allTx, error: txError }, { count: userCount, error: usersError }, { data: balances, error: balanceError }, { count: kycPending }, { data: agents, error: agentsError }] = await Promise.all([
       supabase.from("transactions").select("user_id,type,amount,status,created_at,kyc_required"),
