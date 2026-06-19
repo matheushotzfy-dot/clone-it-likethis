@@ -277,7 +277,6 @@ export const createVeoPagPixDeposit = createServerFn({ method: "POST" })
       .update({
         description: `SafePix PIX ${veopagId}`,
         gateway_qrcode: copyPaste,
-        gateway_external_id: veopagId,
       })
       .eq("id", pendingTx.id)
       .select()
