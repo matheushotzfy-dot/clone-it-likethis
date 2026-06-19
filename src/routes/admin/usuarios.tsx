@@ -13,6 +13,7 @@ export const Route = createFileRoute("/admin/usuarios")({ component: Page });
 
 function Page() {
   const [search, setSearch] = useState("");
+  const [pageSize, setPageSize] = useState<10 | 25 | 50 | "all">(25);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const fn = useServerFn(listUsers);
   const delFn = useServerFn(deleteUsersBulkAdmin);
