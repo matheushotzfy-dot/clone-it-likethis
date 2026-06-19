@@ -67,6 +67,25 @@ function Page() {
         <Input placeholder="Buscar por nome, usuário ou CPF" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm flex-1 min-w-[200px]" />
       </div>
 
+      <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground flex-wrap">
+        <span>Mostrando <b className="text-foreground">{users.length}</b> de <b className="text-foreground">{allUsers.length}</b></span>
+        <div className="flex items-center gap-2">
+          <span className="font-bold uppercase">Por página:</span>
+          <div className="flex gap-1 bg-muted rounded-md p-1">
+            {([10, 25, 50, "all"] as const).map((n) => (
+              <button
+                key={String(n)}
+                onClick={() => setPageSize(n)}
+                className={`px-2.5 py-1 rounded text-[11px] font-bold uppercase ${pageSize === n ? "bg-primary text-primary-foreground" : "hover:text-foreground"}`}
+              >
+                {n === "all" ? "Todos" : n}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+
       {selected.size > 0 && (
         <div className="flex items-center justify-between gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm">
           <span className="font-bold">{selected.size} selecionado(s)</span>
