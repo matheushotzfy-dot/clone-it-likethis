@@ -1,4 +1,5 @@
 import { Play } from "lucide-react";
+import { useState } from "react";
 import type { Game } from "@/lib/games";
 import { useGameAccess } from "@/hooks/use-game-access";
 
@@ -6,6 +7,7 @@ interface Props { game: Game; rank?: number; priority?: boolean }
 
 export function GameCard({ game, rank, priority }: Props) {
   const { tryPlay } = useGameAccess();
+  const [failed, setFailed] = useState(false);
   return (
     <div className="relative group">
       {rank && (
@@ -15,19 +17,32 @@ export function GameCard({ game, rank, priority }: Props) {
       )}
       <button
         onClick={() => tryPlay(game.name)}
-        className="relative z-10 block w-full aspect-[3/4] rounded-xl overflow-hidden bg-surface border border-border hover:border-primary transition-all group-hover:scale-[1.02]"
+        className="relative z-10 block w-full aspect-[3/4] rounded-xl overflow-hidden bg-surface border border-border hover:border-primary transition-all group-hover:scale-[1.02] touch-manipulation"
       >
-        <img
-          src={game.image}
-          alt={game.name}
-          loading={priority ? "eager" : "lazy"}
-          decoding="async"
-          // @ts-expect-error fetchpriority is valid HTML attr
-          fetchpriority={priority ? "high" : "auto"}
-          width={300}
-          height={400}
-          className="w-full h-full object-cover bg-surface-2"
-        />
+        {failed ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-surface-2 to-surface p-3 text-center">
+            <div className="size-10 rounded-full bg-primary/20 flex items-center justify-center">
+              <Play className="size-4 fill-primary text-primary" />
+            </div>
+            <p className="text-xs font-bold text-white line-clamp-2">{game.name}</p>
+            <p className="text-[10px] text-white/50">{game.provider}</p>
+          </div>
+        ) : (
+          <img
+            src={game.image}
+            alt={game.name}
+            loading={priority ? "eager" : "lazy"}
+            decoding="async"
+            // @ts-expect-error fetchpriority is valid HTML attr
+            fetchpriority={priority ? "high" : "auto"}
+            width={300}
+            height={400}
+            sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 180px"
+            onError={() => setFailed(true)}
+            className="w-full h-full object-cover bg-surface-2"
+            draggable={false}
+          />
+        )}
 
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
           <div className="size-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
