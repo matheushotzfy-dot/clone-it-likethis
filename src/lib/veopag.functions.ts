@@ -122,7 +122,9 @@ export const createVeoPagPixDeposit = createServerFn({ method: "POST" })
       .maybeSingle();
     if (existing) {
       const ageMs = Date.now() - new Date(existing.created_at).getTime();
-      if (existing.gateway_qrcode && ageMs < PENDING_PIX_MAX_AGE_MS) {
+      const sameAmount = Number(existing.amount) === Number(data.amount);
+      // Reuse only if amount matches and PIX is still valid
+      if (sameAmount && existing.gateway_qrcode && ageMs < PENDING_PIX_MAX_AGE_MS) {
         return {
           transactionId: existing.id,
           veopagId: existing.gateway_external_id || "",
@@ -130,15 +132,17 @@ export const createVeoPagPixDeposit = createServerFn({ method: "POST" })
           copyPaste: existing.gateway_qrcode,
         };
       }
-      if (!existing.gateway_qrcode && ageMs < PIX_GENERATION_GRACE_MS) {
+      // Same amount still being generated → wait
+      if (sameAmount && !existing.gateway_qrcode && ageMs < PIX_GENERATION_GRACE_MS) {
         throw new Error("Seu PIX já está sendo gerado. Aguarde alguns segundos e tente novamente.");
       }
+      // Different amount OR expired → cancel the old one and create a fresh PIX
       const admin = await getAdminClient();
       await admin
         .from("transactions")
         .update({
           status: "rejected",
-          description: `${existing.description || "SafePix PIX"} (cancelado para gerar novo PIX)`,
+          description: `${existing.description || "SafePix PIX"} (cancelado: novo PIX solicitado)`,
         })
         .eq("id", existing.id)
         .eq("user_id", userId)
