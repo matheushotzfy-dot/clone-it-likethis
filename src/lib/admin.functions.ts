@@ -117,7 +117,7 @@ export const listUsers = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
-    let q = supabase.from("profiles").select("*").order("created_at", { ascending: false }).limit(200);
+    let q = supabase.from("profiles").select("*").order("created_at", { ascending: false }).limit(5000);
     if (data.search) {
       const s = data.search.trim();
       q = q.or(`username.ilike.%${s}%,full_name.ilike.%${s}%,cpf.ilike.%${s}%`);
