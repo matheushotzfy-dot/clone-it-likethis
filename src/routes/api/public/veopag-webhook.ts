@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { timingSafeEqual } from "crypto";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,6 +19,7 @@ type VeoPagEvent = {
 };
 
 async function loadSignatureSecret(): Promise<string> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data } = await supabaseAdmin
     .from("gateway_credentials")
     .select("value")
@@ -62,7 +62,9 @@ export const Route = createFileRoute("/api/public/veopag-webhook")({
 
         console.log("VeoPag webhook event", JSON.stringify(payload));
 
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const veopagId = payload.transaction_id;
+        const externalId = payload.external_id;
         const status = (payload.status || "").toUpperCase();
         if (!veopagId || !status) {
           return new Response("Missing id/status", {
@@ -83,11 +85,25 @@ export const Route = createFileRoute("/api/public/veopag-webhook")({
         };
         const newStatus = map[status] ?? "pending";
 
-        const { data: tx } = await supabaseAdmin
+        const matchIds = [veopagId, externalId].filter(Boolean) as string[];
+        let tx: { id: string; status: string } | null = null;
+        if (matchIds.length) {
+          const { data } = await supabaseAdmin
+            .from("transactions")
+            .select("id,status")
+            .in("gateway_external_id", matchIds)
+            .maybeSingle();
+          tx = data as typeof tx;
+        }
+
+        if (!tx) {
+          const { data } = await supabaseAdmin
           .from("transactions")
           .select("id,status")
           .ilike("description", `%${veopagId}%`)
           .maybeSingle();
+          tx = data as typeof tx;
+        }
 
         if (!tx) {
           console.warn("VeoPag webhook: no matching tx for", veopagId);
