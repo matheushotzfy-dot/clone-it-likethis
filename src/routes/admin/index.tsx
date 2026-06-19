@@ -68,7 +68,7 @@ function Dashboard() {
                 <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
                 <XAxis dataKey="date" stroke="rgba(255,255,255,0.55)" tickLine={false} axisLine={false} fontSize={12} />
                 <YAxis stroke="rgba(255,255,255,0.55)" tickLine={false} axisLine={false} fontSize={12} width={54} tickFormatter={(v) => `R$${Number(v)}`} />
-                <Tooltip formatter={(v: number) => brl(Number(v))} contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12 }} />
+                <Tooltip formatter={(v: number) => brl(Number(v))} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, color: "hsl(var(--foreground))" }} itemStyle={{ color: "hsl(var(--foreground))" }} labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 700 }} />
                 <Area type="monotone" dataKey="deposits" name="Depósitos" stroke="var(--success)" fill="var(--success)" fillOpacity={0.22} strokeWidth={2} />
                 <Area type="monotone" dataKey="withdrawals" name="Saques" stroke="var(--destructive)" fill="var(--destructive)" fillOpacity={0.18} strokeWidth={2} />
               </AreaChart>
