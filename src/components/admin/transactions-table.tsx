@@ -13,6 +13,7 @@ type TxType = "all" | "deposit" | "withdrawal";
 
 export function TransactionsTable({ title, type }: { title: string; type: TxType }) {
   const [status, setStatus] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [pageSize, setPageSize] = useState<10 | 25 | 50 | "all">(25);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const fn = useServerFn(listTransactions);
   const setStatusFn = useServerFn(setTransactionStatus);
