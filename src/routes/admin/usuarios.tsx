@@ -25,7 +25,8 @@ function Page() {
     refetchOnWindowFocus: false,
   });
 
-  const users = (data ?? []) as any[];
+  const allUsers = (data ?? []) as any[];
+  const users = pageSize === "all" ? allUsers : allUsers.slice(0, pageSize);
   const allIds = useMemo(() => users.map((u) => u.id), [users]);
   const allSelected = allIds.length > 0 && allIds.every((id) => selected.has(id));
   const someSelected = selected.size > 0 && !allSelected;
