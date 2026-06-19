@@ -18,6 +18,8 @@ type VeoPagEvent = {
   error_message?: string;
 };
 
+type WebhookTx = { id: string; status: string };
+
 async function loadSignatureSecret(): Promise<string> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data } = await supabaseAdmin
@@ -86,23 +88,23 @@ export const Route = createFileRoute("/api/public/veopag-webhook")({
         const newStatus = map[status] ?? "pending";
 
         const matchIds = [veopagId, externalId].filter(Boolean) as string[];
-        let tx: { id: string; status: string } | null = null;
+        let tx: WebhookTx | null = null;
         if (matchIds.length) {
           const { data } = await supabaseAdmin
             .from("transactions")
             .select("id,status")
             .in("gateway_external_id", matchIds)
             .maybeSingle();
-          tx = data as typeof tx;
+          tx = data as WebhookTx | null;
         }
 
         if (!tx) {
           const { data } = await supabaseAdmin
-          .from("transactions")
-          .select("id,status")
-          .ilike("description", `%${veopagId}%`)
-          .maybeSingle();
-          tx = data as typeof tx;
+            .from("transactions")
+            .select("id,status")
+            .ilike("description", `%${veopagId}%`)
+            .maybeSingle();
+          tx = data as WebhookTx | null;
         }
 
         if (!tx) {
