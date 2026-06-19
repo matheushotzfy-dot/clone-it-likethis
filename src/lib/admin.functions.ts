@@ -269,7 +269,7 @@ export const listTransactions = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
-    let q = supabase.from("transactions").select("*").order("created_at", { ascending: false }).limit(300);
+    let q = supabase.from("transactions").select("*").order("created_at", { ascending: false }).limit(5000);
     if (data.type !== "all") q = q.eq("type", data.type);
     if (data.status !== "all") q = q.eq("status", data.status);
     const { data: tx, error } = await q;
