@@ -51,8 +51,8 @@ function Page() {
   });
 
   const freezeMut = useMutation({
-    mutationFn: (v: boolean) => updFn({ data: { userId: id, is_frozen: v } }),
-    onSuccess: (_d, v) => { toast.success(v ? "Conta congelada" : "Conta descongelada"); qc.invalidateQueries({ queryKey: ["admin-user", id] }); },
+    mutationFn: (vars: { v: boolean; reason?: string }) => updFn({ data: { userId: id, is_frozen: vars.v, freeze_reason: vars.v ? (vars.reason ?? null) : null } }),
+    onSuccess: (_d, vars) => { toast.success(vars.v ? "Conta congelada" : "Conta descongelada"); qc.invalidateQueries({ queryKey: ["admin-user", id] }); },
     onError: (e: any) => toast.error(e.message),
   });
 
