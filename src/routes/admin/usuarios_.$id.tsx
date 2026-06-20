@@ -227,7 +227,13 @@ function Page() {
                   {t.status === "pending" && (
                     <div className="flex gap-1 justify-end">
                       <Button size="sm" onClick={() => txMut.mutate({ id: t.id, status: "approved" })}>Aprovar</Button>
-                      <Button size="sm" variant="outline" onClick={() => txMut.mutate({ id: t.id, status: "rejected" })}>Rejeitar</Button>
+                      <Button size="sm" variant="outline" onClick={() => {
+                        const reason = window.prompt("Motivo da rejeição (será exibido para o usuário):", "");
+                        if (reason === null) return;
+                        const trimmed = reason.trim();
+                        if (!trimmed) { toast.error("Informe um motivo"); return; }
+                        txMut.mutate({ id: t.id, status: "rejected", reason: trimmed });
+                      }}>Rejeitar</Button>
                     </div>
                   )}
                 </td>
