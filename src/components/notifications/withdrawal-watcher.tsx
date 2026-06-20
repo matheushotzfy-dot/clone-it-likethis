@@ -54,7 +54,7 @@ export function WithdrawalWatcher() {
     if (!txs || !user) return;
     const list = txs as Tx[];
     const now = Date.now();
-    // Find the most recent approved withdrawal in the last 24h that we haven't shown yet
+    // Approved withdrawal modal
     const candidate = list.find(
       (t) =>
         t.type === "withdrawal" &&
@@ -67,6 +67,19 @@ export function WithdrawalWatcher() {
       saveShown(shownRef.current);
       setApproved(candidate);
       qc.invalidateQueries({ queryKey: ["my-profile"] });
+    }
+    // Rejected withdrawal toast with reason
+    for (const t of list) {
+      if (t.status !== "rejected") continue;
+      if (t.type !== "withdrawal" && t.type !== "deposit") continue;
+      if (shownRef.current.has(t.id)) continue;
+      if (now - new Date(t.created_at).getTime() > RECENT_WINDOW_MS) continue;
+      shownRef.current.add(t.id);
+      saveShown(shownRef.current);
+      const m = /—\s*Motivo:\s*(.+)$/i.exec(t.description ?? "");
+      const reason = m?.[1]?.trim();
+      const label = t.type === "withdrawal" ? "Saque recusado" : "Depósito recusado";
+      toast.error(reason ? `${label} — Motivo: ${reason}` : label, { duration: 10000 });
     }
   }, [txs, qc, user]);
 
