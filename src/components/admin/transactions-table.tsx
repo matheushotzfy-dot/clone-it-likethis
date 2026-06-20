@@ -219,7 +219,7 @@ export function TransactionsTable({ title, type }: { title: string; type: TxType
                 <Button size="sm" className="flex-1 bg-success text-white hover:bg-success/90" onClick={() => mut.mutate({ id: t.id, s: "approved" })}>
                   <Check className="size-4 mr-1" /> Aprovar
                 </Button>
-                <Button size="sm" variant="destructive" className="flex-1" onClick={() => mut.mutate({ id: t.id, s: "rejected" })}>
+                <Button size="sm" variant="destructive" className="flex-1" onClick={() => reject(t.id)}>
                   <X className="size-4 mr-1" /> Rejeitar
                 </Button>
               </div>
