@@ -146,6 +146,14 @@ export function DepositDialog() {
           <div className="p-4 sm:p-6 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
             {step === "form" ? (
               <div className="space-y-5">
+                {profile?.is_frozen && (
+                  <div className="rounded-xl border-2 border-red-500/60 bg-red-500/15 p-4 text-left">
+                    <div className="font-black text-red-300 uppercase text-xs tracking-widest">⚠️ Conta congelada</div>
+                    <p className="mt-1 text-sm text-red-100 leading-snug">
+                      {profile.freeze_reason ? `Motivo: ${profile.freeze_reason}` : "Sua conta está bloqueada. Entre em contato com o suporte."}
+                    </p>
+                  </div>
+                )}
                 {/* HERO Bonus Banner — sem limite */}
                 {bonusActive && (
                   <div className="relative overflow-hidden rounded-2xl border-2 border-primary bg-gradient-to-br from-primary/25 via-primary/5 to-black p-4 sm:p-5">
