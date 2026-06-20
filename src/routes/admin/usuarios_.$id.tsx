@@ -19,6 +19,7 @@ function Page() {
   const updFn = useServerFn(updateUserAdmin);
   const delFn = useServerFn(deleteUserAdmin);
   const txStatusFn = useServerFn(setTransactionStatus);
+  const exploitFn = useServerFn(freezeForExploit);
   const qc = useQueryClient();
   const { data, isLoading, error, refetch } = useQuery({ queryKey: ["admin-user", id], queryFn: () => fn({ data: { id } }), staleTime: 10_000, refetchOnWindowFocus: false });
 
