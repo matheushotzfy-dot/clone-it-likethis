@@ -63,7 +63,7 @@ function Page() {
   });
 
   const txMut = useMutation({
-    mutationFn: (vars: { id: string; status: "approved" | "rejected" }) => txStatusFn({ data: vars }),
+    mutationFn: (vars: { id: string; status: "approved" | "rejected"; reason?: string }) => txStatusFn({ data: vars }),
     onSuccess: () => { toast.success("Transação atualizada"); qc.invalidateQueries({ queryKey: ["admin-user", id] }); },
     onError: (e: any) => toast.error(e.message),
   });
