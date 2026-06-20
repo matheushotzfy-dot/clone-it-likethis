@@ -94,7 +94,17 @@ function Page() {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <Link to="/admin/usuarios" className="text-sm text-primary">← Voltar</Link>
         <div className="flex gap-2">
-          <Button variant={form.is_frozen ? "default" : "outline"} onClick={() => freezeMut.mutate(!form.is_frozen)}>
+          <Button variant={form.is_frozen ? "default" : "outline"} onClick={() => {
+            if (form.is_frozen) {
+              freezeMut.mutate({ v: false });
+            } else {
+              const reason = window.prompt("Motivo do congelamento (será exibido para o usuário):", "");
+              if (reason === null) return;
+              const trimmed = reason.trim();
+              if (!trimmed) { toast.error("Informe um motivo"); return; }
+              freezeMut.mutate({ v: true, reason: trimmed });
+            }
+          }}>
             <Snowflake className="size-4 mr-2" />
             {form.is_frozen ? "Descongelar" : "Congelar conta"}
           </Button>
@@ -105,8 +115,9 @@ function Page() {
       </div>
 
       {p.is_frozen && (
-        <div className="bg-destructive/10 border border-destructive/40 text-destructive rounded-lg px-4 py-2 text-sm font-bold">
-          ⚠️ Conta congelada — usuário não consegue depositar nem sacar
+        <div className="bg-destructive/10 border border-destructive/40 text-destructive rounded-lg px-4 py-3 text-sm">
+          <div className="font-bold">⚠️ Conta congelada — usuário não consegue depositar nem sacar</div>
+          {p.freeze_reason && <div className="mt-1 text-xs opacity-90">Motivo: {p.freeze_reason}</div>}
         </div>
       )}
 
