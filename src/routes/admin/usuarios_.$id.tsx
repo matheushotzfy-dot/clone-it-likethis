@@ -1,13 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getUserDetail, adjustBalance, updateUserAdmin, deleteUserAdmin, setTransactionStatus } from "@/lib/admin.functions";
+import { getUserDetail, adjustBalance, updateUserAdmin, deleteUserAdmin, setTransactionStatus, freezeForExploit } from "@/lib/admin.functions";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { FileText, ShieldCheck, Snowflake, Trash2 } from "lucide-react";
+import { FileText, ShieldAlert, ShieldCheck, Snowflake, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/admin/usuarios_/$id")({ component: Page });
 
