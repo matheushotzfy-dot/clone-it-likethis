@@ -1,0 +1,2 @@
+DROP POLICY IF EXISTS "settings readable by all authenticated" ON public.app_settings;
+CREATE POLICY "settings readable by all authenticated" ON public.app_settings FOR SELECT TO authenticated USING (true);
