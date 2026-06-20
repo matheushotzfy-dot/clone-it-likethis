@@ -3,10 +3,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { CheckCircle2, PartyPopper, X } from "lucide-react";
+import { toast } from "sonner";
 import { listMyTransactions } from "@/lib/profile.functions";
 import { useAuth } from "@/hooks/use-auth";
 
-type Tx = { id: string; type: string; status: string; amount: number; created_at: string };
+type Tx = { id: string; type: string; status: string; amount: number; created_at: string; description?: string | null };
 
 const SHOWN_KEY = "withdrawal_shown_ids";
 const RECENT_WINDOW_MS = 24 * 60 * 60 * 1000; // notify if approved in last 24h and not yet shown
