@@ -125,8 +125,9 @@ export const listMyTransactions = createServerFn({ method: "GET" })
         .in("transaction_id", txIds)
         .order("created_at", { ascending: false });
       for (const s of subs ?? []) {
-        if (!subByTx.has(s.transaction_id)) subByTx.set(s.transaction_id, s);
+        if (s.transaction_id && !subByTx.has(s.transaction_id)) subByTx.set(s.transaction_id, s);
       }
+
     }
     return txs.map(t => ({ ...t, kyc_submission: subByTx.get(t.id) ?? null }));
 
