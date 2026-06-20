@@ -34,6 +34,7 @@ function Page() {
       phone: data.profile.phone ?? "",
       kyc_status: data.profile.kyc_status ?? "pending",
       is_frozen: !!data.profile.is_frozen,
+      freeze_reason: data.profile.freeze_reason ?? "",
     });
   }, [data?.profile]);
 
