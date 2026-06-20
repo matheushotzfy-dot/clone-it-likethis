@@ -37,7 +37,7 @@ export function TransactionsTable({ title, type }: { title: string; type: TxType
   const toggleAll = () => setSelected(allSelected ? new Set() : new Set(allIds));
 
   const mut = useMutation({
-    mutationFn: ({ id, s }: { id: string; s: "approved" | "rejected" }) => setStatusFn({ data: { id, status: s } }),
+    mutationFn: ({ id, s, reason }: { id: string; s: "approved" | "rejected"; reason?: string }) => setStatusFn({ data: { id, status: s, reason } }),
     onSuccess: (_, v) => {
       toast.success(v.s === "approved" ? "Aprovado" : "Rejeitado");
       qc.invalidateQueries({ queryKey: ["admin-tx"] });
@@ -45,6 +45,14 @@ export function TransactionsTable({ title, type }: { title: string; type: TxType
     },
     onError: (e: any) => toast.error(e.message),
   });
+
+  const reject = (id: string) => {
+    const reason = window.prompt("Motivo da rejeição (será exibido para o usuário):", "");
+    if (reason === null) return;
+    const trimmed = reason.trim();
+    if (!trimmed) { toast.error("Informe um motivo"); return; }
+    mut.mutate({ id, s: "rejected", reason: trimmed });
+  };
 
   const kycMut = useMutation({
     mutationFn: (id: string) => requestKycFn({ data: { transactionId: id } }),
