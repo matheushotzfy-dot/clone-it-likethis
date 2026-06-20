@@ -280,10 +280,10 @@ export function DepositDialog() {
 
                 <button
                   onClick={() => mut.mutate()}
-                  disabled={mut.isPending || amount < min || amount > max}
+                  disabled={mut.isPending || amount < min || amount > max || !!profile?.is_frozen}
                   className="w-full h-16 rounded-2xl bg-primary text-primary-foreground font-black uppercase text-base tracking-widest hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 shadow-xl shadow-primary/20"
                 >
-                  {mut.isPending ? "Processando..." : `Gerar PIX de R$ ${amount.toLocaleString("pt-BR")}`}
+                  {profile?.is_frozen ? "Conta congelada" : mut.isPending ? "Processando..." : `Gerar PIX de R$ ${amount.toLocaleString("pt-BR")}`}
                 </button>
               </div>
             ) : (
