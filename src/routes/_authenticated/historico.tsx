@@ -95,6 +95,16 @@ function Page() {
                         </div>
                       </div>
                     </div>
+                    {t.status === "rejected" && (() => {
+                      const m = /—\s*Motivo:\s*(.+)$/i.exec(t.description ?? "");
+                      const reason = m?.[1]?.trim();
+                      if (!reason) return null;
+                      return (
+                        <div className="mt-3 p-3 rounded-lg bg-red-500/10 border border-red-500/40 text-xs text-red-200">
+                          <span className="font-bold uppercase tracking-wider text-red-400">Motivo da rejeição:</span> {reason}
+                        </div>
+                      );
+                    })()}
                     {needsKyc && (
                       <div className="mt-3 ml-13 p-3 rounded-lg bg-orange-500/10 border border-orange-500/30 flex flex-col sm:flex-row sm:items-center gap-2">
                         <div className="flex items-start gap-2 flex-1">

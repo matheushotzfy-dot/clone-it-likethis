@@ -208,6 +208,7 @@ export type Database = {
           created_at: string
           fbc: string | null
           fbp: string | null
+          freeze_reason: string | null
           full_name: string | null
           id: string
           is_frozen: boolean
@@ -235,6 +236,7 @@ export type Database = {
           created_at?: string
           fbc?: string | null
           fbp?: string | null
+          freeze_reason?: string | null
           full_name?: string | null
           id: string
           is_frozen?: boolean
@@ -262,6 +264,7 @@ export type Database = {
           created_at?: string
           fbc?: string | null
           fbp?: string | null
+          freeze_reason?: string | null
           full_name?: string | null
           id?: string
           is_frozen?: boolean

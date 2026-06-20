@@ -34,6 +34,7 @@ function Page() {
       phone: data.profile.phone ?? "",
       kyc_status: data.profile.kyc_status ?? "pending",
       is_frozen: !!data.profile.is_frozen,
+      freeze_reason: data.profile.freeze_reason ?? "",
     });
   }, [data?.profile]);
 
@@ -50,8 +51,8 @@ function Page() {
   });
 
   const freezeMut = useMutation({
-    mutationFn: (v: boolean) => updFn({ data: { userId: id, is_frozen: v } }),
-    onSuccess: (_d, v) => { toast.success(v ? "Conta congelada" : "Conta descongelada"); qc.invalidateQueries({ queryKey: ["admin-user", id] }); },
+    mutationFn: (vars: { v: boolean; reason?: string }) => updFn({ data: { userId: id, is_frozen: vars.v, freeze_reason: vars.v ? (vars.reason ?? null) : null } }),
+    onSuccess: (_d, vars) => { toast.success(vars.v ? "Conta congelada" : "Conta descongelada"); qc.invalidateQueries({ queryKey: ["admin-user", id] }); },
     onError: (e: any) => toast.error(e.message),
   });
 
@@ -62,7 +63,7 @@ function Page() {
   });
 
   const txMut = useMutation({
-    mutationFn: (vars: { id: string; status: "approved" | "rejected" }) => txStatusFn({ data: vars }),
+    mutationFn: (vars: { id: string; status: "approved" | "rejected"; reason?: string }) => txStatusFn({ data: vars }),
     onSuccess: () => { toast.success("Transação atualizada"); qc.invalidateQueries({ queryKey: ["admin-user", id] }); },
     onError: (e: any) => toast.error(e.message),
   });
@@ -93,7 +94,17 @@ function Page() {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <Link to="/admin/usuarios" className="text-sm text-primary">← Voltar</Link>
         <div className="flex gap-2">
-          <Button variant={form.is_frozen ? "default" : "outline"} onClick={() => freezeMut.mutate(!form.is_frozen)}>
+          <Button variant={form.is_frozen ? "default" : "outline"} onClick={() => {
+            if (form.is_frozen) {
+              freezeMut.mutate({ v: false });
+            } else {
+              const reason = window.prompt("Motivo do congelamento (será exibido para o usuário):", "");
+              if (reason === null) return;
+              const trimmed = reason.trim();
+              if (!trimmed) { toast.error("Informe um motivo"); return; }
+              freezeMut.mutate({ v: true, reason: trimmed });
+            }
+          }}>
             <Snowflake className="size-4 mr-2" />
             {form.is_frozen ? "Descongelar" : "Congelar conta"}
           </Button>
@@ -104,8 +115,9 @@ function Page() {
       </div>
 
       {p.is_frozen && (
-        <div className="bg-destructive/10 border border-destructive/40 text-destructive rounded-lg px-4 py-2 text-sm font-bold">
-          ⚠️ Conta congelada — usuário não consegue depositar nem sacar
+        <div className="bg-destructive/10 border border-destructive/40 text-destructive rounded-lg px-4 py-3 text-sm">
+          <div className="font-bold">⚠️ Conta congelada — usuário não consegue depositar nem sacar</div>
+          {p.freeze_reason && <div className="mt-1 text-xs opacity-90">Motivo: {p.freeze_reason}</div>}
         </div>
       )}
 
@@ -215,7 +227,13 @@ function Page() {
                   {t.status === "pending" && (
                     <div className="flex gap-1 justify-end">
                       <Button size="sm" onClick={() => txMut.mutate({ id: t.id, status: "approved" })}>Aprovar</Button>
-                      <Button size="sm" variant="outline" onClick={() => txMut.mutate({ id: t.id, status: "rejected" })}>Rejeitar</Button>
+                      <Button size="sm" variant="outline" onClick={() => {
+                        const reason = window.prompt("Motivo da rejeição (será exibido para o usuário):", "");
+                        if (reason === null) return;
+                        const trimmed = reason.trim();
+                        if (!trimmed) { toast.error("Informe um motivo"); return; }
+                        txMut.mutate({ id: t.id, status: "rejected", reason: trimmed });
+                      }}>Rejeitar</Button>
                     </div>
                   )}
                 </td>

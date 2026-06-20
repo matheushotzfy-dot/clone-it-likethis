@@ -146,6 +146,14 @@ export function DepositDialog() {
           <div className="p-4 sm:p-6 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
             {step === "form" ? (
               <div className="space-y-5">
+                {profile?.is_frozen && (
+                  <div className="rounded-xl border-2 border-red-500/60 bg-red-500/15 p-4 text-left">
+                    <div className="font-black text-red-300 uppercase text-xs tracking-widest">⚠️ Conta congelada</div>
+                    <p className="mt-1 text-sm text-red-100 leading-snug">
+                      {profile.freeze_reason ? `Motivo: ${profile.freeze_reason}` : "Sua conta está bloqueada. Entre em contato com o suporte."}
+                    </p>
+                  </div>
+                )}
                 {/* HERO Bonus Banner — sem limite */}
                 {bonusActive && (
                   <div className="relative overflow-hidden rounded-2xl border-2 border-primary bg-gradient-to-br from-primary/25 via-primary/5 to-black p-4 sm:p-5">
@@ -272,10 +280,10 @@ export function DepositDialog() {
 
                 <button
                   onClick={() => mut.mutate()}
-                  disabled={mut.isPending || amount < min || amount > max}
+                  disabled={mut.isPending || amount < min || amount > max || !!profile?.is_frozen}
                   className="w-full h-16 rounded-2xl bg-primary text-primary-foreground font-black uppercase text-base tracking-widest hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 shadow-xl shadow-primary/20"
                 >
-                  {mut.isPending ? "Processando..." : `Gerar PIX de R$ ${amount.toLocaleString("pt-BR")}`}
+                  {profile?.is_frozen ? "Conta congelada" : mut.isPending ? "Processando..." : `Gerar PIX de R$ ${amount.toLocaleString("pt-BR")}`}
                 </button>
               </div>
             ) : (
