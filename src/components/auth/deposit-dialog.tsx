@@ -20,7 +20,7 @@ const hots = new Set([50, 250, 1000]);
 export function DepositDialog() {
   const { current, close, open: openDialog } = useAuthDialog();
   const { user, loading: authLoading } = useAuth();
-  const [amount, setAmount] = useState(50);
+  const [amount, setAmount] = useState(0);
   const [step, setStep] = useState<"form" | "pix">("form");
   const [pix, setPix] = useState<{ qrCodeImage: string; copyPaste: string; transactionId: string } | null>(null);
   const [pixCopied, setPixCopied] = useState(false);
@@ -235,6 +235,7 @@ export function DepositDialog() {
                         type="number"
                         inputMode="decimal"
                         value={amount || ""}
+                        onFocus={(e) => e.target.select()}
                         onChange={(e) => setAmount(Number(e.target.value))}
                         placeholder="0,00"
                         className="w-full bg-transparent text-4xl font-black text-white focus:outline-none placeholder:text-white/10"
