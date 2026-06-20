@@ -171,7 +171,7 @@ function Page() {
             <label className="text-xs uppercase font-bold text-muted-foreground">Valor a sacar</label>
             <div className="relative mt-1">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">R$</span>
-              <Input type="number" min={min} max={max} value={amount} onChange={(e) => setAmount(Number(e.target.value))} className="bg-surface-2 h-14 pl-10 text-2xl font-black" />
+              <Input type="number" min={min} max={max} value={amount || ""} onFocus={(e) => e.target.select()} onChange={(e) => setAmount(Number(e.target.value))} className="bg-surface-2 h-14 pl-10 text-2xl font-black" />
             </div>
             <div className="grid grid-cols-5 gap-2 mt-2">
               {presets.map((p) => (
