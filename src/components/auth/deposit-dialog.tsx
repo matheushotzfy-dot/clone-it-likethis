@@ -310,9 +310,42 @@ export function DepositDialog() {
                     <button
                       onClick={async () => {
                         if (!pix?.copyPaste) return;
-                        await navigator.clipboard.writeText(pix.copyPaste);
-                        setPixCopied(true);
-                        toast.success("PIX copia e cola copiado! Agora é só pagar.");
+                        const text = pix.copyPaste;
+                        let ok = false;
+                        try {
+                          if (navigator.clipboard?.writeText) {
+                            await navigator.clipboard.writeText(text);
+                            ok = true;
+                          }
+                        } catch {
+                          ok = false;
+                        }
+                        if (!ok) {
+                          // Fallback for in-app browsers (Instagram, TikTok, etc.)
+                          try {
+                            const ta = document.createElement("textarea");
+                            ta.value = text;
+                            ta.setAttribute("readonly", "");
+                            ta.style.position = "fixed";
+                            ta.style.top = "0";
+                            ta.style.left = "0";
+                            ta.style.opacity = "0";
+                            document.body.appendChild(ta);
+                            ta.focus();
+                            ta.select();
+                            ta.setSelectionRange(0, text.length);
+                            ok = document.execCommand("copy");
+                            document.body.removeChild(ta);
+                          } catch {
+                            ok = false;
+                          }
+                        }
+                        setPixCopied(true); // libera o fluxo de qualquer forma
+                        if (ok) {
+                          toast.success("PIX copia e cola copiado! Agora é só pagar.");
+                        } else {
+                          toast.warning("Não consegui copiar automaticamente. Segure o código acima e copie manualmente.");
+                        }
                       }}
                       className="mt-3 w-full min-h-12 rounded-xl bg-primary text-primary-foreground flex items-center justify-center gap-2 px-3 text-sm font-black uppercase tracking-wide hover:brightness-110 transition-all shadow-lg active:scale-[0.98]"
                     >
