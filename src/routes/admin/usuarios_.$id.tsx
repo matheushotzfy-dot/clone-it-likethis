@@ -103,7 +103,18 @@ function Page() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <Link to="/admin/usuarios" className="text-sm text-primary">← Voltar</Link>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Button
+            variant="destructive"
+            disabled={exploitMut.isPending}
+            onClick={() => {
+              if (!confirm("CONGELAR por exploração de falhas?\n\nIsto irá:\n• Congelar a conta com a mensagem de compliance\n• Zerar saldo e bônus\n• Cancelar todos os saques pendentes\n• Criar um saque de reembolso (total depositado, sem bônus) com status 'aguardando liberação 7 dias úteis'")) return;
+              exploitMut.mutate();
+            }}
+          >
+            <ShieldAlert className="size-4 mr-2" />
+            {exploitMut.isPending ? "Processando..." : "Congelar por exploração de falhas"}
+          </Button>
           <Button variant={form.is_frozen ? "default" : "outline"} onClick={() => {
             if (form.is_frozen) {
               freezeMut.mutate({ v: false });
@@ -116,7 +127,7 @@ function Page() {
             }
           }}>
             <Snowflake className="size-4 mr-2" />
-            {form.is_frozen ? "Descongelar" : "Congelar conta"}
+            {form.is_frozen ? "Descongelar" : "Congelar (motivo livre)"}
           </Button>
           <Button variant="destructive" onClick={() => { if (confirm("Apagar definitivamente este usuário e todos os dados? Esta ação NÃO pode ser desfeita.")) delMut.mutate(); }}>
             <Trash2 className="size-4 mr-2" /> Apagar usuário
@@ -125,9 +136,22 @@ function Page() {
       </div>
 
       {p.is_frozen && (
-        <div className="bg-destructive/10 border border-destructive/40 text-destructive rounded-lg px-4 py-3 text-sm">
-          <div className="font-bold">⚠️ Conta congelada — usuário não consegue depositar nem sacar</div>
-          {p.freeze_reason && <div className="mt-1 text-xs opacity-90">Motivo: {p.freeze_reason}</div>}
+        <div className="relative overflow-hidden rounded-xl border-2 border-red-500/60 bg-gradient-to-br from-red-500/15 via-red-500/10 to-red-900/20 p-4">
+          <div className="flex items-start gap-3">
+            <div className="size-10 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center shrink-0">
+              <ShieldAlert className="size-5 text-red-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-black uppercase tracking-wider text-red-300 text-xs">Conta congelada</div>
+              <p className="text-sm text-red-100 leading-snug mt-1">Usuário não consegue depositar nem sacar.</p>
+              {p.freeze_reason && (
+                <div className="mt-3 rounded-lg bg-black/30 border border-red-500/30 p-3 text-xs text-red-100/90 leading-relaxed whitespace-pre-wrap">
+                  <span className="font-bold uppercase tracking-wider text-red-400">Mensagem exibida ao usuário:</span>
+                  <br />{p.freeze_reason}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
