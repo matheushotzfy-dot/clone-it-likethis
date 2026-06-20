@@ -85,7 +85,7 @@ function Page() {
   const settingsFn = useServerFn(getSettings);
   const qc = useQueryClient();
   const { data: profile } = useQuery({ queryKey: ["my-profile"], queryFn: () => profileFn() });
-  const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: () => settingsFn() });
+  const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: () => settingsFn(), staleTime: 0, refetchOnMount: "always", refetchOnWindowFocus: true });
   const balance = Number(profile?.balance ?? 0);
   const min = settings?.min_withdraw ?? 50;
   const max = settings?.max_withdraw ?? 5000;
