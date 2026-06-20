@@ -69,6 +69,15 @@ function Page() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const exploitMut = useMutation({
+    mutationFn: () => exploitFn({ data: { userId: id } }),
+    onSuccess: (r) => {
+      toast.success(`Conta congelada por compliance. Reembolso pendente: R$ ${Number(r.depositsTotal).toFixed(2).replace(".", ",")}`);
+      qc.invalidateQueries({ queryKey: ["admin-user", id] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   if (isLoading || !data || !form) return <div className="space-y-4">{[96, 280, 220].map((h) => <div key={h} style={{ height: h }} className="animate-pulse rounded-xl border border-border bg-card" />)}</div>;
   if (error) return <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-5 text-sm text-destructive">Erro ao abrir detalhes: {(error as Error).message}<button onClick={() => refetch()} className="ml-2 font-bold underline">tentar novamente</button></div>;
   const p = data.profile;
