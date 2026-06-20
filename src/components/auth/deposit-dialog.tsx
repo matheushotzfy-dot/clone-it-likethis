@@ -235,6 +235,7 @@ export function DepositDialog() {
                         type="number"
                         inputMode="decimal"
                         value={amount || ""}
+                        onFocus={(e) => e.target.select()}
                         onChange={(e) => setAmount(Number(e.target.value))}
                         placeholder="0,00"
                         className="w-full bg-transparent text-4xl font-black text-white focus:outline-none placeholder:text-white/10"
