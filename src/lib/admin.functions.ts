@@ -317,6 +317,7 @@ export const setTransactionStatus = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({
     id: z.string().uuid(),
     status: z.enum(["approved", "rejected"]),
+    reason: z.string().trim().max(500).optional(),
   }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
@@ -329,7 +330,12 @@ export const setTransactionStatus = createServerFn({ method: "POST" })
       const { data: prof } = await supabase.from("profiles").select("balance").eq("id", tx.user_id).maybeSingle();
       if (!prof || Number(prof.balance) < Number(tx.amount)) throw new Error("Saldo insuficiente do usuário");
     }
-    const { error } = await supabase.from("transactions").update({ status: data.status }).eq("id", data.id);
+    const patch: Record<string, unknown> = { status: data.status };
+    if (data.status === "rejected" && data.reason) {
+      const base = (tx.description ?? "").split(" — Motivo:")[0];
+      patch.description = `${base} — Motivo: ${data.reason}`;
+    }
+    const { error } = await supabase.from("transactions").update(patch as never).eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
