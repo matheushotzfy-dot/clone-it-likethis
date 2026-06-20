@@ -105,6 +105,7 @@ function Page() {
                         </div>
                       );
                     })()}
+                    {needsKyc && (
                       <div className="mt-3 ml-13 p-3 rounded-lg bg-orange-500/10 border border-orange-500/30 flex flex-col sm:flex-row sm:items-center gap-2">
                         <div className="flex items-start gap-2 flex-1">
                           <ShieldAlert className="size-4 text-orange-400 mt-0.5 shrink-0" />
