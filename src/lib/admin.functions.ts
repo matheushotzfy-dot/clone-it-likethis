@@ -210,6 +210,7 @@ const userUpdateSchema = z.object({
   phone: z.string().trim().max(20).optional().nullable(),
   kyc_status: z.enum(["pending", "approved", "rejected"]).optional(),
   is_frozen: z.boolean().optional(),
+  freeze_reason: z.string().trim().max(500).optional().nullable(),
 });
 
 export const updateUserAdmin = createServerFn({ method: "POST" })
