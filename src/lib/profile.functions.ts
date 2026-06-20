@@ -113,14 +113,23 @@ export const listMyTransactions = createServerFn({ method: "GET" })
       .limit(100);
     if (error) throw new Error(error.message);
     const txs = data ?? [];
-    // Attach latest KYC submission per transaction
-    const subIds = txs.map(t => t.kyc_submission_id).filter(Boolean) as string[];
-    let subMap = new Map<string, any>();
-    if (subIds.length) {
-      const { data: subs } = await supabase.from("kyc_submissions").select("id,status,rejection_reason").in("id", subIds);
-      subMap = new Map((subs ?? []).map((s: any) => [s.id, s]));
+    // Attach the LATEST KYC submission per transaction (query by transaction_id, not
+    // by tx.kyc_submission_id — users can't update transactions via RLS, so the FK
+    // may point to a stale, already-rejected submission after a resubmit).
+    const txIds = txs.filter(t => t.type === "withdrawal" && t.kyc_required).map(t => t.id);
+    let subByTx = new Map<string, any>();
+    if (txIds.length) {
+      const { data: subs } = await supabase
+        .from("kyc_submissions")
+        .select("id,transaction_id,status,rejection_reason,created_at")
+        .in("transaction_id", txIds)
+        .order("created_at", { ascending: false });
+      for (const s of subs ?? []) {
+        if (!subByTx.has(s.transaction_id)) subByTx.set(s.transaction_id, s);
+      }
     }
-    return txs.map(t => ({ ...t, kyc_submission: t.kyc_submission_id ? subMap.get(t.kyc_submission_id) ?? null : null }));
+    return txs.map(t => ({ ...t, kyc_submission: subByTx.get(t.id) ?? null }));
+
   });
 
 
