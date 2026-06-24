@@ -63,8 +63,6 @@ export function LoginDialog() {
   return (
     <Dialog open={current === "login"} onOpenChange={(o) => !o && close()}>
       <DialogContent className="p-0 max-w-[420px] w-[calc(100vw-1rem)] bg-brand border-brand overflow-hidden gap-0 max-h-[92vh] sm:rounded-2xl">
-        <DialogTitle className="sr-only">Entrar na sua conta</DialogTitle>
-        <DialogDescription className="sr-only">Use seu e-mail ou CPF e senha para acessar</DialogDescription>
         <div className="p-6 sm:p-8 bg-gradient-to-b from-brand-2 to-brand text-white overflow-y-auto">
           <div className="flex flex-col items-center text-center mb-6">
             <img
