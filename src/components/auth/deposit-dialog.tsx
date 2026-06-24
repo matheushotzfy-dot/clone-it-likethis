@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useAuthDialog } from "./auth-dialog-context";
 import { ArrowLeft, Copy, QrCode, CheckCircle2, ShieldCheck, Zap, Gift, Clock, Sparkles, TrendingUp } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
