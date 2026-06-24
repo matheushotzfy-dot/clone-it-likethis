@@ -81,8 +81,8 @@ export function LoginDialog() {
             <p className="mt-1 text-[11px] uppercase tracking-[0.2em] font-bold text-white/60">A Casa da Torcida</p>
           </div>
 
-          <h2 className="text-xl font-bold mb-1">Entrar na conta</h2>
-          <p className="text-sm text-white/70 mb-5">Use seu e-mail ou CPF e senha.</p>
+          <DialogTitle className="text-xl font-bold mb-1">Entrar na conta</DialogTitle>
+          <DialogDescription className="text-sm text-white/70 mb-5">Use seu e-mail ou CPF e senha.</DialogDescription>
 
           <form onSubmit={submit} className="space-y-3">
             <div className="relative">
