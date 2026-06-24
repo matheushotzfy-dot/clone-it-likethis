@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthDialog } from "./auth-dialog-context";
 import { PromoSide } from "./promo-side";
@@ -101,20 +101,20 @@ export function RegisterDialog() {
         <PromoSide />
 
         <div className="flex-1 p-5 md:p-8 bg-brand text-white overflow-y-auto">
-          <div className="flex items-start justify-between mb-6">
-            <span className="text-xl md:text-2xl font-black flex items-center gap-0.5">
+          <div className="flex items-start justify-between gap-3 mb-6 pr-8">
+            <span className="text-xl md:text-2xl font-black flex items-center gap-0.5 shrink-0">
               <span className="text-white">SANTOS</span>
               <span className="text-primary">BET</span>
             </span>
-            <div className="text-right text-xs">
+            <div className="text-right text-xs min-w-0">
               <p className="text-white/60">Já tem uma conta?</p>
               <button onClick={() => open("login")} className="text-primary font-bold hover:underline">Entrar</button>
             </div>
           </div>
 
           <div className="mb-6">
-            <h2 className="text-2xl font-black text-primary leading-tight">Cadastre-se!</h2>
-            <p className="text-sm text-white/70">De forma fácil e rápida!</p>
+            <DialogTitle className="text-2xl font-black text-primary leading-tight">Cadastre-se!</DialogTitle>
+            <DialogDescription className="text-sm text-white/70">De forma fácil e rápida!</DialogDescription>
           </div>
 
           <form onSubmit={submit} className="space-y-4">
