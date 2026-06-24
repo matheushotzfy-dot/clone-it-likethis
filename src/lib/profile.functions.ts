@@ -95,7 +95,8 @@ export const createTransaction = createServerFn({ method: "POST" })
       amount: data.amount,
       pix_key: data.pix_key,
       status: "pending",
-      description: data.type === "deposit" ? "Depósito via PIX" : "Saque via PIX",
+      kyc_required: data.type === "withdrawal" ? true : false,
+      description: data.type === "deposit" ? "Depósito via PIX" : "Saque via PIX — verificação KYC obrigatória",
     });
     if (error) throw new Error(error.message);
     return { ok: true };
