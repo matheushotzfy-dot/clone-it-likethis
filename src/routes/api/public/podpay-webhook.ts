@@ -74,8 +74,11 @@ export const Route = createFileRoute("/api/public/podpay-webhook")({
 
         console.log("PodPay webhook event", JSON.stringify(payload));
 
-        const podpayId =
-          payload?.data?.id || payload?.transactionId || payload?.id;
+        const podpayId = payload?.data?.id || payload?.transactionId || payload?.id;
+        const localTransactionId =
+          typeof payload?.data?.metadata?.localTransactionId === "string"
+            ? payload.data.metadata.localTransactionId
+            : undefined;
         const status = payload?.data?.status || payload?.status;
         if (!podpayId || !status) {
           return new Response("Missing id/status", {
@@ -84,11 +87,24 @@ export const Route = createFileRoute("/api/public/podpay-webhook")({
           });
         }
 
-        let { data: tx } = await supabaseAdmin
-          .from("transactions")
-          .select("id,status")
-          .eq("gateway_external_id", podpayId)
-          .maybeSingle();
+        let tx: { id: string; status: string } | null = null;
+        if (localTransactionId) {
+          const byLocalId = await supabaseAdmin
+            .from("transactions")
+            .select("id,status")
+            .eq("id", localTransactionId)
+            .maybeSingle();
+          tx = byLocalId.data;
+        }
+
+        if (!tx) {
+          const byGatewayId = await supabaseAdmin
+            .from("transactions")
+            .select("id,status")
+            .eq("gateway_external_id", podpayId)
+            .maybeSingle();
+          tx = byGatewayId.data;
+        }
 
         if (!tx) {
           const fallback = await supabaseAdmin
