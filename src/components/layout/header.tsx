@@ -107,7 +107,7 @@ export function Header() {
             >
               Depositar
             </button>
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <button className="relative size-9 md:size-10 rounded-full bg-brand-2 hover:bg-primary hover:text-primary-foreground transition-colors flex items-center justify-center text-white font-bold border-2 border-primary text-sm">
                   {(profile?.username?.[0] ?? user.email?.[0] ?? "U").toUpperCase()}
