@@ -61,11 +61,15 @@ type PixTransaction = {
   createdAt?: string;
 };
 
+const PENDING_PIX_MAX_AGE_MS = 20 * 60_000;
+const PIX_GENERATION_GRACE_MS = 90_000;
+
 export const createPodPayPixDeposit = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => depositSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId, claims } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const limits = await loadLimits(supabase as never);
     if (data.amount < limits.min_deposit || data.amount > limits.max_deposit) {
       throw new Error(`Depósito deve ser entre R$ ${limits.min_deposit} e R$ ${limits.max_deposit}`);
@@ -82,6 +86,71 @@ export const createPodPayPixDeposit = createServerFn({ method: "POST" })
 
     const amountCents = Math.round(data.amount * 100);
     const idempotencyKey = crypto.randomUUID();
+
+    const { data: existing } = await supabaseAdmin
+      .from("transactions")
+      .select("id,amount,gateway_qrcode,gateway_external_id,created_at")
+      .eq("user_id", userId)
+      .eq("type", "deposit")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (existing) {
+      const ageMs = Date.now() - new Date(existing.created_at).getTime();
+      const sameAmount = Number(existing.amount) === Number(data.amount);
+      if (sameAmount && existing.gateway_qrcode && ageMs < PENDING_PIX_MAX_AGE_MS) {
+        return {
+          transactionId: existing.id,
+          podpayId: existing.gateway_external_id || "",
+          qrCodeImage: "",
+          copyPaste: existing.gateway_qrcode,
+        };
+      }
+      if (sameAmount && !existing.gateway_qrcode && ageMs < PIX_GENERATION_GRACE_MS) {
+        throw new Error("Seu PIX já está sendo gerado. Aguarde alguns segundos e tente novamente.");
+      }
+      await supabaseAdmin
+        .from("transactions")
+        .update({ status: "rejected", description: "Cancelado — novo PIX gerado" })
+        .eq("id", existing.id)
+        .eq("user_id", userId)
+        .eq("status", "pending");
+    }
+
+    const { data: pendingTx, error: pendingError } = await supabaseAdmin
+      .from("transactions")
+      .insert({
+        user_id: userId,
+        type: "deposit",
+        amount: data.amount,
+        status: "pending",
+        description: "PodPay PIX gerando",
+        gateway_external_id: idempotencyKey,
+      })
+      .select("id")
+      .single();
+    if (pendingError) {
+      const { data: pending } = await supabaseAdmin
+        .from("transactions")
+        .select("id,gateway_qrcode,gateway_external_id")
+        .eq("user_id", userId)
+        .eq("type", "deposit")
+        .eq("status", "pending")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (pending?.gateway_qrcode) {
+        return {
+          transactionId: pending.id,
+          podpayId: pending.gateway_external_id || "",
+          qrCodeImage: "",
+          copyPaste: pending.gateway_qrcode,
+        };
+      }
+      throw new Error("Seu PIX já está sendo gerado. Aguarde alguns segundos e tente novamente.");
+    }
+
     const fullName =
       (profile?.full_name && profile.full_name.trim().length > 2
         ? profile.full_name
@@ -91,48 +160,56 @@ export const createPodPayPixDeposit = createServerFn({ method: "POST" })
       (claims as { email?: string } | undefined)?.email || "no-reply@example.com";
     const phone = (profile?.phone || "11999999999").replace(/\D/g, "");
 
-    const result = await podpay<PixTransaction>("/v1/transactions", {
-      method: "POST",
-      idempotencyKey,
-      body: JSON.stringify({
-        amount: amountCents,
-        paymentMethod: "pix",
-        items: [
-          {
-            id: idempotencyKey,
-            title: "Depósito",
-            unitPrice: amountCents,
-            quantity: 1,
-            tangible: false,
+    let result: PixTransaction;
+    try {
+      result = await podpay<PixTransaction>("/v1/transactions", {
+        method: "POST",
+        idempotencyKey,
+        body: JSON.stringify({
+          amount: amountCents,
+          paymentMethod: "pix",
+          items: [
+            {
+              id: idempotencyKey,
+              title: "Depósito",
+              unitPrice: amountCents,
+              quantity: 1,
+              tangible: false,
+            },
+          ],
+          customer: {
+            name: fullName,
+            email,
+            phone,
+            document: { number: cpf, type: "cpf" },
           },
-        ],
-        customer: {
-          name: fullName,
-          email,
-          phone,
-          document: { number: cpf, type: "cpf" },
-        },
-        metadata: { userId },
-      }),
-    });
+          metadata: { userId, localTransactionId: pendingTx.id },
+        }),
+      });
+    } catch (error) {
+      await supabaseAdmin
+        .from("transactions")
+        .update({ status: "rejected", description: "PodPay PIX (falha ao gerar)" })
+        .eq("id", pendingTx.id);
+      throw error;
+    }
 
-    // Cancel any prior pending deposit (one-pending-per-user constraint)
-    await supabase
-      .from("transactions")
-      .update({ status: "rejected", description: "Cancelado — novo PIX gerado" })
-      .eq("user_id", userId)
-      .eq("type", "deposit")
-      .eq("status", "pending");
+    if (!result.pixQrCode) {
+      await supabaseAdmin
+        .from("transactions")
+        .update({ status: "rejected", description: `PodPay PIX ${result.id} (sem código PIX)` })
+        .eq("id", pendingTx.id);
+      throw new Error("PodPay não retornou o código PIX");
+    }
 
-    const { data: tx, error } = await supabase
+    const { data: tx, error } = await supabaseAdmin
       .from("transactions")
-      .insert({
-        user_id: userId,
-        type: "deposit",
-        amount: data.amount,
-        status: "pending",
+      .update({
         description: `PodPay PIX ${result.id}`,
+        gateway_external_id: result.id,
+        gateway_qrcode: result.pixQrCode,
       })
+      .eq("id", pendingTx.id)
       .select()
       .single();
     if (error) throw new Error(error.message);

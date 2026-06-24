@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createHmac, timingSafeEqual } from "crypto";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -72,10 +71,14 @@ export const Route = createFileRoute("/api/public/podpay-webhook")({
           });
         }
 
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         console.log("PodPay webhook event", JSON.stringify(payload));
 
-        const podpayId =
-          payload?.data?.id || payload?.transactionId || payload?.id;
+        const podpayId = payload?.data?.id || payload?.transactionId || payload?.id;
+        const localTransactionId =
+          typeof payload?.data?.metadata?.localTransactionId === "string"
+            ? payload.data.metadata.localTransactionId
+            : undefined;
         const status = payload?.data?.status || payload?.status;
         if (!podpayId || !status) {
           return new Response("Missing id/status", {
@@ -84,11 +87,33 @@ export const Route = createFileRoute("/api/public/podpay-webhook")({
           });
         }
 
-        const { data: tx } = await supabaseAdmin
-          .from("transactions")
-          .select("id,status")
-          .ilike("description", `%${podpayId}%`)
-          .maybeSingle();
+        let tx: { id: string; status: string } | null = null;
+        if (localTransactionId) {
+          const byLocalId = await supabaseAdmin
+            .from("transactions")
+            .select("id,status")
+            .eq("id", localTransactionId)
+            .maybeSingle();
+          tx = byLocalId.data;
+        }
+
+        if (!tx) {
+          const byGatewayId = await supabaseAdmin
+            .from("transactions")
+            .select("id,status")
+            .eq("gateway_external_id", podpayId)
+            .maybeSingle();
+          tx = byGatewayId.data;
+        }
+
+        if (!tx) {
+          const fallback = await supabaseAdmin
+            .from("transactions")
+            .select("id,status")
+            .ilike("description", `%${podpayId}%`)
+            .maybeSingle();
+          tx = fallback.data;
+        }
 
         if (!tx) {
           console.warn("PodPay webhook: no matching tx for", podpayId);

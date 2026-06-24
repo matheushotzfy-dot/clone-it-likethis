@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createHmac, timingSafeEqual } from "crypto";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -55,18 +54,29 @@ export const Route = createFileRoute("/api/public/bspay-webhook")({
           return new Response("Bad JSON", { status: 400, headers: corsHeaders });
         }
 
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         console.log("BSPay webhook", JSON.stringify(payload));
         const bspayId = payload.data?.transaction_id || payload.transaction_id;
+        const externalId = payload.data?.external_id;
         const event = (payload.event || "").toLowerCase();
         if (!bspayId) {
           return new Response("Missing id", { status: 400, headers: corsHeaders });
         }
 
-        const { data: tx } = await supabaseAdmin
+        const matchIds = [bspayId, externalId].filter(Boolean) as string[];
+        let { data: tx } = await supabaseAdmin
           .from("transactions")
           .select("id,status")
-          .ilike("description", `%${bspayId}%`)
+          .in("gateway_external_id", matchIds)
           .maybeSingle();
+        if (!tx) {
+          const fallback = await supabaseAdmin
+            .from("transactions")
+            .select("id,status")
+            .ilike("description", `%${bspayId}%`)
+            .maybeSingle();
+          tx = fallback.data;
+        }
         if (!tx) return new Response("ok", { status: 200, headers: corsHeaders });
 
         let newStatus: "approved" | "rejected" | "pending" = "pending";
