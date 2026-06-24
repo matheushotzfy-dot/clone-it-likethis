@@ -47,8 +47,9 @@ function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 md:gap-4">
         <Card icon={ArrowDownCircle} label="Depósitos hoje" value={brl(data.depositsToday)} sub={`${brl(data.depositsMonth)} no mês`} accent="text-success" />
+        <Card icon={ArrowDownCircle} label="Depósitos ontem" value={brl(data.depositsYesterday)} accent="text-success" />
         <Card icon={ArrowUpCircle} label="Saques hoje" value={brl(data.withdrawalsToday)} sub={`${brl(data.withdrawalsMonth)} no mês`} accent="text-destructive" />
         <Card icon={Users} label="Usuários" value={String(data.totalUsers)} />
         <Card icon={Wallet} label="Saldo em conta" value={brl(data.totalBalance)} />
