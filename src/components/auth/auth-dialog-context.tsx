@@ -13,22 +13,26 @@ const AuthDialogContext = createContext<Ctx>({ current: null, open: () => {}, cl
 export function AuthDialogProvider({ children }: { children: ReactNode }) {
   const [current, setCurrent] = useState<DialogKey>(null);
 
-  // Fix: Radix Dialog sometimes leaves `pointer-events: none` on <body> when
-  // we transition between dialogs (e.g. register → deposit) or after a dialog
-  // closes. This freezes the whole UI. Permanently watch <body> and strip the
-  // style any time it appears.
+  // Fix: Radix can leave global interaction/scroll locks on <body> after a
+  // dialog closes or while a non-modal menu is open, freezing taps and scroll.
   useEffect(() => {
     if (typeof document === "undefined") return;
     const strip = () => {
+      const hasOpenDialog = !!document.querySelector('[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]');
       if (document.body.style.pointerEvents === "none") {
         document.body.style.pointerEvents = "";
+      }
+      if (!current && !hasOpenDialog) {
+        if (document.body.style.overflow === "hidden") document.body.style.overflow = "";
+        if (document.body.style.position === "fixed") document.body.style.position = "";
+        if (document.body.style.touchAction === "none") document.body.style.touchAction = "";
       }
     };
     strip();
     const mo = new MutationObserver(strip);
     mo.observe(document.body, { attributes: true, attributeFilter: ["style"] });
     return () => mo.disconnect();
-  }, []);
+  }, [current]);
 
 
   const open = useCallback((k: DialogKey) => {
