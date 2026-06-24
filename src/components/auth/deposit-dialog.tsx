@@ -123,10 +123,10 @@ export function DepositDialog() {
   return (
     <Dialog open={showDialog} onOpenChange={(o) => !o && (step !== "pix" || pixCopied) && close()}>
       <DialogContent className="max-w-[440px] w-[calc(100vw-2.5rem)] sm:w-full bg-brand border-white/10 text-white p-0 overflow-hidden shadow-2xl max-h-[88vh] sm:max-h-[92vh] flex flex-col sm:rounded-2xl rounded-2xl">
-        <VisuallyHidden>
+        <>
           <DialogTitle>Depósito via PIX</DialogTitle>
           <DialogDescription>Gere um QR Code PIX para depositar na sua conta</DialogDescription>
-        </VisuallyHidden>
+        </>
         <div className="relative flex flex-col min-h-0 flex-1">
           <div className="p-4 sm:p-6 border-b border-white/5 flex items-center justify-between bg-brand-2/50 shrink-0">
             <div className="flex items-center gap-3 sm:gap-4">
