@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthDialog } from "./auth-dialog-context";
 import { PromoSide } from "./promo-side";
