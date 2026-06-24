@@ -84,11 +84,20 @@ export const Route = createFileRoute("/api/public/podpay-webhook")({
           });
         }
 
-        const { data: tx } = await supabaseAdmin
+        let { data: tx } = await supabaseAdmin
           .from("transactions")
           .select("id,status")
-          .ilike("description", `%${podpayId}%`)
+          .eq("gateway_external_id", podpayId)
           .maybeSingle();
+
+        if (!tx) {
+          const fallback = await supabaseAdmin
+            .from("transactions")
+            .select("id,status")
+            .ilike("description", `%${podpayId}%`)
+            .maybeSingle();
+          tx = fallback.data;
+        }
 
         if (!tx) {
           console.warn("PodPay webhook: no matching tx for", podpayId);

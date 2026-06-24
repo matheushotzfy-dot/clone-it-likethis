@@ -44,6 +44,7 @@ export const createBSPayPixDeposit = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ amount: z.number().positive().max(1000000) }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId, claims } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const limits = await loadLimits(supabase as never);
     if (data.amount < limits.min_deposit || data.amount > limits.max_deposit) {
       throw new Error(`Depósito deve ser entre R$ ${limits.min_deposit} e R$ ${limits.max_deposit}`);
@@ -56,6 +57,15 @@ export const createBSPayPixDeposit = createServerFn({ method: "POST" })
     const cpf = (profile?.cpf || "").replace(/\D/g, "");
     if (!cpf || cpf.length !== 11)
       throw new Error("CPF não encontrado no cadastro. Atualize seu perfil.");
+
+    // Libera qualquer PIX pendente antigo antes de gerar outro, evitando a
+    // constraint uniq_transactions_one_pending_deposit_per_user.
+    await supabaseAdmin
+      .from("transactions")
+      .update({ status: "rejected", description: "Cancelado — novo PIX gerado" })
+      .eq("user_id", userId)
+      .eq("type", "deposit")
+      .eq("status", "pending");
 
     const token = await getAccessToken();
     const externalId = crypto.randomUUID();
@@ -93,7 +103,7 @@ export const createBSPayPixDeposit = createServerFn({ method: "POST" })
     const qrcode = j.data.payment_info?.qrcode || "";
     const qrcodeImage = j.data.payment_info?.qrcode_image || "";
 
-    const { data: tx, error } = await supabase
+    const { data: tx, error } = await supabaseAdmin
       .from("transactions")
       .insert({
         user_id: userId,
@@ -101,6 +111,8 @@ export const createBSPayPixDeposit = createServerFn({ method: "POST" })
         amount: data.amount,
         status: "pending",
         description: `BSPay PIX ${j.data.transaction_id}`,
+        gateway_external_id: j.data.transaction_id,
+        gateway_qrcode: qrcode || null,
       })
       .select()
       .single();

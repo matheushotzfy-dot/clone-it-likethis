@@ -62,11 +62,19 @@ export const Route = createFileRoute("/api/public/bspay-webhook")({
           return new Response("Missing id", { status: 400, headers: corsHeaders });
         }
 
-        const { data: tx } = await supabaseAdmin
+        let { data: tx } = await supabaseAdmin
           .from("transactions")
           .select("id,status")
-          .ilike("description", `%${bspayId}%`)
+          .eq("gateway_external_id", bspayId)
           .maybeSingle();
+        if (!tx) {
+          const fallback = await supabaseAdmin
+            .from("transactions")
+            .select("id,status")
+            .ilike("description", `%${bspayId}%`)
+            .maybeSingle();
+          tx = fallback.data;
+        }
         if (!tx) return new Response("ok", { status: 200, headers: corsHeaders });
 
         let newStatus: "approved" | "rejected" | "pending" = "pending";

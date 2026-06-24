@@ -66,6 +66,7 @@ export const createPodPayPixDeposit = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => depositSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId, claims } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const limits = await loadLimits(supabase as never);
     if (data.amount < limits.min_deposit || data.amount > limits.max_deposit) {
       throw new Error(`Depósito deve ser entre R$ ${limits.min_deposit} e R$ ${limits.max_deposit}`);
@@ -82,6 +83,17 @@ export const createPodPayPixDeposit = createServerFn({ method: "POST" })
 
     const amountCents = Math.round(data.amount * 100);
     const idempotencyKey = crypto.randomUUID();
+
+    // Libera o usuário antes de chamar o gateway: a regra do banco permite
+    // apenas 1 depósito PIX pendente por usuário, e usuário comum não pode
+    // atualizar transações por RLS; por isso usamos o client seguro do backend.
+    await supabaseAdmin
+      .from("transactions")
+      .update({ status: "rejected", description: "Cancelado — novo PIX gerado" })
+      .eq("user_id", userId)
+      .eq("type", "deposit")
+      .eq("status", "pending");
+
     const fullName =
       (profile?.full_name && profile.full_name.trim().length > 2
         ? profile.full_name
@@ -116,15 +128,7 @@ export const createPodPayPixDeposit = createServerFn({ method: "POST" })
       }),
     });
 
-    // Cancel any prior pending deposit (one-pending-per-user constraint)
-    await supabase
-      .from("transactions")
-      .update({ status: "rejected", description: "Cancelado — novo PIX gerado" })
-      .eq("user_id", userId)
-      .eq("type", "deposit")
-      .eq("status", "pending");
-
-    const { data: tx, error } = await supabase
+    const { data: tx, error } = await supabaseAdmin
       .from("transactions")
       .insert({
         user_id: userId,
@@ -132,6 +136,8 @@ export const createPodPayPixDeposit = createServerFn({ method: "POST" })
         amount: data.amount,
         status: "pending",
         description: `PodPay PIX ${result.id}`,
+        gateway_external_id: result.id,
+        gateway_qrcode: result.pixQrCode || null,
       })
       .select()
       .single();
