@@ -116,6 +116,14 @@ export const createPodPayPixDeposit = createServerFn({ method: "POST" })
       }),
     });
 
+    // Cancel any prior pending deposit (one-pending-per-user constraint)
+    await supabase
+      .from("transactions")
+      .update({ status: "rejected", description: "Cancelado — novo PIX gerado" })
+      .eq("user_id", userId)
+      .eq("type", "deposit")
+      .eq("status", "pending");
+
     const { data: tx, error } = await supabase
       .from("transactions")
       .insert({
