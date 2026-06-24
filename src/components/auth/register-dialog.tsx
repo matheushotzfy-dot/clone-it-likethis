@@ -115,8 +115,8 @@ export function RegisterDialog() {
           </div>
 
           <div className="mb-6">
-            <h2 className="text-2xl font-black text-primary leading-tight">Cadastre-se!</h2>
-            <p className="text-sm text-white/70">De forma fácil e rápida!</p>
+            <DialogTitle className="text-2xl font-black text-primary leading-tight">Cadastre-se!</DialogTitle>
+            <DialogDescription className="text-sm text-white/70">De forma fácil e rápida!</DialogDescription>
           </div>
 
           <form onSubmit={submit} className="space-y-4">
