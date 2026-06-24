@@ -99,10 +99,8 @@ export function RegisterDialog() {
   return (
     <Dialog open={current === "register"} onOpenChange={(o) => !o && close()}>
       <DialogContent className="p-0 max-w-[860px] w-[calc(100vw-1rem)] sm:w-[calc(100vw-2rem)] bg-brand border-brand overflow-hidden gap-0 flex flex-col md:flex-row max-h-[95vh] sm:max-h-[92vh] sm:rounded-2xl">
-        <VisuallyHidden>
-          <DialogTitle>Cadastre-se na SantosBet</DialogTitle>
-          <DialogDescription>Crie sua conta de forma fácil e rápida</DialogDescription>
-        </VisuallyHidden>
+        <DialogTitle className="sr-only">Cadastre-se na SantosBet</DialogTitle>
+        <DialogDescription className="sr-only">Crie sua conta de forma fácil e rápida</DialogDescription>
         <PromoSide />
 
         <div className="flex-1 p-5 md:p-8 bg-brand text-white overflow-y-auto">
