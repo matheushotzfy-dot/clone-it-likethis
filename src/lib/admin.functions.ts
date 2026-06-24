@@ -100,6 +100,7 @@ export const getDashboardKPIs = createServerFn({ method: "GET" })
 
     return {
       depositsToday: sum(t => t.type === "deposit" && t.status === "approved" && t.created_at >= todayIso),
+      depositsYesterday: sum(t => t.type === "deposit" && t.status === "approved" && t.created_at >= yesterdayIso && t.created_at < todayIso),
       depositsMonth: sum(t => t.type === "deposit" && t.status === "approved" && t.created_at >= monthIso),
       withdrawalsToday: sum(t => t.type === "withdrawal" && t.status === "approved" && t.created_at >= todayIso),
       withdrawalsMonth: sum(t => t.type === "withdrawal" && t.status === "approved" && t.created_at >= monthIso),
