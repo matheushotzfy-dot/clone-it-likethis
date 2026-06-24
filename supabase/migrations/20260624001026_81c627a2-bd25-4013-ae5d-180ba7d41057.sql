@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS public.uniq_transactions_one_pending_deposit_per_user;
