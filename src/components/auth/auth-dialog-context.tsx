@@ -14,19 +14,22 @@ export function AuthDialogProvider({ children }: { children: ReactNode }) {
   const [current, setCurrent] = useState<DialogKey>(null);
 
   // Fix: Radix Dialog sometimes leaves `pointer-events: none` on <body> when
-  // we transition between dialogs (e.g. register → deposit). This freezes the
-  // whole UI: buttons stop responding even though the click handlers exist.
-  // Clear it whenever the active dialog changes.
+  // we transition between dialogs (e.g. register → deposit) or after a dialog
+  // closes. This freezes the whole UI. Permanently watch <body> and strip the
+  // style any time it appears.
   useEffect(() => {
-    const clear = () => {
+    if (typeof document === "undefined") return;
+    const strip = () => {
       if (document.body.style.pointerEvents === "none") {
         document.body.style.pointerEvents = "";
       }
     };
-    clear();
-    const t = window.setTimeout(clear, 350);
-    return () => window.clearTimeout(t);
-  }, [current]);
+    strip();
+    const mo = new MutationObserver(strip);
+    mo.observe(document.body, { attributes: true, attributeFilter: ["style"] });
+    return () => mo.disconnect();
+  }, []);
+
 
   const open = useCallback((k: DialogKey) => {
     // Defer to next frame so a previous dialog has a chance to fully unmount
