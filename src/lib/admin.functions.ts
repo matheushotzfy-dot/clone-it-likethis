@@ -82,6 +82,7 @@ export const getDashboardKPIs = createServerFn({ method: "GET" })
     const monthIso = monthStart.toISOString();
     const weekIso = weekStart.toISOString();
     const DAY_MS = 24 * 60 * 60 * 1000;
+    const yesterdayIso = new Date(today.getTime() - DAY_MS).toISOString();
     const daily = Array.from({ length: 7 }, (_, i) => {
       const day = new Date(weekStart.getTime() + i * DAY_MS);
       const next = new Date(day.getTime() + DAY_MS);
@@ -99,6 +100,7 @@ export const getDashboardKPIs = createServerFn({ method: "GET" })
 
     return {
       depositsToday: sum(t => t.type === "deposit" && t.status === "approved" && t.created_at >= todayIso),
+      depositsYesterday: sum(t => t.type === "deposit" && t.status === "approved" && t.created_at >= yesterdayIso && t.created_at < todayIso),
       depositsMonth: sum(t => t.type === "deposit" && t.status === "approved" && t.created_at >= monthIso),
       withdrawalsToday: sum(t => t.type === "withdrawal" && t.status === "approved" && t.created_at >= todayIso),
       withdrawalsMonth: sum(t => t.type === "withdrawal" && t.status === "approved" && t.created_at >= monthIso),
