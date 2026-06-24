@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createHmac, timingSafeEqual } from "crypto";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -55,6 +54,7 @@ export const Route = createFileRoute("/api/public/bspay-webhook")({
           return new Response("Bad JSON", { status: 400, headers: corsHeaders });
         }
 
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         console.log("BSPay webhook", JSON.stringify(payload));
         const bspayId = payload.data?.transaction_id || payload.transaction_id;
         const externalId = payload.data?.external_id;

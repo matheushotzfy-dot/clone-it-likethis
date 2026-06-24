@@ -92,6 +92,7 @@ export const createBSPayPixDeposit = createServerFn({ method: "POST" })
         .eq("status", "pending");
     }
 
+    const token = await getAccessToken();
     const externalId = crypto.randomUUID();
     const { data: pendingTx, error: pendingError } = await supabaseAdmin
       .from("transactions")
@@ -126,7 +127,6 @@ export const createBSPayPixDeposit = createServerFn({ method: "POST" })
       throw new Error("Seu PIX já está sendo gerado. Aguarde alguns segundos e tente novamente.");
     }
 
-    const token = await getAccessToken();
     const fullName =
       (profile?.full_name && profile.full_name.trim().length > 2
         ? profile.full_name
@@ -137,20 +137,29 @@ export const createBSPayPixDeposit = createServerFn({ method: "POST" })
     const postbackBase = process.env.PUBLIC_APP_URL || "";
     const postbackUrl = postbackBase ? `${postbackBase}/api/public/bspay-webhook` : undefined;
 
-    const r = await fetch(`${BSPAY_BASE}/v2/transactions/cashin`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        amount: data.amount,
-        currency: "BRL",
-        external_id: externalId,
-        payer: { name: fullName, document: cpf, email },
-        ...(postbackUrl ? { postback_url: postbackUrl } : {}),
-      }),
-    });
+    let r: Response;
+    try {
+      r = await fetch(`${BSPAY_BASE}/v2/transactions/cashin`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount: data.amount,
+          currency: "BRL",
+          external_id: externalId,
+          payer: { name: fullName, document: cpf, email },
+          ...(postbackUrl ? { postback_url: postbackUrl } : {}),
+        }),
+      });
+    } catch (error) {
+      await supabaseAdmin
+        .from("transactions")
+        .update({ status: "rejected", description: `BSPay PIX ${externalId} (falha ao gerar)` })
+        .eq("id", pendingTx.id);
+      throw error;
+    }
     const j: { success?: boolean; data?: CashinResponse; error?: { message?: string } } = await r
       .json()
       .catch(() => ({}));

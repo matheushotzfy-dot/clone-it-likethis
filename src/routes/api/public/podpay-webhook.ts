@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createHmac, timingSafeEqual } from "crypto";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -72,6 +71,7 @@ export const Route = createFileRoute("/api/public/podpay-webhook")({
           });
         }
 
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         console.log("PodPay webhook event", JSON.stringify(payload));
 
         const podpayId = payload?.data?.id || payload?.transactionId || payload?.id;
