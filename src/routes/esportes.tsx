@@ -74,12 +74,6 @@ function Page() {
             description="Crie sua conta ou faça login para acessar a sportsbook."
             cta={<Button onClick={() => open("register")} className="font-bold">Criar conta</Button>}
           />
-        ) : !profileQ.data?.hasDeposited ? (
-          <EmptyState
-            title="Faça um depósito"
-            description="Depósito mínimo libera a sportsbook completa com odds reais."
-            cta={<Button onClick={() => open("deposit")} className="font-bold">Depositar agora</Button>}
-          />
         ) : loading || !url ? (
           <div className="min-h-[70vh] flex flex-col items-center justify-center gap-3 text-white/60">
             <Loader2 className="size-10 animate-spin text-primary" />
