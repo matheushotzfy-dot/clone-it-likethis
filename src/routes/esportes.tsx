@@ -35,7 +35,7 @@ function Page() {
 
   useEffect(() => {
     if (!canPlay) return;
-    if (url || loading) return;
+    if (url || loading || error) return;
     setLoading(true);
     setError(null);
     launch({
@@ -46,10 +46,13 @@ function Page() {
         lang: "pt",
       },
     })
-      .then((res) => setUrl(res.launch_url))
+      .then((res) => {
+        if (res.ok) setUrl(res.launch_url);
+        else setError(res.error);
+      })
       .catch((e: any) => setError(e?.message ?? "Falha ao carregar a sportsbook"))
       .finally(() => setLoading(false));
-  }, [canPlay, url, loading, launch]);
+  }, [canPlay, url, loading, error, launch]);
 
   return (
     <SiteShell>
@@ -74,11 +77,16 @@ function Page() {
             description="Crie sua conta ou faça login para acessar a sportsbook."
             cta={<Button onClick={() => open("register")} className="font-bold">Criar conta</Button>}
           />
+        ) : error ? (
+          <EmptyState
+            title="Sportsbook indisponível"
+            description={error}
+            cta={<Button onClick={() => setError(null)} className="font-bold">Tentar novamente</Button>}
+          />
         ) : loading || !url ? (
           <div className="min-h-[70vh] flex flex-col items-center justify-center gap-3 text-white/60">
             <Loader2 className="size-10 animate-spin text-primary" />
             <p className="text-sm">Carregando sportsbook...</p>
-            {error && <p className="text-xs text-destructive">{error}</p>}
           </div>
         ) : (
           <div className="rounded-2xl overflow-hidden border border-white/10 bg-black">
