@@ -53,15 +53,31 @@ async function pfFetch(path: string, init?: RequestInit) {
   return json;
 }
 
-function normalizeLaunchError(error: unknown): LaunchPFGameResult {
+async function getServerOutboundIp() {
+  try {
+    const res = await fetch("https://api.ipify.org?format=json", {
+      headers: { Accept: "application/json" },
+    });
+    if (!res.ok) return null;
+    const json = await res.json() as { ip?: string };
+    return json.ip ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function normalizeLaunchError(error: unknown): Promise<LaunchPFGameResult> {
   if (error instanceof PFRequestError) {
     const isIpDenied = error.status === 403 && /ip/i.test(error.message);
+    const outboundIp = isIpDenied ? await getServerOutboundIp() : null;
     return {
       ok: false,
       status: error.status,
       code: isIpDenied ? "ip_not_allowed" : "launch_failed",
       error: isIpDenied
-        ? "IP do servidor ainda não autorizado na PlayFivers. Autorize o IP atual do preview e tente de novo."
+        ? outboundIp
+          ? `IP do servidor não autorizado na PlayFivers. Autorize exatamente este IP: ${outboundIp}`
+          : "IP do servidor não autorizado na PlayFivers. Tente novamente em instantes."
         : `PlayFivers ${error.status}: ${error.message}`,
     };
   }
