@@ -39,6 +39,8 @@ import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authentica
 import { Route as AuthenticatedDepositoRouteImport } from './routes/_authenticated/deposito'
 import { Route as ApiPublicVeopagWebhookRouteImport } from './routes/api/public/veopag-webhook'
 import { Route as ApiPublicPodpayWebhookRouteImport } from './routes/api/public/podpay-webhook'
+import { Route as ApiPublicPlayfiversTransactionRouteImport } from './routes/api/public/playfivers-transaction'
+import { Route as ApiPublicPlayfiversBalanceRouteImport } from './routes/api/public/playfivers-balance'
 import { Route as ApiPublicBspayWebhookRouteImport } from './routes/api/public/bspay-webhook'
 import { Route as AdminUsuariosIdRouteImport } from './routes/admin/usuarios_.$id'
 
@@ -191,6 +193,18 @@ const ApiPublicPodpayWebhookRoute = ApiPublicPodpayWebhookRouteImport.update({
   path: '/api/public/podpay-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPlayfiversTransactionRoute =
+  ApiPublicPlayfiversTransactionRouteImport.update({
+    id: '/api/public/playfivers-transaction',
+    path: '/api/public/playfivers-transaction',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPlayfiversBalanceRoute =
+  ApiPublicPlayfiversBalanceRouteImport.update({
+    id: '/api/public/playfivers-balance',
+    path: '/api/public/playfivers-balance',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicBspayWebhookRoute = ApiPublicBspayWebhookRouteImport.update({
   id: '/api/public/bspay-webhook',
   path: '/api/public/bspay-webhook',
@@ -232,6 +246,8 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/admin/usuarios/$id': typeof AdminUsuariosIdRoute
   '/api/public/bspay-webhook': typeof ApiPublicBspayWebhookRoute
+  '/api/public/playfivers-balance': typeof ApiPublicPlayfiversBalanceRoute
+  '/api/public/playfivers-transaction': typeof ApiPublicPlayfiversTransactionRoute
   '/api/public/podpay-webhook': typeof ApiPublicPodpayWebhookRoute
   '/api/public/veopag-webhook': typeof ApiPublicVeopagWebhookRoute
 }
@@ -264,6 +280,8 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/admin/usuarios/$id': typeof AdminUsuariosIdRoute
   '/api/public/bspay-webhook': typeof ApiPublicBspayWebhookRoute
+  '/api/public/playfivers-balance': typeof ApiPublicPlayfiversBalanceRoute
+  '/api/public/playfivers-transaction': typeof ApiPublicPlayfiversTransactionRoute
   '/api/public/podpay-webhook': typeof ApiPublicPodpayWebhookRoute
   '/api/public/veopag-webhook': typeof ApiPublicVeopagWebhookRoute
 }
@@ -299,6 +317,8 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/admin/usuarios_/$id': typeof AdminUsuariosIdRoute
   '/api/public/bspay-webhook': typeof ApiPublicBspayWebhookRoute
+  '/api/public/playfivers-balance': typeof ApiPublicPlayfiversBalanceRoute
+  '/api/public/playfivers-transaction': typeof ApiPublicPlayfiversTransactionRoute
   '/api/public/podpay-webhook': typeof ApiPublicPodpayWebhookRoute
   '/api/public/veopag-webhook': typeof ApiPublicVeopagWebhookRoute
 }
@@ -334,6 +354,8 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/admin/usuarios/$id'
     | '/api/public/bspay-webhook'
+    | '/api/public/playfivers-balance'
+    | '/api/public/playfivers-transaction'
     | '/api/public/podpay-webhook'
     | '/api/public/veopag-webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -366,6 +388,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin/usuarios/$id'
     | '/api/public/bspay-webhook'
+    | '/api/public/playfivers-balance'
+    | '/api/public/playfivers-transaction'
     | '/api/public/podpay-webhook'
     | '/api/public/veopag-webhook'
   id:
@@ -400,6 +424,8 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/admin/usuarios_/$id'
     | '/api/public/bspay-webhook'
+    | '/api/public/playfivers-balance'
+    | '/api/public/playfivers-transaction'
     | '/api/public/podpay-webhook'
     | '/api/public/veopag-webhook'
   fileRoutesById: FileRoutesById
@@ -420,6 +446,8 @@ export interface RootRouteChildren {
   LegalPrivacidadeRoute: typeof LegalPrivacidadeRoute
   LegalTermosRoute: typeof LegalTermosRoute
   ApiPublicBspayWebhookRoute: typeof ApiPublicBspayWebhookRoute
+  ApiPublicPlayfiversBalanceRoute: typeof ApiPublicPlayfiversBalanceRoute
+  ApiPublicPlayfiversTransactionRoute: typeof ApiPublicPlayfiversTransactionRoute
   ApiPublicPodpayWebhookRoute: typeof ApiPublicPodpayWebhookRoute
   ApiPublicVeopagWebhookRoute: typeof ApiPublicVeopagWebhookRoute
 }
@@ -636,6 +664,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPodpayWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/playfivers-transaction': {
+      id: '/api/public/playfivers-transaction'
+      path: '/api/public/playfivers-transaction'
+      fullPath: '/api/public/playfivers-transaction'
+      preLoaderRoute: typeof ApiPublicPlayfiversTransactionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/playfivers-balance': {
+      id: '/api/public/playfivers-balance'
+      path: '/api/public/playfivers-balance'
+      fullPath: '/api/public/playfivers-balance'
+      preLoaderRoute: typeof ApiPublicPlayfiversBalanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/bspay-webhook': {
       id: '/api/public/bspay-webhook'
       path: '/api/public/bspay-webhook'
@@ -717,6 +759,8 @@ const rootRouteChildren: RootRouteChildren = {
   LegalPrivacidadeRoute: LegalPrivacidadeRoute,
   LegalTermosRoute: LegalTermosRoute,
   ApiPublicBspayWebhookRoute: ApiPublicBspayWebhookRoute,
+  ApiPublicPlayfiversBalanceRoute: ApiPublicPlayfiversBalanceRoute,
+  ApiPublicPlayfiversTransactionRoute: ApiPublicPlayfiversTransactionRoute,
   ApiPublicPodpayWebhookRoute: ApiPublicPodpayWebhookRoute,
   ApiPublicVeopagWebhookRoute: ApiPublicVeopagWebhookRoute,
 }
