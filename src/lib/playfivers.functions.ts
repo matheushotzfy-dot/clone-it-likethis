@@ -103,7 +103,12 @@ async function loadProviders() {
 }
 
 export const getPFProviders = createServerFn({ method: "GET" }).handler(async () => {
-  return loadProviders();
+  try {
+    return await loadProviders();
+  } catch (error) {
+    console.error("PlayFivers providers unavailable", error);
+    return providersCache?.data ?? [];
+  }
 });
 
 // Public — list of games (optionally filtered by provider id)
@@ -125,20 +130,30 @@ export const getPFGames = createServerFn({ method: "GET" })
     q: z.string().trim().max(80).optional(),
   }).parse(d ?? {}))
   .handler(async ({ data }) => {
-    let list: PFGame[];
-    if (data.providerId) {
-      list = await loadProviderGames(data.providerId);
-    } else {
-      const providers = await loadProviders();
-      const providersToLoad = providers.slice(0, Math.min(providers.length, Math.max(4, Math.ceil(data.limit / 40))));
-      const settled = await Promise.allSettled(providersToLoad.map((p) => loadProviderGames(p.id)));
-      list = settled.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
+    try {
+      let list: PFGame[];
+      if (data.providerId) {
+        list = await loadProviderGames(data.providerId);
+      } else {
+        const providers = await loadProviders();
+        const providersToLoad = providers.slice(0, Math.min(providers.length, Math.max(4, Math.ceil(data.limit / 40))));
+        const settled = await Promise.allSettled(providersToLoad.map((p) => loadProviderGames(p.id)));
+        list = settled.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
+      }
+      const query = data.q?.toLowerCase();
+      const filtered = query
+        ? list.filter((g) => g.name.toLowerCase().includes(query) || g.provider.name.toLowerCase().includes(query))
+        : list;
+      return filtered.slice(0, data.limit);
+    } catch (error) {
+      console.error("PlayFivers games unavailable", error);
+      const fallback = data.providerId ? gamesCache.get(String(data.providerId))?.data : [...gamesCache.values()].flatMap((c) => c.data);
+      const query = data.q?.toLowerCase();
+      const filtered = query
+        ? (fallback ?? []).filter((g) => g.name.toLowerCase().includes(query) || g.provider.name.toLowerCase().includes(query))
+        : (fallback ?? []);
+      return filtered.slice(0, data.limit);
     }
-    const query = data.q?.toLowerCase();
-    const filtered = query
-      ? list.filter((g) => g.name.toLowerCase().includes(query) || g.provider.name.toLowerCase().includes(query))
-      : list;
-    return filtered.slice(0, data.limit);
   });
 
 // Authenticated — launch a game for the current user
