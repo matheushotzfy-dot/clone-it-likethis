@@ -20,6 +20,21 @@ interface PFGame {
   provider: { name: string };
 }
 
+type LaunchPFGameResult =
+  | { ok: true; launch_url: string; name?: string }
+  | { ok: false; error: string; status?: number; code?: "ip_not_allowed" | "not_configured" | "frozen" | "profile_missing" | "launch_failed" };
+
+class PFRequestError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public path: string,
+  ) {
+    super(message);
+    this.name = "PFRequestError";
+  }
+}
+
 async function pfFetch(path: string, init?: RequestInit) {
   const res = await fetch(`${PF_BASE}${path}`, {
     ...init,
@@ -33,9 +48,29 @@ async function pfFetch(path: string, init?: RequestInit) {
   let json: any = null;
   try { json = text ? JSON.parse(text) : null; } catch { /* ignore */ }
   if (!res.ok) {
-    throw new Error(`PlayFivers ${path} ${res.status}: ${json?.msg ?? text}`);
+    throw new PFRequestError(json?.msg ?? text ?? "Erro na PlayFivers", res.status, path);
   }
   return json;
+}
+
+function normalizeLaunchError(error: unknown): LaunchPFGameResult {
+  if (error instanceof PFRequestError) {
+    const isIpDenied = error.status === 403 && /ip/i.test(error.message);
+    return {
+      ok: false,
+      status: error.status,
+      code: isIpDenied ? "ip_not_allowed" : "launch_failed",
+      error: isIpDenied
+        ? "IP do servidor ainda não autorizado na PlayFivers. Autorize o IP atual do preview e tente de novo."
+        : `PlayFivers ${error.status}: ${error.message}`,
+    };
+  }
+
+  return {
+    ok: false,
+    code: "launch_failed",
+    error: error instanceof Error ? error.message : "Falha ao iniciar jogo",
+  };
 }
 
 // Public — list of providers (cached)
@@ -74,11 +109,11 @@ export const launchPFGame = createServerFn({ method: "POST" })
       lang: z.enum(["pt", "es", "en", "ja", "zh", "ru", "th", "hi"]).default("pt"),
     }).parse(d),
   )
-  .handler(async ({ data, context }) => {
+  .handler(async ({ data, context }): Promise<LaunchPFGameResult> => {
     const { supabase, userId } = context;
     const agentToken = process.env.PLAYFIVERS_AGENT_TOKEN;
     const secretKey = process.env.PLAYFIVERS_SECRET_KEY;
-    if (!agentToken || !secretKey) throw new Error("PlayFivers não configurado");
+    if (!agentToken || !secretKey) return { ok: false, code: "not_configured", error: "PlayFivers não configurado" };
 
     // Block frozen accounts
     const { data: prof } = await supabase
@@ -86,24 +121,30 @@ export const launchPFGame = createServerFn({ method: "POST" })
       .select("balance,is_frozen,freeze_reason")
       .eq("id", userId)
       .maybeSingle();
-    if (!prof) throw new Error("Perfil não encontrado");
-    if (prof.is_frozen) throw new Error(prof.freeze_reason ? `Conta congelada — ${prof.freeze_reason}` : "Conta congelada");
+    if (!prof) return { ok: false, code: "profile_missing", error: "Perfil não encontrado" };
+    if (prof.is_frozen) {
+      return { ok: false, code: "frozen", error: prof.freeze_reason ? `Conta congelada — ${prof.freeze_reason}` : "Conta congelada" };
+    }
 
     // Note: deposit gate is enforced in the UI for slots/live; sportsbook is open to all logged-in users.
 
-    const json = await pfFetch("/api/v2/game_launch", {
-      method: "POST",
-      body: JSON.stringify({
-        agentToken,
-        secretKey,
-        user_code: userId,
-        game_code: data.game_code,
-        provider: data.provider,
-        game_original: data.game_original,
-        user_balance: Number(prof.balance ?? 0),
-        lang: data.lang,
-      }),
-    });
-    if (!json?.launch_url) throw new Error(json?.msg ?? "Falha ao iniciar jogo");
-    return { launch_url: json.launch_url as string, name: json.name as string };
+    try {
+      const json = await pfFetch("/api/v2/game_launch", {
+        method: "POST",
+        body: JSON.stringify({
+          agentToken,
+          secretKey,
+          user_code: userId,
+          game_code: data.game_code,
+          provider: data.provider,
+          game_original: data.game_original,
+          user_balance: Number(prof.balance ?? 0),
+          lang: data.lang,
+        }),
+      });
+      if (!json?.launch_url) return { ok: false, code: "launch_failed", error: json?.msg ?? "Falha ao iniciar jogo" };
+      return { ok: true, launch_url: json.launch_url as string, name: json.name as string | undefined };
+    } catch (error) {
+      return normalizeLaunchError(error);
+    }
   });

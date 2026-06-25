@@ -71,6 +71,10 @@ function SlotsPage() {
           lang: "pt",
         },
       });
+      if (!res.ok) {
+        toast.error(res.error);
+        return;
+      }
       window.open(res.launch_url, "_blank", "noopener,noreferrer");
     } catch (e: any) {
       toast.error(e?.message ?? "Não foi possível abrir o jogo");
