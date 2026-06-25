@@ -47,23 +47,6 @@ export function useTransactionNotifications() {
           }
         }
       )
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "transactions", filter: `user_id=eq.${user.id}` },
-        (payload) => {
-          const row: any = payload.new;
-          if (!row) return;
-          if (row.type === "bonus" && (row.status === "approved" || row.status === "completed")) {
-            const amount = `R$ ${Number(row.amount).toFixed(2).replace(".", ",")}`;
-            toast.success(`🎁 Bônus de ${amount} creditado!`, {
-              description: "Bônus de 100% no primeiro depósito aplicado.",
-              duration: 10000,
-            });
-            qc.invalidateQueries({ queryKey: ["my-profile"] });
-            qc.invalidateQueries({ queryKey: ["transactions"] });
-          }
-        }
-      )
       .subscribe();
 
     return () => {
