@@ -144,40 +144,49 @@ function SlotsPage() {
             <Loader2 className="size-8 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-            {filtered.map((g) => (
-              <button
-                key={`${g.provider.name}-${g.game_code}`}
-                onClick={() => handlePlay(g)}
-                disabled={launchingCode === g.game_code}
-                className="relative group block aspect-[3/4] rounded-xl overflow-hidden bg-surface border border-border hover:border-primary transition-all hover:scale-[1.02] touch-manipulation"
-              >
-                <img
-                  src={g.image_url}
-                  alt={g.name}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full h-full object-cover bg-surface-2"
-                  draggable={false}
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = "0.2"; }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/0 to-transparent" />
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  {launchingCode === g.game_code ? (
-                    <Loader2 className="size-8 animate-spin text-white" />
-                  ) : (
-                    <div className="size-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-                      <Play className="size-5 fill-current" />
-                    </div>
-                  )}
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 p-2">
-                  <p className="text-xs font-semibold text-white truncate">{g.name}</p>
-                  <p className="text-[10px] text-white/60">{g.provider.name}</p>
-                </div>
-              </button>
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+              {visible.map((g) => (
+                <button
+                  key={`${g.provider.name}-${g.game_code}`}
+                  onClick={() => handlePlay(g)}
+                  disabled={launchingCode === g.game_code}
+                  className="relative group block aspect-[3/4] rounded-xl overflow-hidden bg-surface border border-border hover:border-primary transition-all hover:scale-[1.02] touch-manipulation"
+                >
+                  <img
+                    src={g.image_url}
+                    alt={g.name}
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-cover bg-surface-2"
+                    draggable={false}
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = "0.2"; }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/0 to-transparent" />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    {launchingCode === g.game_code ? (
+                      <Loader2 className="size-8 animate-spin text-white" />
+                    ) : (
+                      <div className="size-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                        <Play className="size-5 fill-current" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 p-2">
+                    <p className="text-xs font-semibold text-white truncate">{g.name}</p>
+                    <p className="text-[10px] text-white/60">{g.provider.name}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+            {hasMore && (
+              <div className="flex justify-center pt-4">
+                <Button onClick={() => setVisibleCount((c) => c + 60)} variant="outline" size="lg" className="min-w-[200px]">
+                  Carregar mais ({filtered.length - visible.length})
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </SiteShell>
