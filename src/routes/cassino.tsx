@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { SiteShell } from "@/components/layout/site-shell";
-import { GameCard } from "@/components/casino/game-card";
-import { games, providers } from "@/lib/games";
+import { PFGameCard } from "@/components/casino/pf-game-card";
+import { usePFGames, usePFProviders, usePFLaunch } from "@/hooks/use-pf-launch";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Search, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/cassino")({
   head: () => ({ meta: [{ title: "Cassino — SANTOSBET" }] }),
@@ -14,40 +14,46 @@ export const Route = createFileRoute("/cassino")({
 
 function Page() {
   const [q, setQ] = useState("");
-  const [prov, setProv] = useState<string | null>(null);
+  const [providerId, setProviderId] = useState<number | null>(null);
+  const providersQ = usePFProviders();
+  const gamesQ = usePFGames(providerId ?? undefined);
+  const { play, launchingCode } = usePFLaunch();
 
-  const filtered = games.filter(
-    (g) =>
-      g.name.toLowerCase().includes(q.toLowerCase()) &&
-      (!prov || g.provider === prov)
-  );
+  const filtered = useMemo(() => {
+    const list = gamesQ.data ?? [];
+    if (!q.trim()) return list;
+    const needle = q.trim().toLowerCase();
+    return list.filter((g) => g.name.toLowerCase().includes(needle) || g.provider.name.toLowerCase().includes(needle));
+  }, [gamesQ.data, q]);
 
   return (
     <SiteShell>
       <div className="max-w-7xl mx-auto px-3 md:px-6 py-6 space-y-6">
-        <h1 className="text-2xl font-bold">Cassino</h1>
+        <div>
+          <h1 className="text-2xl font-bold">Cassino</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            {gamesQ.isLoading ? "Carregando..." : `${filtered.length} jogos disponíveis`}
+          </p>
+        </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar jogo..." className="pl-10 h-11 bg-surface" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar jogo ou provedor..." className="pl-10 h-11 bg-surface" />
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <Button
-            variant={!prov ? "default" : "outline"}
-            size="sm"
-            onClick={() => setProv(null)}
-          >Todos</Button>
-          {providers.map((p) => (
-            <Button
-              key={p}
-              variant={prov === p ? "default" : "outline"}
-              size="sm"
-              onClick={() => setProv(p)}
-            >{p}</Button>
+        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+          <Button variant={providerId === null ? "default" : "outline"} size="sm" onClick={() => setProviderId(null)} className="shrink-0">Todos</Button>
+          {(providersQ.data ?? []).map((p) => (
+            <Button key={p.id} variant={providerId === p.id ? "default" : "outline"} size="sm" onClick={() => setProviderId(p.id)} className="shrink-0">{p.name}</Button>
           ))}
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-          {filtered.map((g, i) => <GameCard key={g.id} game={g} priority={i < 12} />)}
-        </div>
+        {gamesQ.isLoading ? (
+          <div className="min-h-[40vh] flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>
+        ) : (
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+            {filtered.map((g, i) => (
+              <PFGameCard key={`${g.provider.name}-${g.game_code}`} game={g} priority={i < 12} loading={launchingCode === g.game_code} onPlay={play} />
+            ))}
+          </div>
+        )}
       </div>
     </SiteShell>
   );
