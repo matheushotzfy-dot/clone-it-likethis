@@ -98,6 +98,57 @@ export type Database = {
         }
         Relationships: []
       }
+      game_rounds: {
+        Row: {
+          after_balance: number | null
+          before_balance: number | null
+          bet: number
+          created_at: string
+          game_code: string | null
+          game_type: string | null
+          id: string
+          payload: Json | null
+          provider: string | null
+          round_id: string | null
+          txn_id: string
+          txn_type: string | null
+          user_id: string
+          win: number
+        }
+        Insert: {
+          after_balance?: number | null
+          before_balance?: number | null
+          bet?: number
+          created_at?: string
+          game_code?: string | null
+          game_type?: string | null
+          id?: string
+          payload?: Json | null
+          provider?: string | null
+          round_id?: string | null
+          txn_id: string
+          txn_type?: string | null
+          user_id: string
+          win?: number
+        }
+        Update: {
+          after_balance?: number | null
+          before_balance?: number | null
+          bet?: number
+          created_at?: string
+          game_code?: string | null
+          game_type?: string | null
+          id?: string
+          payload?: Json | null
+          provider?: string | null
+          round_id?: string | null
+          txn_id?: string
+          txn_type?: string | null
+          user_id?: string
+          win?: number
+        }
+        Relationships: []
+      }
       gateway_credentials: {
         Row: {
           key: string
@@ -355,6 +406,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_playfivers_transaction: {
+        Args: {
+          p_bet: number
+          p_game_code: string
+          p_game_type: string
+          p_payload: Json
+          p_provider: string
+          p_round_id: string
+          p_txn_id: string
+          p_txn_type: string
+          p_user_id: string
+          p_win: number
+        }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
