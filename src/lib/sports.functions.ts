@@ -59,6 +59,10 @@ const LEAGUES: LeagueDef[] = [
   { sport: "basketball", slug: "nba", label: "NBA" },
 ];
 
+const TODAY_WINDOW_HOURS = 18;
+const DEFAULT_TIMEOUT_MS = 2200;
+let feedCache: { at: number; data: SportsFeed } | null = null;
+
 function americanToDecimal(odds: string | number | undefined | null): number | null {
   if (odds == null || odds === "") return null;
   const n = typeof odds === "number" ? odds : Number(String(odds).replace(/[^0-9-]/g, ""));
@@ -109,7 +113,13 @@ function statusToDetail(state: string, type: any): { detail: string; isLive: boo
 async function fetchLeague(def: LeagueDef): Promise<RealMatch[]> {
   try {
     const url = `https://site.api.espn.com/apis/site/v2/sports/${def.sport}/${def.slug}/scoreboard`;
-    const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
+    const res = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0" },
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
     if (!res.ok) return [];
     const json: any = await res.json();
     const leagueLogo: string | null = json?.leagues?.[0]?.logos?.[0]?.href ?? null;
@@ -149,12 +159,31 @@ async function fetchLeague(def: LeagueDef): Promise<RealMatch[]> {
   }
 }
 
-export const getSportsFeed = createServerFn({ method: "GET" }).handler(async () => {
-  const lists = await Promise.all(LEAGUES.map(fetchLeague));
-  const matches = lists.flat();
+function isRelevantSoon(match: RealMatch): boolean {
+  if (match.isLive || match.status === "post") return true;
+  const ts = new Date(match.kickoff).getTime();
+  if (!Number.isFinite(ts)) return false;
+  const now = Date.now();
+  return ts >= now - 2 * 60 * 60_000 && ts <= now + TODAY_WINDOW_HOURS * 60 * 60_000;
+}
+
+interface SportsFeed {
+  matches: RealMatch[];
+  leagues: { slug: string; name: string; logo: string | null; count: number; live: number }[];
+  liveCount: number;
+  generatedAt: string;
+}
+
+export const getSportsFeed = createServerFn({ method: "GET" }).handler(async (): Promise<SportsFeed> => {
+  if (feedCache && Date.now() - feedCache.at < 20_000) return feedCache.data;
+
+  const results = await Promise.allSettled(LEAGUES.map(fetchLeague));
+  const matches = results.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
+  const relevant = matches.filter(isRelevantSoon);
+  const visibleMatches = relevant.length ? relevant : matches.slice(0, 120);
 
   // Sort: live first, then by kickoff
-  matches.sort((a, b) => {
+  visibleMatches.sort((a, b) => {
     if (a.isLive !== b.isLive) return a.isLive ? -1 : 1;
     return a.kickoff.localeCompare(b.kickoff);
   });
@@ -164,7 +193,7 @@ export const getSportsFeed = createServerFn({ method: "GET" }).handler(async () 
     string,
     { slug: string; name: string; logo: string | null; count: number; live: number }
   >();
-  for (const m of matches) {
+  for (const m of visibleMatches) {
     const cur =
       leaguesMap.get(m.leagueSlug) ?? { slug: m.leagueSlug, name: m.league, logo: m.leagueLogo, count: 0, live: 0 };
     cur.count += 1;
@@ -174,10 +203,12 @@ export const getSportsFeed = createServerFn({ method: "GET" }).handler(async () 
   }
   const leagues = [...leaguesMap.values()].sort((a, b) => b.live - a.live || b.count - a.count);
 
-  return {
-    matches,
+  const data = {
+    matches: visibleMatches,
     leagues,
-    liveCount: matches.filter((m) => m.isLive).length,
+    liveCount: visibleMatches.filter((m) => m.isLive).length,
     generatedAt: new Date().toISOString(),
   };
+  feedCache = { at: Date.now(), data };
+  return data;
 });
