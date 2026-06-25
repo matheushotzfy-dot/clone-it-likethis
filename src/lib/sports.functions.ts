@@ -59,7 +59,7 @@ const LEAGUES: LeagueDef[] = [
   { sport: "basketball", slug: "nba", label: "NBA" },
 ];
 
-const TODAY_WINDOW_HOURS = 18;
+const TODAY_WINDOW_HOURS = 96;
 const DEFAULT_TIMEOUT_MS = 2200;
 let feedCache: { at: number; data: SportsFeed } | null = null;
 
@@ -159,11 +159,11 @@ async function fetchLeague(def: LeagueDef): Promise<RealMatch[]> {
 }
 
 function isRelevantSoon(match: RealMatch): boolean {
-  if (match.isLive || match.status === "post") return true;
+  if (match.isLive) return true;
   const ts = new Date(match.kickoff).getTime();
-  if (!Number.isFinite(ts)) return false;
+  if (!Number.isFinite(ts)) return true; // keep when unknown
   const now = Date.now();
-  return ts >= now - 2 * 60 * 60_000 && ts <= now + TODAY_WINDOW_HOURS * 60 * 60_000;
+  return ts >= now - 6 * 60 * 60_000 && ts <= now + TODAY_WINDOW_HOURS * 60 * 60_000;
 }
 
 interface SportsFeed {
