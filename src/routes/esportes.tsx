@@ -124,11 +124,15 @@ function Page() {
             <Trophy className="size-12 text-primary/30 mb-3" />
             <h2 className="text-lg font-bold mb-1">Nenhum jogo encontrado</h2>
             <p className="text-white/50 text-sm">
-              {leagueFilter === "live" ? "Não tem jogo ao vivo agora. Veja os próximos jogos." : "Sem partidas nessa liga no momento."}
+              {leagueFilter === "live"
+                ? "Sem jogos ao vivo agora — veja os jogos de hoje."
+                : leagueFilter === "today"
+                  ? "Sem jogos hoje — veja a programação completa."
+                  : "Sem partidas nessa liga no momento."}
             </p>
-            {leagueFilter === "live" && (
-              <Button variant="outline" size="sm" className="mt-4" onClick={() => setLeagueFilter("all")}>
-                Ver próximos jogos
+            {(leagueFilter === "live" || leagueFilter === "today") && (
+              <Button variant="outline" size="sm" className="mt-4" onClick={() => setLeagueFilter(leagueFilter === "live" ? "today" : "all")}>
+                {leagueFilter === "live" ? "Ver jogos de hoje" : "Ver todos os jogos"}
               </Button>
             )}
           </div>
