@@ -142,13 +142,13 @@ function SlotsPage() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
               {visible.map((g) => (
                 <button
                   key={`${g.provider.name}-${g.game_code}`}
                   onClick={() => handlePlay(g)}
                   disabled={launchingCode === g.game_code}
-                  className="relative group block aspect-[3/4] rounded-xl overflow-hidden bg-surface border border-border hover:border-primary transition-all hover:scale-[1.02] touch-manipulation"
+                  className="relative group block aspect-[3/4] rounded-2xl overflow-hidden bg-surface border border-white/5 shadow-lg shadow-black/30 hover:border-primary/60 hover:shadow-primary/20 transition-all hover:-translate-y-0.5 touch-manipulation"
                 >
                   <img
                     src={g.image_url}
@@ -159,19 +159,19 @@ function SlotsPage() {
                     draggable={false}
                     onError={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = "0.2"; }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/0 to-transparent" />
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
                     {launchingCode === g.game_code ? (
-                      <Loader2 className="size-8 animate-spin text-white" />
+                      <Loader2 className="size-9 animate-spin text-white" />
                     ) : (
-                      <div className="size-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-                        <Play className="size-5 fill-current" />
+                      <div className="size-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-xl shadow-primary/40">
+                        <Play className="size-6 fill-current" />
                       </div>
                     )}
                   </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-2">
-                    <p className="text-xs font-semibold text-white truncate">{g.name}</p>
-                    <p className="text-[10px] text-white/60">{g.provider.name}</p>
+                  <div className="absolute bottom-0 left-0 right-0 p-2.5">
+                    <p className="text-xs md:text-sm font-bold text-white truncate">{g.name}</p>
+                    <p className="text-[10px] md:text-xs text-white/60 truncate">{g.provider.name}</p>
                   </div>
                 </button>
               ))}
