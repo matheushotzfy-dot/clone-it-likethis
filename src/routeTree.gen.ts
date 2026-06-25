@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TorneiosRouteImport } from './routes/torneios'
+import { Route as SlotsRouteImport } from './routes/slots'
 import { Route as RegistroRouteImport } from './routes/registro'
 import { Route as PromocoesRouteImport } from './routes/promocoes'
 import { Route as LoginRouteImport } from './routes/login'
@@ -47,6 +48,11 @@ import { Route as AdminUsuariosIdRouteImport } from './routes/admin/usuarios_.$i
 const TorneiosRoute = TorneiosRouteImport.update({
   id: '/torneios',
   path: '/torneios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SlotsRoute = SlotsRouteImport.update({
+  id: '/slots',
+  path: '/slots',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegistroRoute = RegistroRouteImport.update({
@@ -226,6 +232,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/promocoes': typeof PromocoesRoute
   '/registro': typeof RegistroRoute
+  '/slots': typeof SlotsRoute
   '/torneios': typeof TorneiosRoute
   '/deposito': typeof AuthenticatedDepositoRoute
   '/historico': typeof AuthenticatedHistoricoRoute
@@ -260,6 +267,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/promocoes': typeof PromocoesRoute
   '/registro': typeof RegistroRoute
+  '/slots': typeof SlotsRoute
   '/torneios': typeof TorneiosRoute
   '/deposito': typeof AuthenticatedDepositoRoute
   '/historico': typeof AuthenticatedHistoricoRoute
@@ -297,6 +305,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/promocoes': typeof PromocoesRoute
   '/registro': typeof RegistroRoute
+  '/slots': typeof SlotsRoute
   '/torneios': typeof TorneiosRoute
   '/_authenticated/deposito': typeof AuthenticatedDepositoRoute
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
@@ -334,6 +343,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/promocoes'
     | '/registro'
+    | '/slots'
     | '/torneios'
     | '/deposito'
     | '/historico'
@@ -368,6 +378,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/promocoes'
     | '/registro'
+    | '/slots'
     | '/torneios'
     | '/deposito'
     | '/historico'
@@ -404,6 +415,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/promocoes'
     | '/registro'
+    | '/slots'
     | '/torneios'
     | '/_authenticated/deposito'
     | '/_authenticated/historico'
@@ -441,6 +453,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   PromocoesRoute: typeof PromocoesRoute
   RegistroRoute: typeof RegistroRoute
+  SlotsRoute: typeof SlotsRoute
   TorneiosRoute: typeof TorneiosRoute
   LegalJogoResponsavelRoute: typeof LegalJogoResponsavelRoute
   LegalPrivacidadeRoute: typeof LegalPrivacidadeRoute
@@ -459,6 +472,13 @@ declare module '@tanstack/react-router' {
       path: '/torneios'
       fullPath: '/torneios'
       preLoaderRoute: typeof TorneiosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/slots': {
+      id: '/slots'
+      path: '/slots'
+      fullPath: '/slots'
+      preLoaderRoute: typeof SlotsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/registro': {
@@ -754,6 +774,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   PromocoesRoute: PromocoesRoute,
   RegistroRoute: RegistroRoute,
+  SlotsRoute: SlotsRoute,
   TorneiosRoute: TorneiosRoute,
   LegalJogoResponsavelRoute: LegalJogoResponsavelRoute,
   LegalPrivacidadeRoute: LegalPrivacidadeRoute,
