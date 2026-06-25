@@ -25,6 +25,12 @@ export const Route = createFileRoute("/esportes")({
   component: Page,
 });
 
+interface BetSlip {
+  match: RealMatch;
+  pick: "home" | "draw" | "away";
+  odd: number;
+}
+
 function Page() {
   const fetchFeed = useServerFn(getSportsFeed);
   const feedQ = useQuery({
@@ -35,6 +41,7 @@ function Page() {
   });
 
   const [leagueFilter, setLeagueFilter] = useState<string | "all" | "live" | "today">("today");
+  const [slip, setSlip] = useState<BetSlip | null>(null);
 
   const matches = feedQ.data?.matches ?? [];
   const leagues = feedQ.data?.leagues ?? [];
