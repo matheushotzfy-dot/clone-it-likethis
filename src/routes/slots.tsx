@@ -33,6 +33,7 @@ function SlotsPage() {
   const [providerId, setProviderId] = useState<number | null>(null);
   const [q, setQ] = useState("");
   const [launchingCode, setLaunchingCode] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(60);
 
   const providersQ = useQuery({
     queryKey: ["pf-providers"],
@@ -57,6 +58,10 @@ function SlotsPage() {
     const needle = q.trim().toLowerCase();
     return games.filter((g) => g.name.toLowerCase().includes(needle) || g.provider.name.toLowerCase().includes(needle));
   }, [gamesQ.data, q]);
+
+  // Reset pagination when filters/search change
+  const visible = filtered.slice(0, visibleCount);
+  const hasMore = filtered.length > visible.length;
 
   async function handlePlay(game: { game_code: string; provider: { name: string }; original: boolean; name: string }) {
     if (!user) { open("register"); return; }
