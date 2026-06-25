@@ -67,27 +67,37 @@ function americanToDecimal(odds: string | number | undefined | null): number | n
   return Math.round(dec * 100) / 100;
 }
 
-function parseOdds(rawList: any[] | undefined): RealOdds {
+function parseOdds(rawList: any[] | undefined, sport: "soccer" | "basketball"): RealOdds {
   const empty: RealOdds = { home: null, draw: null, away: null };
   if (!rawList || !rawList.length) return empty;
   const o = rawList.find((x) => x && (x.moneyline || x.awayTeamOdds || x.homeTeamOdds));
   if (!o) return empty;
   const ml = o.moneyline;
+  let result: RealOdds;
   if (ml) {
-    return {
+    result = {
       home: americanToDecimal(ml.home?.close?.odds ?? ml.home?.open?.odds),
       draw: americanToDecimal(ml.draw?.close?.odds ?? ml.draw?.open?.odds),
       away: americanToDecimal(ml.away?.close?.odds ?? ml.away?.open?.odds),
       provider: o.provider?.displayName ?? o.provider?.name,
     };
+  } else {
+    result = {
+      home: americanToDecimal(o.homeTeamOdds?.moneyLine),
+      draw: americanToDecimal(o.drawOdds?.moneyLine),
+      away: americanToDecimal(o.awayTeamOdds?.moneyLine),
+      provider: o.provider?.displayName ?? o.provider?.name,
+    };
   }
-  // Fallback: awayTeamOdds / homeTeamOdds shape
-  return {
-    home: americanToDecimal(o.homeTeamOdds?.moneyLine),
-    draw: americanToDecimal(o.drawOdds?.moneyLine),
-    away: americanToDecimal(o.awayTeamOdds?.moneyLine),
-    provider: o.provider?.displayName ?? o.provider?.name,
-  };
+  // Soccer: derive draw odd from home/away implied probabilities when missing,
+  // so cards show a complete 1X2 market consistent with the real lines.
+  if (sport === "soccer" && result.draw == null && result.home != null && result.away != null) {
+    const pH = 1 / result.home;
+    const pA = 1 / result.away;
+    const pD = Math.max(0.08, Math.min(0.45, 1 - pH - pA));
+    result.draw = Math.round((1 / pD) * 100) / 100;
+  }
+  return result;
 }
 
 function statusToDetail(state: string, type: any): { detail: string; isLive: boolean } {
@@ -129,7 +139,7 @@ async function fetchLeague(def: LeagueDef): Promise<RealMatch[]> {
         statusDetail: detail,
         isLive,
         venue: c.venue?.fullName ?? null,
-        odds: parseOdds(c.odds),
+        odds: parseOdds(c.odds, def.sport),
         broadcast: c.broadcasts?.[0]?.names?.[0] ?? null,
       } satisfies RealMatch;
     });
