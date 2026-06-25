@@ -30,7 +30,8 @@ function Page() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const canPlay = !!user && !!profileQ.data?.hasDeposited;
+  const canPlay = !!user;
+  void profileQ;
 
   useEffect(() => {
     if (!canPlay) return;
@@ -72,12 +73,6 @@ function Page() {
             title="Entre para apostar"
             description="Crie sua conta ou faça login para acessar a sportsbook."
             cta={<Button onClick={() => open("register")} className="font-bold">Criar conta</Button>}
-          />
-        ) : !profileQ.data?.hasDeposited ? (
-          <EmptyState
-            title="Faça um depósito"
-            description="Depósito mínimo libera a sportsbook completa com odds reais."
-            cta={<Button onClick={() => open("deposit")} className="font-bold">Depositar agora</Button>}
           />
         ) : loading || !url ? (
           <div className="min-h-[70vh] flex flex-col items-center justify-center gap-3 text-white/60">

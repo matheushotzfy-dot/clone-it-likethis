@@ -89,14 +89,7 @@ export const launchPFGame = createServerFn({ method: "POST" })
     if (!prof) throw new Error("Perfil não encontrado");
     if (prof.is_frozen) throw new Error(prof.freeze_reason ? `Conta congelada — ${prof.freeze_reason}` : "Conta congelada");
 
-    // Require at least one approved deposit before launching real-money games
-    const { count: depCount } = await supabase
-      .from("transactions")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", userId)
-      .eq("type", "deposit")
-      .eq("status", "approved");
-    if ((depCount ?? 0) === 0) throw new Error("Faça um depósito para liberar os jogos");
+    // Note: deposit gate is enforced in the UI for slots/live; sportsbook is open to all logged-in users.
 
     const json = await pfFetch("/api/v2/game_launch", {
       method: "POST",
