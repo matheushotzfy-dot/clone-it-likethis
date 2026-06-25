@@ -139,7 +139,7 @@ async function fetchLeague(def: LeagueDef): Promise<RealMatch[]> {
         statusDetail: detail,
         isLive,
         venue: c.venue?.fullName ?? null,
-        odds: parseOdds(c.odds),
+        odds: parseOdds(c.odds, def.sport),
         broadcast: c.broadcasts?.[0]?.names?.[0] ?? null,
       } satisfies RealMatch;
     });
