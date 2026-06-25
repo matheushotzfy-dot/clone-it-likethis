@@ -50,18 +50,20 @@ function Page() {
         {gamesQ.isLoading ? (
           <div className="min-h-[40vh] flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>
         ) : (
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-            {visible.map((g, i) => (
-              <PFGameCard key={`${g.provider.name}-${g.game_code}`} game={g} priority={i < 12} loading={launchingCode === g.game_code} onPlay={play} />
-            ))}
-          </div>
-          {hasMore && (
-            <div className="flex justify-center pt-4">
-              <Button onClick={() => setVisibleCount((c) => c + 72)} variant="outline" size="lg" className="min-w-[200px]">
-                Carregar mais
-              </Button>
+          <>
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+              {visible.map((g, i) => (
+                <PFGameCard key={`${g.provider.name}-${g.game_code}`} game={g} priority={i < 12} loading={launchingCode === g.game_code} onPlay={play} />
+              ))}
             </div>
-          )}
+            {hasMore && (
+              <div className="flex justify-center pt-4">
+                <Button onClick={() => setVisibleCount((c) => c + 72)} variant="outline" size="lg" className="min-w-[200px]">
+                  Carregar mais
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </SiteShell>
