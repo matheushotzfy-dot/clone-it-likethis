@@ -118,8 +118,7 @@ async function fetchLeague(def: LeagueDef): Promise<RealMatch[]> {
     const res = await fetch(url, {
       headers: { "User-Agent": "Mozilla/5.0" },
       signal: controller.signal,
-    });
-    clearTimeout(timeout);
+    }).finally(() => clearTimeout(timeout));
     if (!res.ok) return [];
     const json: any = await res.json();
     const leagueLogo: string | null = json?.leagues?.[0]?.logos?.[0]?.href ?? null;
