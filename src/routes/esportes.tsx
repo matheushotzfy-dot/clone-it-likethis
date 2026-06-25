@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { SiteShell } from "@/components/layout/site-shell";
@@ -38,6 +38,7 @@ function Page() {
     queryFn: () => fetchFeed(),
     refetchInterval: 30_000,
     staleTime: 25_000,
+    retry: 1,
   });
 
   const [leagueFilter, setLeagueFilter] = useState<string | "all" | "live" | "today">("today");
@@ -128,7 +129,7 @@ function Page() {
         {feedQ.isLoading ? (
           <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3 text-white/60">
             <Loader2 className="size-10 animate-spin text-primary" />
-            <p className="text-sm">Carregando jogos reais...</p>
+            <p className="text-sm">Atualizando odds e jogos...</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="min-h-[40vh] flex flex-col items-center justify-center text-center px-4">
@@ -322,7 +323,7 @@ function BetSlipDialog({ slip, onClose }: { slip: BetSlip | null; onClose: () =>
   });
 
   // Reset stake when a new slip opens
-  useMemo(() => { if (slip) setStake("10"); }, [slip?.match.id, slip?.pick]);
+  useEffect(() => { if (slip) setStake("10"); }, [slip?.match.id, slip?.pick]);
 
   if (!slip) return null;
   const balance = Number(profileQ.data?.balance ?? 0);
