@@ -30,7 +30,8 @@ function Page() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const canPlay = !!user && !!profileQ.data?.hasDeposited;
+  const canPlay = !!user;
+  void profileQ;
 
   useEffect(() => {
     if (!canPlay) return;
