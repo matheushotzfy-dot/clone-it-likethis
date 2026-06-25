@@ -30,15 +30,20 @@ function Page() {
     staleTime: 25_000,
   });
 
-  const [leagueFilter, setLeagueFilter] = useState<string | "all" | "live">("live");
+  const [leagueFilter, setLeagueFilter] = useState<string | "all" | "live" | "today">("today");
 
   const matches = feedQ.data?.matches ?? [];
   const leagues = feedQ.data?.leagues ?? [];
   const liveCount = feedQ.data?.liveCount ?? 0;
 
+  const isToday = (iso: string) => {
+    try { return new Date(iso).toDateString() === new Date().toDateString(); } catch { return false; }
+  };
+
   const filtered = useMemo(() => {
     if (leagueFilter === "all") return matches;
     if (leagueFilter === "live") return matches.filter((m) => m.isLive);
+    if (leagueFilter === "today") return matches.filter((m) => m.isLive || isToday(m.kickoff));
     return matches.filter((m) => m.leagueSlug === leagueFilter);
   }, [matches, leagueFilter]);
 
@@ -89,6 +94,9 @@ function Page() {
           <Pill active={leagueFilter === "live"} onClick={() => setLeagueFilter("live")} badge={liveCount || undefined}>
             <Radio className="size-3.5" /> Ao Vivo
           </Pill>
+          <Pill active={leagueFilter === "today"} onClick={() => setLeagueFilter("today")}>
+            Hoje
+          </Pill>
           <Pill active={leagueFilter === "all"} onClick={() => setLeagueFilter("all")}>
             Todos
           </Pill>
@@ -116,11 +124,15 @@ function Page() {
             <Trophy className="size-12 text-primary/30 mb-3" />
             <h2 className="text-lg font-bold mb-1">Nenhum jogo encontrado</h2>
             <p className="text-white/50 text-sm">
-              {leagueFilter === "live" ? "Não tem jogo ao vivo agora. Veja os próximos jogos." : "Sem partidas nessa liga no momento."}
+              {leagueFilter === "live"
+                ? "Sem jogos ao vivo agora — veja os jogos de hoje."
+                : leagueFilter === "today"
+                  ? "Sem jogos hoje — veja a programação completa."
+                  : "Sem partidas nessa liga no momento."}
             </p>
-            {leagueFilter === "live" && (
-              <Button variant="outline" size="sm" className="mt-4" onClick={() => setLeagueFilter("all")}>
-                Ver próximos jogos
+            {(leagueFilter === "live" || leagueFilter === "today") && (
+              <Button variant="outline" size="sm" className="mt-4" onClick={() => setLeagueFilter(leagueFilter === "live" ? "today" : "all")}>
+                {leagueFilter === "live" ? "Ver jogos de hoje" : "Ver todos os jogos"}
               </Button>
             )}
           </div>
