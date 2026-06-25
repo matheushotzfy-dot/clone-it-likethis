@@ -241,17 +241,16 @@ function formatKickoff(iso: string): string {
   }
 }
 
-function MatchCard({ match }: { match: RealMatch }) {
+function MatchCard({ match, onPick }: { match: RealMatch; onPick: (pick: "home" | "draw" | "away", odd: number) => void }) {
   const { user } = useAuth();
   const { open } = useAuthDialog();
   const hasOdds = match.odds.home != null || match.odds.draw != null || match.odds.away != null;
 
   function bet(pick: "home" | "draw" | "away", odd: number | null) {
     if (!odd) return;
+    if (match.status === "post") return;
     if (!user) { open("register"); return; }
-    toast.success(`Aposta registrada: ${pick === "home" ? match.homeShort : pick === "away" ? match.awayShort : "Empate"} @ ${odd.toFixed(2)}`, {
-      description: "Em breve: bilhete de aposta completo.",
-    });
+    onPick(pick, odd);
   }
 
   return (
@@ -267,7 +266,6 @@ function MatchCard({ match }: { match: RealMatch }) {
       )}
 
       <div className="p-3 space-y-2.5">
-        {/* League + status */}
         <div className="flex items-center justify-between text-[10px] text-white/45 font-semibold uppercase tracking-wide">
           <span className="truncate flex items-center gap-1.5">
             {match.leagueLogo && <img src={match.leagueLogo} alt="" className="size-3.5 object-contain" loading="lazy" />}
@@ -279,13 +277,11 @@ function MatchCard({ match }: { match: RealMatch }) {
           </span>
         </div>
 
-        {/* Teams + score */}
         <div className="space-y-1.5">
           <TeamRow name={match.home} badge={match.homeBadge} score={match.homeScore} live={match.isLive} ended={match.status === "post"} winner={match.status === "post" && (match.homeScore ?? 0) > (match.awayScore ?? 0)} />
           <TeamRow name={match.away} badge={match.awayBadge} score={match.awayScore} live={match.isLive} ended={match.status === "post"} winner={match.status === "post" && (match.awayScore ?? 0) > (match.homeScore ?? 0)} />
         </div>
 
-        {/* Venue / broadcast */}
         {(match.venue || match.broadcast) && (
           <div className="flex items-center gap-3 text-[10px] text-white/35">
             {match.venue && <span className="flex items-center gap-1 truncate"><MapPin className="size-3" />{match.venue}</span>}
@@ -293,8 +289,7 @@ function MatchCard({ match }: { match: RealMatch }) {
           </div>
         )}
 
-        {/* Odds */}
-        {hasOdds ? (
+        {hasOdds && match.status !== "post" ? (
           <div className="grid grid-cols-3 gap-1.5 pt-1">
             <OddButton label="Casa" pick={match.homeShort} odd={match.odds.home} onClick={() => bet("home", match.odds.home)} />
             <OddButton label="Empate" pick="X" odd={match.odds.draw} onClick={() => bet("draw", match.odds.draw)} />
@@ -307,6 +302,170 @@ function MatchCard({ match }: { match: RealMatch }) {
         ) : null}
       </div>
     </div>
+  );
+}
+
+function BetSlipDialog({ slip, onClose }: { slip: BetSlip | null; onClose: () => void }) {
+  const { user } = useAuth();
+  const { open: openAuthDialog } = useAuthDialog();
+  const fetchProfile = useServerFn(getMyProfile);
+  const placeBet = useServerFn(placeSportsBet);
+  const qc = useQueryClient();
+  const [stake, setStake] = useState<string>("10");
+  const [submitting, setSubmitting] = useState(false);
+
+  const profileQ = useQuery({
+    queryKey: ["my-profile"],
+    queryFn: () => fetchProfile(),
+    enabled: !!user && !!slip,
+    staleTime: 10_000,
+  });
+
+  // Reset stake when a new slip opens
+  useMemo(() => { if (slip) setStake("10"); }, [slip?.match.id, slip?.pick]);
+
+  if (!slip) return null;
+  const balance = Number(profileQ.data?.balance ?? 0);
+  const stakeNum = Number(stake.replace(",", ".")) || 0;
+  const payout = stakeNum * slip.odd;
+  const profit = payout - stakeNum;
+  const insufficient = stakeNum > 0 && stakeNum > balance;
+  const validStake = stakeNum >= 1 && stakeNum <= 50000;
+  const pickLabel = slip.pick === "home" ? slip.match.home : slip.pick === "away" ? slip.match.away : "Empate";
+
+  async function submit() {
+    if (!slip) return;
+    if (insufficient || !validStake) return;
+    setSubmitting(true);
+    try {
+      const res = await placeBet({
+        data: {
+          matchId: slip.match.id,
+          pick: slip.pick,
+          odd: slip.odd,
+          stake: stakeNum,
+          description: `${slip.match.home} x ${slip.match.away} — ${pickLabel}`,
+        },
+      });
+      if (!res.ok) {
+        if (res.error === "INSUFFICIENT_BALANCE") {
+          onClose();
+          openAuthDialog("deposit");
+          return;
+        }
+        toast.error(res.error);
+        return;
+      }
+      qc.invalidateQueries({ queryKey: ["my-profile"] });
+      qc.invalidateQueries({ queryKey: ["transactions"] });
+      toast.success(`Aposta confirmada — R$ ${stakeNum.toFixed(2)} @ ${slip.odd.toFixed(2)}`, {
+        description: `Retorno potencial: R$ ${payout.toFixed(2)}`,
+      });
+      onClose();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Não foi possível confirmar a aposta");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <Dialog open={!!slip} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-md p-0 overflow-hidden bg-gradient-to-b from-[#0f1419] to-[#0a0d11] border-white/10">
+        <DialogHeader className="px-5 pt-5 pb-3 border-b border-white/5">
+          <DialogTitle className="text-base font-black flex items-center gap-2">
+            <Trophy className="size-4 text-primary" /> Bilhete de aposta
+          </DialogTitle>
+          <DialogDescription className="text-xs text-white/45">{slip.match.league}</DialogDescription>
+        </DialogHeader>
+
+        <div className="px-5 py-4 space-y-4">
+          <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3 space-y-2">
+            <div className="text-[11px] text-white/50 font-semibold uppercase tracking-wider">{slip.match.home} <span className="text-white/30">vs</span> {slip.match.away}</div>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-[10px] text-white/40 uppercase font-bold">Sua escolha</div>
+                <div className="text-sm font-black text-white">{pickLabel}</div>
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] text-white/40 uppercase font-bold">Odd</div>
+                <div className="text-lg font-black text-primary tabular-nums">{slip.odd.toFixed(2)}</div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-bold text-white/70 uppercase tracking-wide">Valor da aposta</label>
+              <span className="text-[11px] text-white/45 flex items-center gap-1">
+                <Wallet className="size-3" /> R$ {balance.toFixed(2)}
+              </span>
+            </div>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-sm font-bold">R$</span>
+              <Input
+                type="number"
+                inputMode="decimal"
+                min={1}
+                step="0.01"
+                value={stake}
+                onChange={(e) => setStake(e.target.value)}
+                className="pl-10 h-12 text-lg font-black bg-white/5 border-white/10"
+              />
+            </div>
+            <div className="flex gap-1.5 mt-2">
+              {[10, 25, 50, 100, 250].map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setStake(String(v))}
+                  className="flex-1 text-[11px] font-bold rounded-md bg-white/5 border border-white/10 py-1.5 hover:bg-white/10"
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-lg bg-primary/10 border border-primary/30 p-3 flex items-center justify-between">
+            <div>
+              <div className="text-[10px] text-white/60 uppercase font-bold">Retorno potencial</div>
+              <div className="text-xl font-black text-primary tabular-nums">R$ {payout.toFixed(2)}</div>
+            </div>
+            <div className="text-right">
+              <div className="text-[10px] text-white/60 uppercase font-bold">Lucro</div>
+              <div className="text-sm font-black text-emerald-400 tabular-nums">+R$ {profit.toFixed(2)}</div>
+            </div>
+          </div>
+
+          {insufficient ? (
+            <Button
+              size="lg"
+              className="w-full font-black"
+              onClick={() => { onClose(); openAuthDialog("deposit"); }}
+            >
+              Saldo insuficiente — Depositar
+            </Button>
+          ) : (
+            <Button
+              size="lg"
+              className="w-full font-black"
+              disabled={!validStake || submitting || profileQ.isLoading}
+              onClick={submit}
+            >
+              {submitting ? <Loader2 className="size-5 animate-spin" /> : `Apostar R$ ${stakeNum.toFixed(2)}`}
+            </Button>
+          )}
+        </div>
+
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 size-8 rounded-full hover:bg-white/10 flex items-center justify-center text-white/60"
+          aria-label="Fechar"
+        >
+          <X className="size-4" />
+        </button>
+      </DialogContent>
+    </Dialog>
   );
 }
 
