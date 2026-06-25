@@ -1,0 +1,3 @@
+REVOKE EXECUTE ON FUNCTION public.apply_playfivers_transaction(uuid,text,text,text,text,text,text,numeric,numeric,jsonb) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.apply_playfivers_transaction(uuid,text,text,text,text,text,text,numeric,numeric,jsonb) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.apply_playfivers_transaction(uuid,text,text,text,text,text,text,numeric,numeric,jsonb) TO service_role;

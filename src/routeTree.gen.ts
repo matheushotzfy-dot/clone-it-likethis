@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TorneiosRouteImport } from './routes/torneios'
+import { Route as SlotsRouteImport } from './routes/slots'
 import { Route as RegistroRouteImport } from './routes/registro'
 import { Route as PromocoesRouteImport } from './routes/promocoes'
 import { Route as LoginRouteImport } from './routes/login'
@@ -39,12 +40,19 @@ import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authentica
 import { Route as AuthenticatedDepositoRouteImport } from './routes/_authenticated/deposito'
 import { Route as ApiPublicVeopagWebhookRouteImport } from './routes/api/public/veopag-webhook'
 import { Route as ApiPublicPodpayWebhookRouteImport } from './routes/api/public/podpay-webhook'
+import { Route as ApiPublicPlayfiversTransactionRouteImport } from './routes/api/public/playfivers-transaction'
+import { Route as ApiPublicPlayfiversBalanceRouteImport } from './routes/api/public/playfivers-balance'
 import { Route as ApiPublicBspayWebhookRouteImport } from './routes/api/public/bspay-webhook'
 import { Route as AdminUsuariosIdRouteImport } from './routes/admin/usuarios_.$id'
 
 const TorneiosRoute = TorneiosRouteImport.update({
   id: '/torneios',
   path: '/torneios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SlotsRoute = SlotsRouteImport.update({
+  id: '/slots',
+  path: '/slots',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegistroRoute = RegistroRouteImport.update({
@@ -191,6 +199,18 @@ const ApiPublicPodpayWebhookRoute = ApiPublicPodpayWebhookRouteImport.update({
   path: '/api/public/podpay-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPlayfiversTransactionRoute =
+  ApiPublicPlayfiversTransactionRouteImport.update({
+    id: '/api/public/playfivers-transaction',
+    path: '/api/public/playfivers-transaction',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPlayfiversBalanceRoute =
+  ApiPublicPlayfiversBalanceRouteImport.update({
+    id: '/api/public/playfivers-balance',
+    path: '/api/public/playfivers-balance',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicBspayWebhookRoute = ApiPublicBspayWebhookRouteImport.update({
   id: '/api/public/bspay-webhook',
   path: '/api/public/bspay-webhook',
@@ -212,6 +232,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/promocoes': typeof PromocoesRoute
   '/registro': typeof RegistroRoute
+  '/slots': typeof SlotsRoute
   '/torneios': typeof TorneiosRoute
   '/deposito': typeof AuthenticatedDepositoRoute
   '/historico': typeof AuthenticatedHistoricoRoute
@@ -232,6 +253,8 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/admin/usuarios/$id': typeof AdminUsuariosIdRoute
   '/api/public/bspay-webhook': typeof ApiPublicBspayWebhookRoute
+  '/api/public/playfivers-balance': typeof ApiPublicPlayfiversBalanceRoute
+  '/api/public/playfivers-transaction': typeof ApiPublicPlayfiversTransactionRoute
   '/api/public/podpay-webhook': typeof ApiPublicPodpayWebhookRoute
   '/api/public/veopag-webhook': typeof ApiPublicVeopagWebhookRoute
 }
@@ -244,6 +267,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/promocoes': typeof PromocoesRoute
   '/registro': typeof RegistroRoute
+  '/slots': typeof SlotsRoute
   '/torneios': typeof TorneiosRoute
   '/deposito': typeof AuthenticatedDepositoRoute
   '/historico': typeof AuthenticatedHistoricoRoute
@@ -264,6 +288,8 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/admin/usuarios/$id': typeof AdminUsuariosIdRoute
   '/api/public/bspay-webhook': typeof ApiPublicBspayWebhookRoute
+  '/api/public/playfivers-balance': typeof ApiPublicPlayfiversBalanceRoute
+  '/api/public/playfivers-transaction': typeof ApiPublicPlayfiversTransactionRoute
   '/api/public/podpay-webhook': typeof ApiPublicPodpayWebhookRoute
   '/api/public/veopag-webhook': typeof ApiPublicVeopagWebhookRoute
 }
@@ -279,6 +305,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/promocoes': typeof PromocoesRoute
   '/registro': typeof RegistroRoute
+  '/slots': typeof SlotsRoute
   '/torneios': typeof TorneiosRoute
   '/_authenticated/deposito': typeof AuthenticatedDepositoRoute
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
@@ -299,6 +326,8 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/admin/usuarios_/$id': typeof AdminUsuariosIdRoute
   '/api/public/bspay-webhook': typeof ApiPublicBspayWebhookRoute
+  '/api/public/playfivers-balance': typeof ApiPublicPlayfiversBalanceRoute
+  '/api/public/playfivers-transaction': typeof ApiPublicPlayfiversTransactionRoute
   '/api/public/podpay-webhook': typeof ApiPublicPodpayWebhookRoute
   '/api/public/veopag-webhook': typeof ApiPublicVeopagWebhookRoute
 }
@@ -314,6 +343,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/promocoes'
     | '/registro'
+    | '/slots'
     | '/torneios'
     | '/deposito'
     | '/historico'
@@ -334,6 +364,8 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/admin/usuarios/$id'
     | '/api/public/bspay-webhook'
+    | '/api/public/playfivers-balance'
+    | '/api/public/playfivers-transaction'
     | '/api/public/podpay-webhook'
     | '/api/public/veopag-webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -346,6 +378,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/promocoes'
     | '/registro'
+    | '/slots'
     | '/torneios'
     | '/deposito'
     | '/historico'
@@ -366,6 +399,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin/usuarios/$id'
     | '/api/public/bspay-webhook'
+    | '/api/public/playfivers-balance'
+    | '/api/public/playfivers-transaction'
     | '/api/public/podpay-webhook'
     | '/api/public/veopag-webhook'
   id:
@@ -380,6 +415,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/promocoes'
     | '/registro'
+    | '/slots'
     | '/torneios'
     | '/_authenticated/deposito'
     | '/_authenticated/historico'
@@ -400,6 +436,8 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/admin/usuarios_/$id'
     | '/api/public/bspay-webhook'
+    | '/api/public/playfivers-balance'
+    | '/api/public/playfivers-transaction'
     | '/api/public/podpay-webhook'
     | '/api/public/veopag-webhook'
   fileRoutesById: FileRoutesById
@@ -415,11 +453,14 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   PromocoesRoute: typeof PromocoesRoute
   RegistroRoute: typeof RegistroRoute
+  SlotsRoute: typeof SlotsRoute
   TorneiosRoute: typeof TorneiosRoute
   LegalJogoResponsavelRoute: typeof LegalJogoResponsavelRoute
   LegalPrivacidadeRoute: typeof LegalPrivacidadeRoute
   LegalTermosRoute: typeof LegalTermosRoute
   ApiPublicBspayWebhookRoute: typeof ApiPublicBspayWebhookRoute
+  ApiPublicPlayfiversBalanceRoute: typeof ApiPublicPlayfiversBalanceRoute
+  ApiPublicPlayfiversTransactionRoute: typeof ApiPublicPlayfiversTransactionRoute
   ApiPublicPodpayWebhookRoute: typeof ApiPublicPodpayWebhookRoute
   ApiPublicVeopagWebhookRoute: typeof ApiPublicVeopagWebhookRoute
 }
@@ -431,6 +472,13 @@ declare module '@tanstack/react-router' {
       path: '/torneios'
       fullPath: '/torneios'
       preLoaderRoute: typeof TorneiosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/slots': {
+      id: '/slots'
+      path: '/slots'
+      fullPath: '/slots'
+      preLoaderRoute: typeof SlotsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/registro': {
@@ -636,6 +684,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPodpayWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/playfivers-transaction': {
+      id: '/api/public/playfivers-transaction'
+      path: '/api/public/playfivers-transaction'
+      fullPath: '/api/public/playfivers-transaction'
+      preLoaderRoute: typeof ApiPublicPlayfiversTransactionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/playfivers-balance': {
+      id: '/api/public/playfivers-balance'
+      path: '/api/public/playfivers-balance'
+      fullPath: '/api/public/playfivers-balance'
+      preLoaderRoute: typeof ApiPublicPlayfiversBalanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/bspay-webhook': {
       id: '/api/public/bspay-webhook'
       path: '/api/public/bspay-webhook'
@@ -712,11 +774,14 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   PromocoesRoute: PromocoesRoute,
   RegistroRoute: RegistroRoute,
+  SlotsRoute: SlotsRoute,
   TorneiosRoute: TorneiosRoute,
   LegalJogoResponsavelRoute: LegalJogoResponsavelRoute,
   LegalPrivacidadeRoute: LegalPrivacidadeRoute,
   LegalTermosRoute: LegalTermosRoute,
   ApiPublicBspayWebhookRoute: ApiPublicBspayWebhookRoute,
+  ApiPublicPlayfiversBalanceRoute: ApiPublicPlayfiversBalanceRoute,
+  ApiPublicPlayfiversTransactionRoute: ApiPublicPlayfiversTransactionRoute,
   ApiPublicPodpayWebhookRoute: ApiPublicPodpayWebhookRoute,
   ApiPublicVeopagWebhookRoute: ApiPublicVeopagWebhookRoute,
 }
