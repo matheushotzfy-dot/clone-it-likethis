@@ -1,11 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { SiteShell } from "@/components/layout/site-shell";
 import { getSportsFeed, type RealMatch } from "@/lib/sports.functions";
-import { Trophy, Loader2, Radio, Clock, MapPin, Tv, RefreshCw } from "lucide-react";
+import { placeSportsBet } from "@/lib/sports-bet.functions";
+import { getMyProfile } from "@/lib/profile.functions";
+import { Trophy, Loader2, Radio, Clock, MapPin, Tv, RefreshCw, Wallet, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthDialog } from "@/components/auth/auth-dialog-context";
