@@ -41,8 +41,8 @@ function SlotsPage() {
     staleTime: 5 * 60_000,
   });
   const gamesQ = useQuery({
-    queryKey: ["pf-games", providerId ?? "all"],
-    queryFn: () => fetchGames({ data: { providerId: providerId ?? undefined } }),
+    queryKey: ["pf-games", providerId ?? "all", visibleCount, q.trim()],
+    queryFn: () => fetchGames({ data: { providerId: providerId ?? undefined, limit: Math.max(visibleCount + 60, 120), q: q.trim() || undefined } }),
     staleTime: 5 * 60_000,
   });
   const profileQ = useQuery({
@@ -53,11 +53,8 @@ function SlotsPage() {
   });
 
   const filtered = useMemo(() => {
-    const games = gamesQ.data ?? [];
-    if (!q.trim()) return games;
-    const needle = q.trim().toLowerCase();
-    return games.filter((g) => g.name.toLowerCase().includes(needle) || g.provider.name.toLowerCase().includes(needle));
-  }, [gamesQ.data, q]);
+    return gamesQ.data ?? [];
+  }, [gamesQ.data]);
 
   // Reset pagination when filters/search change
   const visible = filtered.slice(0, visibleCount);
