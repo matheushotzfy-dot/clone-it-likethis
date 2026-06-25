@@ -151,23 +151,25 @@ function Page() {
           <div className="space-y-6">
             {live.length > 0 && (
               <Section title="Ao Vivo" accent="red" count={live.length}>
-                {live.map((m) => <MatchCard key={m.id} match={m} />)}
+                {live.map((m) => <MatchCard key={m.id} match={m} onPick={(p, o) => setSlip({ match: m, pick: p, odd: o })} />)}
               </Section>
             )}
             {upcoming.length > 0 && (
               <Section title="Próximos jogos" count={upcoming.length}>
-                {upcoming.map((m) => <MatchCard key={m.id} match={m} />)}
+                {upcoming.map((m) => <MatchCard key={m.id} match={m} onPick={(p, o) => setSlip({ match: m, pick: p, odd: o })} />)}
               </Section>
             )}
             {finished.length > 0 && (
               <Section title="Encerrados" count={finished.length}>
-                {finished.map((m) => <MatchCard key={m.id} match={m} />)}
+                {finished.map((m) => <MatchCard key={m.id} match={m} onPick={(p, o) => setSlip({ match: m, pick: p, odd: o })} />)}
               </Section>
             )}
           </div>
         )}
       </div>
+      <BetSlipDialog slip={slip} onClose={() => setSlip(null)} />
     </SiteShell>
+
   );
 }
 
