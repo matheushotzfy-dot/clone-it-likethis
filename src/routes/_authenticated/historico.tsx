@@ -21,7 +21,7 @@ const tabs = [
 
 function statusLabel(t: any): { label: string; cls: string } {
   // KYC takes priority on withdrawals
-  if (t.type === "withdrawal" && t.kyc_required) {
+  if (t.type === "withdrawal" && t.status === "pending" && t.kyc_required) {
     const sub = t.kyc_submission;
     if (!sub || sub.status === "rejected") {
       return { label: "Verificação Necessária", cls: "bg-orange-500/20 text-orange-400" };
@@ -73,7 +73,7 @@ function Page() {
                 const Ico = t.type === "deposit" ? ArrowDownToLine : t.type === "withdrawal" ? ArrowUpFromLine : Dices;
                 const positive = t.type === "deposit";
                 const st = statusLabel(t);
-                const needsKyc = t.type === "withdrawal" && t.kyc_required &&
+                const needsKyc = t.type === "withdrawal" && t.status === "pending" && t.kyc_required &&
                   (!t.kyc_submission || t.kyc_submission.status === "rejected");
                 return (
                   <li key={t.id} className="p-4 hover:bg-muted/30">
