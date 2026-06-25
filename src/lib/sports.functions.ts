@@ -41,6 +41,9 @@ interface LeagueDef {
 }
 
 const LEAGUES: LeagueDef[] = [
+  { sport: "soccer", slug: "fifa.world", label: "Copa do Mundo FIFA" },
+  { sport: "soccer", slug: "fifa.cwc", label: "Mundial de Clubes" },
+  { sport: "soccer", slug: "fifa.worldq.conmebol", label: "Eliminatórias CONMEBOL" },
   { sport: "soccer", slug: "bra.1", label: "Brasileirão Série A" },
   { sport: "soccer", slug: "bra.2", label: "Brasileirão Série B" },
   { sport: "soccer", slug: "bra.copa_do_brazil", label: "Copa do Brasil" },
