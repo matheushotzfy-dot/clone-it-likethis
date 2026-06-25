@@ -63,6 +63,8 @@ function SlotsPage() {
   const visible = filtered.slice(0, visibleCount);
   const hasMore = filtered.length > visible.length;
 
+  useEffect(() => { setVisibleCount(60); }, [providerId, q]);
+
   async function handlePlay(game: { game_code: string; provider: { name: string }; original: boolean; name: string }) {
     if (!user) { open("register"); return; }
     if (!profileQ.data?.hasDeposited) { open("deposit"); return; }
