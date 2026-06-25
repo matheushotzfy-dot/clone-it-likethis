@@ -61,6 +61,7 @@ function SlotsPage() {
   async function handlePlay(game: { game_code: string; provider: { name: string }; original: boolean; name: string }) {
     if (!user) { open("register"); return; }
     if (!profileQ.data?.hasDeposited) { open("deposit"); return; }
+    const gameWindow = window.open("about:blank", "_blank");
     setLaunchingCode(game.game_code);
     try {
       const res = await launch({
@@ -72,11 +73,18 @@ function SlotsPage() {
         },
       });
       if (!res.ok) {
+        gameWindow?.close();
         toast.error(res.error);
         return;
       }
-      window.open(res.launch_url, "_blank", "noopener,noreferrer");
+      if (gameWindow) {
+        gameWindow.opener = null;
+        gameWindow.location.replace(res.launch_url);
+      } else {
+        window.location.assign(res.launch_url);
+      }
     } catch (e: any) {
+      gameWindow?.close();
       toast.error(e?.message ?? "Não foi possível abrir o jogo");
     } finally {
       setLaunchingCode(null);
