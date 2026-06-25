@@ -94,6 +94,9 @@ function Page() {
           <Pill active={leagueFilter === "live"} onClick={() => setLeagueFilter("live")} badge={liveCount || undefined}>
             <Radio className="size-3.5" /> Ao Vivo
           </Pill>
+          <Pill active={leagueFilter === "today"} onClick={() => setLeagueFilter("today")}>
+            Hoje
+          </Pill>
           <Pill active={leagueFilter === "all"} onClick={() => setLeagueFilter("all")}>
             Todos
           </Pill>
