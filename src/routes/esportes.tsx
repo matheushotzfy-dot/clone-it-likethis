@@ -7,8 +7,6 @@ import { getSportsFeed, type RealMatch } from "@/lib/sports.functions";
 import { cn } from "@/lib/utils";
 import { Trophy, Star, Plus, X, Receipt, TrendingUp, Search, Radio, Calendar } from "lucide-react";
 import { toast } from "sonner";
-import { useRequireAccess } from "@/hooks/use-game-access";
-
 
 export const Route = createFileRoute("/esportes")({
   head: () => ({ meta: [{ title: "Esportes — SANTOSBET" }] }),
@@ -26,16 +24,6 @@ type Pick = {
 type Tab = "live" | "today" | "tomorrow" | "upcoming";
 
 function Page() {
-  const { allowed, loading } = useRequireAccess();
-  if (loading || !allowed) {
-    return (
-      <SiteShell>
-        <div className="min-h-[60vh] flex items-center justify-center">
-          <div className="size-10 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-        </div>
-      </SiteShell>
-    );
-  }
   return <SportsBody />;
 }
 
