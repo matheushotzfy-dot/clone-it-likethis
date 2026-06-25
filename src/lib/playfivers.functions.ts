@@ -102,16 +102,28 @@ export const getPFProviders = createServerFn({ method: "GET" }).handler(async ()
 // Public — list of games (optionally filtered by provider id)
 const gamesCache = new Map<string, { at: number; data: PFGame[] }>();
 export const getPFGames = createServerFn({ method: "GET" })
-  .inputValidator((d: unknown) => z.object({ providerId: z.number().int().optional() }).parse(d ?? {}))
+  .inputValidator((d: unknown) => z.object({
+    providerId: z.number().int().optional(),
+    limit: z.number().int().min(24).max(600).default(240),
+    q: z.string().trim().max(80).optional(),
+  }).parse(d ?? {}))
   .handler(async ({ data }) => {
     const key = String(data.providerId ?? "all");
     const cached = gamesCache.get(key);
-    if (cached && Date.now() - cached.at < 5 * 60_000) return cached.data;
-    const qs = data.providerId ? `?provider=${data.providerId}` : "";
-    const json = await pfFetch(`/api/v2/games${qs}`);
-    const list: PFGame[] = (json?.data ?? []).filter((g: PFGame) => g.status);
-    gamesCache.set(key, { at: Date.now(), data: list });
-    return list;
+    let list: PFGame[];
+    if (cached && Date.now() - cached.at < 5 * 60_000) {
+      list = cached.data;
+    } else {
+      const qs = data.providerId ? `?provider=${data.providerId}` : "";
+      const json = await pfFetch(`/api/v2/games${qs}`);
+      list = (json?.data ?? []).filter((g: PFGame) => g.status);
+      gamesCache.set(key, { at: Date.now(), data: list });
+    }
+    const query = data.q?.toLowerCase();
+    const filtered = query
+      ? list.filter((g) => g.name.toLowerCase().includes(query) || g.provider.name.toLowerCase().includes(query))
+      : list;
+    return filtered.slice(0, data.limit);
   });
 
 // Authenticated — launch a game for the current user
