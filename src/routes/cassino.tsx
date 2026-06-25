@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SiteShell } from "@/components/layout/site-shell";
 import { PFGameCard } from "@/components/casino/pf-game-card";
 import { usePFGames, usePFProviders, usePFLaunch } from "@/hooks/use-pf-launch";
@@ -15,16 +15,18 @@ export const Route = createFileRoute("/cassino")({
 function Page() {
   const [q, setQ] = useState("");
   const [providerId, setProviderId] = useState<number | null>(null);
+  const [visibleCount, setVisibleCount] = useState(72);
   const providersQ = usePFProviders();
-  const gamesQ = usePFGames(providerId ?? undefined);
+  const gamesQ = usePFGames(providerId ?? undefined, { limit: Math.max(visibleCount + 48, 120), q });
   const { play, launchingCode } = usePFLaunch();
 
   const filtered = useMemo(() => {
-    const list = gamesQ.data ?? [];
-    if (!q.trim()) return list;
-    const needle = q.trim().toLowerCase();
-    return list.filter((g) => g.name.toLowerCase().includes(needle) || g.provider.name.toLowerCase().includes(needle));
-  }, [gamesQ.data, q]);
+    return gamesQ.data ?? [];
+  }, [gamesQ.data]);
+  const visible = filtered.slice(0, visibleCount);
+  const hasMore = filtered.length > visible.length;
+
+  useEffect(() => { setVisibleCount(72); }, [providerId, q]);
 
   return (
     <SiteShell>
@@ -48,11 +50,20 @@ function Page() {
         {gamesQ.isLoading ? (
           <div className="min-h-[40vh] flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>
         ) : (
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-            {filtered.map((g, i) => (
-              <PFGameCard key={`${g.provider.name}-${g.game_code}`} game={g} priority={i < 12} loading={launchingCode === g.game_code} onPlay={play} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+              {visible.map((g, i) => (
+                <PFGameCard key={`${g.provider.name}-${g.game_code}`} game={g} priority={i < 12} loading={launchingCode === g.game_code} onPlay={play} />
+              ))}
+            </div>
+            {hasMore && (
+              <div className="flex justify-center pt-4">
+                <Button onClick={() => setVisibleCount((c) => c + 72)} variant="outline" size="lg" className="min-w-[200px]">
+                  Carregar mais
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </SiteShell>

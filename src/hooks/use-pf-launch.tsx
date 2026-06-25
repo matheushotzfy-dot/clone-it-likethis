@@ -64,11 +64,13 @@ export function usePFLaunch() {
   return { play, launchingCode };
 }
 
-export function usePFGames(providerId?: number) {
+export function usePFGames(providerId?: number, options?: { limit?: number; q?: string }) {
   const fetchGames = useServerFn(getPFGames);
+  const limit = options?.limit ?? 240;
+  const q = options?.q?.trim() || undefined;
   return useQuery({
-    queryKey: ["pf-games", providerId ?? "all"],
-    queryFn: () => fetchGames({ data: { providerId } }),
+    queryKey: ["pf-games", providerId ?? "all", limit, q ?? ""],
+    queryFn: () => fetchGames({ data: { providerId, limit, q } }),
     staleTime: 5 * 60_000,
   });
 }

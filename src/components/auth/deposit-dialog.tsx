@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useAuthDialog } from "./auth-dialog-context";
-import { ArrowLeft, Copy, QrCode, CheckCircle2, ShieldCheck, Zap, Gift, Clock, Sparkles, TrendingUp } from "lucide-react";
+import { ArrowLeft, Copy, QrCode, CheckCircle2, ShieldCheck, Zap } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
@@ -70,20 +70,6 @@ export function DepositDialog() {
     }
   }, [txs, step, pix, qc, close]);
 
-  // Bonus countdown
-  const bonusExpiresAt = profile?.bonus_expires_at ? new Date(profile.bonus_expires_at).getTime() : 0;
-  const bonusUsed = !!profile?.bonus_used;
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    if (!open || !bonusExpiresAt || bonusUsed) return;
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, [open, bonusExpiresAt, bonusUsed]);
-  const msLeft = Math.max(0, bonusExpiresAt - now);
-  const bonusActive = !bonusUsed && msLeft > 0;
-  const mm = Math.floor(msLeft / 60000);
-  const ss = Math.floor((msLeft % 60000) / 1000);
-
   useEffect(() => {
     if (open) {
       setStep("form");
@@ -114,9 +100,6 @@ export function DepositDialog() {
     },
     onError: (e: Error) => toast.error(e.message || "Erro ao gerar PIX"),
   });
-
-  const doubled = amount * 2;
-  const hasSelectedAmount = amount >= min;
 
   const showDialog = open && !!user;
   return (
@@ -156,62 +139,6 @@ export function DepositDialog() {
                     </p>
                   </div>
                 )}
-                {/* HERO Bonus Banner — sem limite */}
-                {bonusActive && (
-                  <div className="relative overflow-hidden rounded-2xl border-2 border-primary bg-gradient-to-br from-primary/25 via-primary/5 to-black p-4 sm:p-5">
-                    <div className="absolute -top-12 -right-12 size-44 bg-primary/30 rounded-full blur-3xl pointer-events-none" />
-                    <div className="absolute -bottom-12 -left-12 size-36 bg-yellow-500/20 rounded-full blur-3xl pointer-events-none" />
-
-                    <div className="relative space-y-3">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground rounded-full px-2.5 py-1">
-                          <Sparkles className="size-3.5" />
-                          <span className="text-[10px] font-black uppercase tracking-widest">Oferta Exclusiva</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 bg-black/70 border border-primary rounded-lg px-2.5 py-1">
-                          <Clock className="size-3.5 text-primary" />
-                          <span className="font-mono text-sm font-black text-primary tabular-nums">
-                            {String(mm).padStart(2, "0")}:{String(ss).padStart(2, "0")}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div>
-                        <div className="text-[10px] uppercase tracking-widest text-white/60 font-bold">Bônus de boas-vindas</div>
-                        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 mt-0.5">
-                          <span className="text-3xl sm:text-4xl font-black text-primary leading-none drop-shadow-[0_0_20px_rgba(255,215,0,0.4)]">+100%</span>
-                          <span className="text-base sm:text-lg font-black text-white leading-none">SEM LIMITE</span>
-                        </div>
-                        <p className="text-xs text-white/70 mt-1.5 leading-snug">Dobre seu depósito agora — sem rollover, saque liberado.</p>
-                      </div>
-
-                      {hasSelectedAmount && (
-                        <div className="bg-black/50 backdrop-blur rounded-xl p-3 border border-primary/30 flex items-center justify-between gap-2">
-                          <div className="min-w-0">
-                            <div className="text-[10px] uppercase tracking-wider text-white/50 font-bold">Você deposita</div>
-                            <div className="text-base sm:text-lg font-black text-white truncate">R$ {amount.toLocaleString("pt-BR")}</div>
-                          </div>
-                          <TrendingUp className="size-5 text-primary shrink-0" />
-                          <div className="text-right min-w-0">
-                            <div className="text-[10px] uppercase tracking-wider text-primary font-bold">Valor dobrado</div>
-                            <div className="text-base sm:text-lg font-black text-primary truncate">R$ {doubled.toLocaleString("pt-BR")}</div>
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="flex items-center gap-2 text-[11px] text-white/70">
-                        <Gift className="size-3.5 text-primary shrink-0" />
-                        <span>Crédito instantâneo após confirmação do PIX</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                {bonusUsed && (
-                  <div className="rounded-xl border border-white/5 bg-brand-2/40 p-3 text-xs text-white/60 text-center">
-                    Bônus de boas-vindas já utilizado.
-                  </div>
-                )}
-
                 <div className="p-1 bg-brand-2 rounded-xl border border-white/5">
                   <button className="w-full h-11 rounded-lg bg-primary text-primary-foreground font-black text-xs uppercase tracking-wider shadow-lg">PIX</button>
                 </div>
