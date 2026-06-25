@@ -36,14 +36,17 @@ class PFRequestError extends Error {
 }
 
 async function pfFetch(path: string, init?: RequestInit) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8_000);
   const res = await fetch(`${PF_BASE}${path}`, {
     ...init,
+    signal: controller.signal,
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
       ...(init?.headers ?? {}),
     },
-  });
+  }).finally(() => clearTimeout(timeout));
   const text = await res.text();
   let json: any = null;
   try { json = text ? JSON.parse(text) : null; } catch { /* ignore */ }
@@ -91,16 +94,30 @@ async function normalizeLaunchError(error: unknown): Promise<LaunchPFGameResult>
 
 // Public — list of providers (cached)
 let providersCache: { at: number; data: PFProvider[] } | null = null;
-export const getPFProviders = createServerFn({ method: "GET" }).handler(async () => {
+async function loadProviders() {
   if (providersCache && Date.now() - providersCache.at < 5 * 60_000) return providersCache.data;
   const json = await pfFetch("/api/v2/providers");
   const data: PFProvider[] = (json?.data ?? []).filter((p: PFProvider) => p.status === 1);
   providersCache = { at: Date.now(), data };
   return data;
+}
+
+export const getPFProviders = createServerFn({ method: "GET" }).handler(async () => {
+  return loadProviders();
 });
 
 // Public — list of games (optionally filtered by provider id)
 const gamesCache = new Map<string, { at: number; data: PFGame[] }>();
+async function loadProviderGames(providerId: number) {
+  const key = String(providerId);
+  const cached = gamesCache.get(key);
+  if (cached && Date.now() - cached.at < 5 * 60_000) return cached.data;
+  const json = await pfFetch(`/api/v2/games?provider=${providerId}`);
+  const list: PFGame[] = (json?.data ?? []).filter((g: PFGame) => g.status);
+  gamesCache.set(key, { at: Date.now(), data: list });
+  return list;
+}
+
 export const getPFGames = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({
     providerId: z.number().int().optional(),
@@ -108,16 +125,14 @@ export const getPFGames = createServerFn({ method: "GET" })
     q: z.string().trim().max(80).optional(),
   }).parse(d ?? {}))
   .handler(async ({ data }) => {
-    const key = String(data.providerId ?? "all");
-    const cached = gamesCache.get(key);
     let list: PFGame[];
-    if (cached && Date.now() - cached.at < 5 * 60_000) {
-      list = cached.data;
+    if (data.providerId) {
+      list = await loadProviderGames(data.providerId);
     } else {
-      const qs = data.providerId ? `?provider=${data.providerId}` : "";
-      const json = await pfFetch(`/api/v2/games${qs}`);
-      list = (json?.data ?? []).filter((g: PFGame) => g.status);
-      gamesCache.set(key, { at: Date.now(), data: list });
+      const providers = await loadProviders();
+      const providersToLoad = providers.slice(0, Math.min(providers.length, Math.max(4, Math.ceil(data.limit / 40))));
+      const settled = await Promise.allSettled(providersToLoad.map((p) => loadProviderGames(p.id)));
+      list = settled.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
     }
     const query = data.q?.toLowerCase();
     const filtered = query
