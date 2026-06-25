@@ -30,15 +30,20 @@ function Page() {
     staleTime: 25_000,
   });
 
-  const [leagueFilter, setLeagueFilter] = useState<string | "all" | "live">("live");
+  const [leagueFilter, setLeagueFilter] = useState<string | "all" | "live" | "today">("today");
 
   const matches = feedQ.data?.matches ?? [];
   const leagues = feedQ.data?.leagues ?? [];
   const liveCount = feedQ.data?.liveCount ?? 0;
 
+  const isToday = (iso: string) => {
+    try { return new Date(iso).toDateString() === new Date().toDateString(); } catch { return false; }
+  };
+
   const filtered = useMemo(() => {
     if (leagueFilter === "all") return matches;
     if (leagueFilter === "live") return matches.filter((m) => m.isLive);
+    if (leagueFilter === "today") return matches.filter((m) => m.isLive || isToday(m.kickoff));
     return matches.filter((m) => m.leagueSlug === leagueFilter);
   }, [matches, leagueFilter]);
 
