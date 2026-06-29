@@ -369,7 +369,8 @@ function MatchCard({ match, onPick }: { match: RealMatch; onPick: (pick: "home" 
   }
 
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-white/8 bg-gradient-to-br from-white/[0.04] to-transparent hover:border-primary/30 transition-all">
+    <div className="group relative overflow-hidden rounded-xl border border-white/8 bg-gradient-to-br from-white/[0.04] to-transparent hover:border-primary/40 card-rise">
+      {match.isLive && <div className="absolute inset-0 stripes-live pointer-events-none opacity-60" />}
       {match.isLive && (
         <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-bl-lg flex items-center gap-1">
           <span className="relative flex size-1.5">
