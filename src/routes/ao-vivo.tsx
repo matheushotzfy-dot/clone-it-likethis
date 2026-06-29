@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { SiteShell } from "@/components/layout/site-shell";
 import { PFGameCard } from "@/components/casino/pf-game-card";
 import { usePFGames, usePFLaunch } from "@/hooks/use-pf-launch";
+import { splitPFGamesByCategory } from "@/lib/pf-game-classification";
 import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/ao-vivo")({
@@ -10,18 +11,13 @@ export const Route = createFileRoute("/ao-vivo")({
   component: Page,
 });
 
-const LIVE_HINTS = ["LIVE", "EVOLUTION", "PRAGMATIC LIVE", "EZUGI", "VIVO", "ROULETTE", "BACCARAT", "BLACKJACK", "DEALER", "CRAZY", "MEGA", "LIGHTNING"];
-
 function Page() {
   const gamesQ = usePFGames();
   const { play, launchingCode } = usePFLaunch();
 
   const live = useMemo(() => {
     const list = gamesQ.data ?? [];
-    return list.filter((g) => {
-      const txt = `${g.provider.name} ${g.name}`.toUpperCase();
-      return LIVE_HINTS.some((h) => txt.includes(h));
-    });
+    return splitPFGamesByCategory(list).live;
   }, [gamesQ.data]);
 
   return (
