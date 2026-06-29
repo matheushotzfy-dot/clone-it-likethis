@@ -233,7 +233,7 @@ function sortLiveGames<T extends ClassifiablePFGame>(games: T[]) {
 
 export function sortPFSectionGames<T extends ClassifiablePFGame>(games: T[], category: PFGameCategory) {
   if (category === "live") return sortLiveGames(games);
-  const terms = category === "crash" ? CRASH_PRIORITY : category === "live" ? LIVE_PRIORITY : [];
+  const terms = category === "crash" ? CRASH_PRIORITY : [];
   return sortWithinCategory(games, terms);
 }
 
