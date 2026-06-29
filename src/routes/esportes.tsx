@@ -612,9 +612,9 @@ function OddButton({ label, pick, odd, onClick }: { label: string; pick: string;
   return (
     <button
       onClick={onClick}
-      className="group/odd rounded-lg bg-white/5 border border-white/10 py-1.5 px-2 text-center hover:bg-primary hover:border-primary hover:text-primary-foreground transition-all active:scale-95"
+      className="group/odd relative overflow-hidden rounded-lg bg-white/5 border border-white/10 py-2 px-2 text-center hover:bg-primary hover:border-primary hover:text-primary-foreground transition-all active:scale-95 hover:-translate-y-0.5"
     >
-      <div className="text-[9px] uppercase font-bold opacity-50 group-hover/odd:opacity-100 truncate">{label}</div>
+      <div className="text-[9px] uppercase font-bold opacity-50 group-hover/odd:opacity-100 truncate tracking-wider">{label}</div>
       <div className="text-sm font-black tabular-nums">{odd.toFixed(2)}</div>
     </button>
   );
