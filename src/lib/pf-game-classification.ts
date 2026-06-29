@@ -141,6 +141,35 @@ const LIVE_PRIORITY = [
   "LIVE CASINO LOBBY",
 ];
 
+const PG_PROVIDER_PRIORITY = [
+  /\bPG\s?SOFT\b/,
+  /\bPGSOFT\b/,
+  /\bPOCKET\s+GAMES\s+SOFT\b/,
+];
+
+const SLOT_PRIORITY = [
+  "FORTUNE TIGER",
+  "FORTUNE RABBIT",
+  "FORTUNE DRAGON",
+  "FORTUNE OX",
+  "FORTUNE SNAKE",
+  "FORTUNE MOUSE",
+  "TOURO SORTUDO",
+  "TIGRE SORTUDO",
+  "LUCKY NEKO",
+  "MAHJONG WAYS 2",
+  "MAHJONG WAYS",
+  "TREASURES OF AZTEC",
+  "WILD BOUNTY SHOWDOWN",
+  "CAISHEN WINS",
+  "PINATA WINS",
+  "QUEEN OF BOUNTY",
+  "GANESHA GOLD",
+  "WAYS OF THE QILIN",
+  "JURASSIC KINGDOM",
+  "GEM SAVIOUR",
+];
+
 const LIVE_TYPE_GROUPS = [
   ["ROULETTE", "ROLETA", "RULETA", "ROULETA"],
   ["BACCARAT", "BAC BO"],
@@ -257,8 +286,26 @@ function sortLiveGames<T extends ClassifiablePFGame>(games: T[]) {
   return interleaveGroups(groups.map((group) => sortLiveGroup(group)));
 }
 
+function isPGSoftGame(game: ClassifiablePFGame) {
+  const provider = normalize(game.provider.name);
+  return PG_PROVIDER_PRIORITY.some((pattern) => pattern.test(provider));
+}
+
+function sortSlotGames<T extends ClassifiablePFGame>(games: T[]) {
+  return [...games].sort((a, b) => {
+    const byPGProvider = Number(isPGSoftGame(b)) - Number(isPGSoftGame(a));
+    if (byPGProvider !== 0) return byPGProvider;
+    const byRank = rankByTerms(a, SLOT_PRIORITY) - rankByTerms(b, SLOT_PRIORITY);
+    if (byRank !== 0) return byRank;
+    const byProvider = a.provider.name.localeCompare(b.provider.name, "pt-BR");
+    if (byProvider !== 0) return byProvider;
+    return a.name.localeCompare(b.name, "pt-BR");
+  });
+}
+
 export function sortPFSectionGames<T extends ClassifiablePFGame>(games: T[], category: PFGameCategory) {
   if (category === "live") return sortLiveGames(games);
+  if (category === "slot") return sortSlotGames(games);
   const terms = category === "crash" ? CRASH_PRIORITY : [];
   return sortWithinCategory(games, terms);
 }
@@ -278,6 +325,6 @@ export function splitPFGamesByCategory<T extends ClassifiablePFGame>(games: T[])
   return {
     crash: sortPFSectionGames(crash, "crash"),
     live: sortPFSectionGames(live, "live"),
-    slots,
+    slots: sortPFSectionGames(slots, "slot"),
   };
 }
