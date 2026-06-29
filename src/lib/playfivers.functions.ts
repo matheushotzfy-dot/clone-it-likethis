@@ -178,10 +178,12 @@ function orderLobbyGames(games: PFGame[]) {
   const crash = unique.filter((game) => getPFGameCategory(game) === "crash");
   const live = unique.filter((game) => getPFGameCategory(game) === "live");
   const slots = unique.filter((game) => getPFGameCategory(game) === "slot");
+  const orderedSlots = sortPFSectionGames(slots, "slot");
   return [
-    ...sortPFSectionGames(slots, "slot"),
+    ...orderedSlots.slice(0, 72),
     ...sortPFSectionGames(crash, "crash"),
     ...sortPFSectionGames(live, "live"),
+    ...orderedSlots.slice(72),
   ];
 }
 
