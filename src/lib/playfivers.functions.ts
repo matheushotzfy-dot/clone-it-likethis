@@ -144,6 +144,9 @@ async function loadProviderGames(providerId: number) {
 }
 
 const PROVIDER_PRIORITY_HINTS = [
+  "PG SOFT",
+  "PGSOFT",
+  "POCKET GAMES SOFT",
   "SPRIBE",
   "JETX",
   "AVIATRIX",
@@ -186,23 +189,6 @@ function interleaveByProvider(games: PFGame[]) {
   return result;
 }
 
-function interleaveCategories(categories: PFGame[][]) {
-  const queues = categories.map((category) => [...category]);
-  const result: PFGame[] = [];
-  let added = true;
-  while (added) {
-    added = false;
-    for (const queue of queues) {
-      const next = queue.shift();
-      if (next) {
-        result.push(next);
-        added = true;
-      }
-    }
-  }
-  return result;
-}
-
 function orderLobbyGames(games: PFGame[]) {
   const seen = new Set<string>();
   const unique = games.filter((game) => {
@@ -214,11 +200,11 @@ function orderLobbyGames(games: PFGame[]) {
   const crash = unique.filter((game) => getPFGameCategory(game) === "crash");
   const live = unique.filter((game) => getPFGameCategory(game) === "live");
   const slots = unique.filter((game) => getPFGameCategory(game) === "slot");
-  return interleaveCategories([
-    sortPFSectionGames(crash, "crash"),
-    sortPFSectionGames(live, "live"),
-    interleaveByProvider(slots),
-  ]);
+  return [
+    ...sortPFSectionGames(slots, "slot"),
+    ...sortPFSectionGames(crash, "crash"),
+    ...sortPFSectionGames(live, "live"),
+  ];
 }
 
 function applyGameQuery(games: PFGame[], q?: string) {
