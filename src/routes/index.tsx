@@ -41,7 +41,7 @@ function Index() {
   const all = gamesQ.data ?? [];
   const { live, crash, slots, top } = useMemo(() => {
     const grouped = splitPFGamesByCategory(all);
-    return { ...grouped, top: [...grouped.crash, ...grouped.live, ...grouped.slots].slice(0, 8) };
+    return { ...grouped, top: [...grouped.slots, ...grouped.crash, ...grouped.live].slice(0, 8) };
   }, [all]);
 
   const filtered = q.trim()
@@ -89,9 +89,9 @@ function Index() {
               </div>
             </section>
 
+            <Section title="Slots" items={slots} play={play} launchingCode={launchingCode} />
             <Section title="🚀 Crash Games" items={crash} play={play} launchingCode={launchingCode} />
             <Section title="🎰 Cassino Ao Vivo" items={live} play={play} launchingCode={launchingCode} />
-            <Section title="Slots" items={slots} play={play} launchingCode={launchingCode} />
           </>
         )}
       </div>
