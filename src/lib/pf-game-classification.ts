@@ -59,12 +59,22 @@ const CRASH_BRAND_PATTERNS = [
   /\bCRASH\s?X\b/,
   /\bNINJA\s+CRASH\b/,
   /\bCRASH\s+GAME\b/,
-  /\bCRASHER\b/,
   /\bAERO\b/,
   /\bAERONAUTS?\b/,
   /\bROCKETON\b/,
   /\bPUMPED\s?X\b/,
   /\bJAVELIN\s?X\b/,
+];
+
+const LIVE_PROVIDER_PRIORITY = [
+  "EVOLUTION LIVE",
+  "EZUGI",
+  "PRAGMATIC LIVE",
+  "LIVE88",
+  "WINFINITY",
+  "DREAMGAMING LIVE",
+  "DREAM GAMING LIVE",
+  "LIVE22",
 ];
 
 const CRASH_PROVIDER_PATTERNS = [
@@ -208,6 +218,22 @@ function sortWithinCategory<T extends ClassifiablePFGame>(games: T[], terms: str
   });
 }
 
+function getProviderPriority(game: ClassifiablePFGame, providers: string[]) {
+  const provider = normalize(game.provider.name);
+  const index = providers.findIndex((term) => provider.includes(term));
+  return index === -1 ? 999 : index;
+}
+
+function sortLiveGroup<T extends ClassifiablePFGame>(games: T[]) {
+  return [...games].sort((a, b) => {
+    const byProvider = getProviderPriority(a, LIVE_PROVIDER_PRIORITY) - getProviderPriority(b, LIVE_PROVIDER_PRIORITY);
+    if (byProvider !== 0) return byProvider;
+    const byRank = rankByTerms(a, LIVE_PRIORITY) - rankByTerms(b, LIVE_PRIORITY);
+    if (byRank !== 0) return byRank;
+    return a.name.localeCompare(b.name, "pt-BR");
+  });
+}
+
 function interleaveGroups<T>(groups: T[][]) {
   const queues = groups.map((group) => [...group]);
   const result: T[] = [];
@@ -228,7 +254,7 @@ function interleaveGroups<T>(groups: T[][]) {
 function sortLiveGames<T extends ClassifiablePFGame>(games: T[]) {
   const groups = Array.from({ length: LIVE_TYPE_GROUPS.length + 1 }, () => [] as T[]);
   for (const game of games) groups[getLiveTypeRank(game)].push(game);
-  return interleaveGroups(groups.map((group) => sortWithinCategory(group, LIVE_PRIORITY)));
+  return interleaveGroups(groups.map((group) => sortLiveGroup(group)));
 }
 
 export function sortPFSectionGames<T extends ClassifiablePFGame>(games: T[], category: PFGameCategory) {
