@@ -123,6 +123,16 @@ async function loadProviderGames(providerId: number) {
   return list;
 }
 
+// Provedores prioritários (crash + live dealer). Garantem que Aviator, Spaceman,
+// JetX, Evolution Roleta/Baccarat etc. apareçam na home mesmo com limit pequeno.
+const PRIORITY_PROVIDER_HINTS = [
+  "SPRIBE", "SMARTSOFT", "TURBO", "ONLYPLAY", "HACKSAW", "BGAMING",
+  "GALAXSYS", "POPOK", "GAMING CORPS", "MASCOT",
+  "EVOLUTION", "PRAGMATIC PLAY LIVE", "PRAGMATIC LIVE", "EZUGI",
+  "VIVO", "ATMOSFERA", "AUTHENTIC", "BETGAMES",
+  "PRAGMATIC", "PG SOFT", "PGSOFT",
+];
+
 export const getPFGames = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({
     providerId: z.number().int().optional(),
@@ -136,7 +146,15 @@ export const getPFGames = createServerFn({ method: "GET" })
         list = await loadProviderGames(data.providerId);
       } else {
         const providers = await loadProviders();
-        const providersToLoad = providers.slice(0, Math.min(providers.length, Math.max(4, Math.ceil(data.limit / 40))));
+        // Sort: priority providers first, then everything else
+        const sorted = [...providers].sort((a, b) => {
+          const aP = PRIORITY_PROVIDER_HINTS.some((h) => a.name.toUpperCase().includes(h)) ? 0 : 1;
+          const bP = PRIORITY_PROVIDER_HINTS.some((h) => b.name.toUpperCase().includes(h)) ? 0 : 1;
+          return aP - bP;
+        });
+        // Load at least 18 providers (covers all major crash + live providers)
+        const minProviders = 18;
+        const providersToLoad = sorted.slice(0, Math.min(sorted.length, Math.max(minProviders, Math.ceil(data.limit / 30))));
         const settled = await Promise.allSettled(providersToLoad.map((p) => loadProviderGames(p.id)));
         list = settled.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
       }
