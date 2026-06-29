@@ -21,6 +21,25 @@ interface PFGame {
   provider: { name: string };
 }
 
+const CURATED_FEATURED_GAMES: PFGame[] = [
+  { name: "Aviator", image_url: "https://imagensfivers.com/Games/Spribe/SPB_aviator.webp", rounds_free: false, status: true, original: false, game_code: "SPB_aviator", provider: { name: "OFICIAL - SPRIBE" } },
+  { name: "Aviator", image_url: "https://imagensfivers.com/Games/Spribe/Aviator.webp", rounds_free: false, status: true, original: true, game_code: "aviator", provider: { name: "SPRIBE" } },
+  { name: "Spaceman", image_url: "https://imagensfivers.com/Games/Pragmatic-Play/PP_1301.webp", rounds_free: false, status: true, original: false, game_code: "PP_1301", provider: { name: "OFICIAL - PRAGMATIC SLOTS" } },
+  { name: "JETX", image_url: "https://imagensfivers.com/Games/jetx/8891.webp", rounds_free: false, status: true, original: true, game_code: "8891", provider: { name: "JETX ORIGINAL" } },
+  { name: "JETX3", image_url: "https://imagensfivers.com/Games/jetx/8892.webp", rounds_free: false, status: true, original: true, game_code: "8892", provider: { name: "JETX ORIGINAL" } },
+  { name: "Crash", image_url: "https://imagensfivers.com/Games/Galaxsys/Crash.webp", rounds_free: false, status: true, original: true, game_code: "12493", provider: { name: "GALAXSYS ORIGINAL" } },
+  { name: "Ninja Crash", image_url: "https://imagensfivers.com/Games/Galaxsys/Ninja-Crash.webp", rounds_free: false, status: true, original: true, game_code: "12526", provider: { name: "GALAXSYS ORIGINAL" } },
+  { name: "Mines", image_url: "https://imagensfivers.com/Games/Spribe/SPB_mines.webp", rounds_free: false, status: true, original: false, game_code: "SPB_mines", provider: { name: "OFICIAL - SPRIBE" } },
+  { name: "Roulette", image_url: "https://imagensfivers.com/Games/Evolution-Live/GPKEVO_002f1c169f987367a76460647f4d38f5.webp", rounds_free: false, status: true, original: false, game_code: "GPKEVO_002f1c169f987367a76460647f4d38f5", provider: { name: "OFICIAL - EVOLUTION LIVE" } },
+  { name: "Baccarat A", image_url: "https://imagensfivers.com/Games/Evolution-Live/GPKEVO_dbbb995447823f91946b33fc4a59ed69.webp", rounds_free: false, status: true, original: false, game_code: "GPKEVO_dbbb995447823f91946b33fc4a59ed69", provider: { name: "OFICIAL - EVOLUTION LIVE" } },
+  { name: "Blackjack A", image_url: "https://imagensfivers.com/Games/Evolution-Live/GPKEVO_d44f99268a3f923142a9dbcdc3295448.webp", rounds_free: false, status: true, original: false, game_code: "GPKEVO_d44f99268a3f923142a9dbcdc3295448", provider: { name: "OFICIAL - EVOLUTION LIVE" } },
+  { name: "Crazy Time", image_url: "https://imagensfivers.com/Games/Evolution-Live/GPKEVO_7d9bf93163aa8286ca8af68253fbe635.webp", rounds_free: false, status: true, original: false, game_code: "GPKEVO_7d9bf93163aa8286ca8af68253fbe635", provider: { name: "OFICIAL - EVOLUTION LIVE" } },
+  { name: "Dragon Tiger", image_url: "https://imagensfivers.com/Games/Evolution-Live/GPKEVO_f6fdac8354ea904db507a13c6cf13b56.webp", rounds_free: false, status: true, original: false, game_code: "GPKEVO_f6fdac8354ea904db507a13c6cf13b56", provider: { name: "OFICIAL - EVOLUTION LIVE" } },
+  { name: "Bacará Rápido", image_url: "https://imagensfivers.com/Games/Evolution-Live/GPKEVO_c605e257bc20ba94849999cdc3007f72.webp", rounds_free: false, status: true, original: false, game_code: "GPKEVO_c605e257bc20ba94849999cdc3007f72", provider: { name: "OFICIAL - EVOLUTION LIVE" } },
+  { name: "Auto Roulette", image_url: "https://imagensfivers.com/Games/Ezugi/EZUGI_5001.webp", rounds_free: false, status: true, original: false, game_code: "EZUGI_5001", provider: { name: "OFICIAL - EZUGI" } },
+  { name: "Baccarat", image_url: "https://imagensfivers.com/Games/Ezugi/EZUGI_100.webp", rounds_free: false, status: true, original: false, game_code: "EZUGI_100", provider: { name: "OFICIAL - EZUGI" } },
+];
+
 type LaunchPFGameResult =
   | { ok: true; launch_url: string; name?: string }
   | { ok: false; error: string; status?: number; code?: "ip_not_allowed" | "not_configured" | "frozen" | "profile_missing" | "launch_failed" };
@@ -202,6 +221,13 @@ function orderLobbyGames(games: PFGame[]) {
   ]);
 }
 
+function applyGameQuery(games: PFGame[], q?: string) {
+  const query = q?.toLowerCase();
+  return query
+    ? games.filter((g) => g.name.toLowerCase().includes(query) || g.provider.name.toLowerCase().includes(query))
+    : games;
+}
+
 export const getPFGames = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({
     providerId: z.number().int().optional(),
@@ -221,18 +247,14 @@ export const getPFGames = createServerFn({ method: "GET" })
         const settled = await Promise.allSettled(providersToLoad.map((p) => loadProviderGames(p.id)));
         list = orderLobbyGames(settled.flatMap((r) => (r.status === "fulfilled" ? r.value : [])));
       }
-      const query = data.q?.toLowerCase();
-      const filtered = query
-        ? list.filter((g) => g.name.toLowerCase().includes(query) || g.provider.name.toLowerCase().includes(query))
-        : list;
+      if (!data.providerId && list.length === 0) list = orderLobbyGames(CURATED_FEATURED_GAMES);
+      const filtered = applyGameQuery(list, data.q);
       return filtered.slice(0, data.limit);
     } catch (error) {
       console.error("PlayFivers games unavailable", error);
       const fallback = data.providerId ? gamesCache.get(String(data.providerId))?.data : [...gamesCache.values()].flatMap((c) => c.data);
-      const query = data.q?.toLowerCase();
-      const filtered = query
-        ? (fallback ?? []).filter((g) => g.name.toLowerCase().includes(query) || g.provider.name.toLowerCase().includes(query))
-        : (fallback ?? []);
+      const list = data.providerId ? (fallback ?? []) : orderLobbyGames((fallback?.length ? fallback : CURATED_FEATURED_GAMES));
+      const filtered = applyGameQuery(list, data.q);
       return filtered.slice(0, data.limit);
     }
   });
