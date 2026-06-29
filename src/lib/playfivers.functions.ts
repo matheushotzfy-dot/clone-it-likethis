@@ -167,28 +167,6 @@ function providerPriority(provider: PFProvider) {
   return index === -1 ? 999 : index;
 }
 
-function interleaveByProvider(games: PFGame[]) {
-  const groups = new Map<string, PFGame[]>();
-  for (const game of games) {
-    const key = game.provider.name;
-    groups.set(key, [...(groups.get(key) ?? []), game]);
-  }
-  const queues = [...groups.values()];
-  const result: PFGame[] = [];
-  let added = true;
-  while (added) {
-    added = false;
-    for (const queue of queues) {
-      const next = queue.shift();
-      if (next) {
-        result.push(next);
-        added = true;
-      }
-    }
-  }
-  return result;
-}
-
 function orderLobbyGames(games: PFGame[]) {
   const seen = new Set<string>();
   const unique = games.filter((game) => {
