@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -6,7 +6,7 @@ import { SiteShell } from "@/components/layout/site-shell";
 import { getSportsFeed, type RealMatch } from "@/lib/sports.functions";
 import { placeSportsBet } from "@/lib/sports-bet.functions";
 import { getMyProfile } from "@/lib/profile.functions";
-import { Trophy, Loader2, Radio, Clock, MapPin, Tv, RefreshCw, Wallet, X } from "lucide-react";
+import { Trophy, Loader2, Radio, Clock, MapPin, Tv, RefreshCw, Wallet, X, Flame, Star, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -15,7 +15,12 @@ import { useAuth } from "@/hooks/use-auth";
 import { useAuthDialog } from "@/components/auth/auth-dialog-context";
 import { toast } from "sonner";
 
+interface SportsSearch { liga?: string; }
+
 export const Route = createFileRoute("/esportes")({
+  validateSearch: (s: Record<string, unknown>): SportsSearch => ({
+    liga: typeof s.liga === "string" ? s.liga : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Esportes Ao Vivo — SANTOSBET" },
