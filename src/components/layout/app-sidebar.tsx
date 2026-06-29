@@ -116,7 +116,7 @@ export function AppSidebar() {
 
         {!collapsed && (
           <div className="mt-3">
-            <Section title="Esportes" items={esportes} />
+            <EsportesSection />
             <Section title="Cassino" items={cassino} />
             <Section title="Promoções" items={promocoes} />
           </div>
