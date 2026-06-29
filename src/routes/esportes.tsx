@@ -37,6 +37,7 @@ interface BetSlip {
 }
 
 function Page() {
+  const search = useSearch({ from: "/esportes" }) as SportsSearch;
   const fetchFeed = useServerFn(getSportsFeed);
   const feedQ = useQuery({
     queryKey: ["sports-feed"],
@@ -46,8 +47,11 @@ function Page() {
     retry: 1,
   });
 
-  const [leagueFilter, setLeagueFilter] = useState<string | "all" | "live" | "today">("all");
+  const [leagueFilter, setLeagueFilter] = useState<string | "all" | "live" | "today">(search.liga ?? "all");
   const [slip, setSlip] = useState<BetSlip | null>(null);
+
+  // Sync filter from URL (sidebar deep-links)
+  useEffect(() => { if (search.liga) setLeagueFilter(search.liga); }, [search.liga]);
 
   const matches = feedQ.data?.matches ?? [];
   const leagues = feedQ.data?.leagues ?? [];
@@ -72,69 +76,111 @@ function Page() {
   const upcoming = filtered.filter((m) => m.status === "pre").slice(0, 60);
   const finished = filtered.filter((m) => m.status === "post").slice(0, 20);
 
+  // Featured = first live OR next major upcoming (Copa do Mundo / Libertadores / Champions priority)
+  const PRIORITY = ["fifa.world", "fifa.cwc", "conmebol.libertadores", "uefa.champions", "bra.1"];
+  const featured = useMemo<RealMatch | null>(() => {
+    const all = matches;
+    if (!all.length) return null;
+    const liveMajor = all.find((m) => m.isLive && PRIORITY.includes(m.leagueSlug));
+    if (liveMajor) return liveMajor;
+    const anyLive = all.find((m) => m.isLive);
+    if (anyLive) return anyLive;
+    const nextMajor = all
+      .filter((m) => m.status === "pre" && PRIORITY.includes(m.leagueSlug))
+      .sort((a, b) => a.kickoff.localeCompare(b.kickoff))[0];
+    return nextMajor ?? null;
+  }, [matches]);
+
+  // Detect Copa do Mundo presence to swap hero copy
+  const hasWorldCup = matches.some((m) => m.leagueSlug === "fifa.world");
+
   return (
     <SiteShell>
-      <div className="max-w-[1400px] mx-auto px-3 md:px-6 py-5 space-y-5">
-        {/* Header */}
-        <div className="flex items-end justify-between flex-wrap gap-3">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-black flex items-center gap-2">
-              <Trophy className="size-7 text-primary" />
-              Esportes
-            </h1>
-            <p className="text-xs md:text-sm text-white/55 mt-1 flex items-center gap-2">
-              {liveCount > 0 ? (
-                <>
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="relative flex size-2">
-                      <span className="animate-ping absolute inset-0 rounded-full bg-red-500 opacity-75" />
-                      <span className="relative inline-flex rounded-full size-2 bg-red-500" />
-                    </span>
-                    <span className="font-bold text-red-400">{liveCount} ao vivo agora</span>
-                  </span>
-                  <span className="text-white/30">·</span>
-                </>
-              ) : null}
-              <span>Odds atualizam a cada 30s</span>
-            </p>
+      <div className="max-w-[1400px] mx-auto px-3 md:px-6 py-5 space-y-6">
+        {/* ============ HERO BAR ============ */}
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 pitch-bg">
+          <div className="absolute inset-0 live-shimmer pointer-events-none opacity-40" />
+          <div className="relative grid lg:grid-cols-[1.1fr_1fr] gap-4 p-4 md:p-6">
+            <div className="flex flex-col justify-between gap-3 min-w-0">
+              <div>
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/15 border border-primary/40 text-primary text-[10px] font-black uppercase tracking-widest">
+                  {hasWorldCup ? <><Trophy className="size-3" /> Copa do Mundo FIFA</> : <><Flame className="size-3" /> Esportes Ao Vivo</>}
+                </div>
+                <h1 className="mt-2 text-3xl md:text-4xl font-black leading-tight">
+                  {hasWorldCup ? "A Copa é aqui." : "O melhor do esporte"}
+                  <span className="block text-primary text-shadow-glow">Odds reais. Tempo real.</span>
+                </h1>
+                <p className="mt-2 text-sm text-white/65 max-w-md">
+                  {liveCount > 0
+                    ? `${liveCount} ${liveCount === 1 ? "partida acontecendo" : "partidas acontecendo"} agora.`
+                    : "Acompanhe os próximos confrontos e aposte com odds atualizadas a cada 30 segundos."}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => setLeagueFilter("live")} className="inline-flex items-center gap-1.5 px-3 h-9 rounded-md bg-red-500/90 hover:bg-red-500 text-white text-xs font-black uppercase tracking-wide transition-all">
+                  <Radio className="size-3.5" /> Ao Vivo {liveCount > 0 && <span className="px-1.5 rounded bg-white/20 text-[10px]">{liveCount}</span>}
+                </button>
+                <button onClick={() => setLeagueFilter("today")} className="inline-flex items-center gap-1.5 px-3 h-9 rounded-md bg-white/10 hover:bg-white/20 text-white text-xs font-black uppercase tracking-wide transition-all">
+                  <Clock className="size-3.5" /> Hoje
+                </button>
+                {hasWorldCup && (
+                  <button onClick={() => setLeagueFilter("fifa.world")} className="inline-flex items-center gap-1.5 px-3 h-9 rounded-md bg-primary text-primary-foreground text-xs font-black uppercase tracking-wide transition-all hover:brightness-110">
+                    <Trophy className="size-3.5" /> Jogos da Copa
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Featured match preview */}
+            <div className="min-w-0">
+              {featured ? (
+                <FeaturedCard match={featured} onPick={(p, o) => setSlip({ match: featured, pick: p, odd: o })} />
+              ) : (
+                <div className="h-full min-h-[140px] rounded-xl border border-dashed border-white/15 flex items-center justify-center text-white/40 text-sm">
+                  Aguardando próximas partidas…
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ============ FILTERS ============ */}
+        <div className="flex items-center gap-3">
+          <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar flex-1 min-w-0">
+            <Pill active={leagueFilter === "live"} onClick={() => setLeagueFilter("live")} badge={liveCount || undefined}>
+              <Radio className="size-3.5" /> Ao Vivo
+            </Pill>
+            <Pill active={leagueFilter === "today"} onClick={() => setLeagueFilter("today")}>
+              <Clock className="size-3.5" /> Hoje
+            </Pill>
+            <Pill active={leagueFilter === "all"} onClick={() => setLeagueFilter("all")}>
+              <Star className="size-3.5" /> Todos
+            </Pill>
+            {leagues.map((l) => (
+              <Pill
+                key={l.slug}
+                active={leagueFilter === l.slug}
+                onClick={() => setLeagueFilter(l.slug)}
+                badge={l.live || undefined}
+                logo={l.logo}
+              >
+                {l.name}
+              </Pill>
+            ))}
           </div>
           <Button
             variant="outline"
             size="sm"
             onClick={() => feedQ.refetch()}
             disabled={feedQ.isFetching}
-            className="border-white/10"
+            className="border-white/10 shrink-0"
           >
-            <RefreshCw className={cn("size-4 mr-2", feedQ.isFetching && "animate-spin")} />
-            Atualizar
+            <RefreshCw className={cn("size-4 md:mr-2", feedQ.isFetching && "animate-spin")} />
+            <span className="hidden md:inline">Atualizar</span>
           </Button>
         </div>
 
-        {/* League pills */}
-        <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-thin scrollbar-thumb-white/10">
-          <Pill active={leagueFilter === "live"} onClick={() => setLeagueFilter("live")} badge={liveCount || undefined}>
-            <Radio className="size-3.5" /> Ao Vivo
-          </Pill>
-          <Pill active={leagueFilter === "today"} onClick={() => setLeagueFilter("today")}>
-            Hoje
-          </Pill>
-          <Pill active={leagueFilter === "all"} onClick={() => setLeagueFilter("all")}>
-            Todos
-          </Pill>
-          {leagues.map((l) => (
-            <Pill
-              key={l.slug}
-              active={leagueFilter === l.slug}
-              onClick={() => setLeagueFilter(l.slug)}
-              badge={l.live || undefined}
-              logo={l.logo}
-            >
-              {l.name}
-            </Pill>
-          ))}
-        </div>
-
-        {/* Content */}
+        {/* ============ CONTENT ============ */}
         {feedQ.isLoading ? (
           <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3 text-white/60">
             <Loader2 className="size-10 animate-spin text-primary" />
@@ -158,19 +204,19 @@ function Page() {
             )}
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-7">
             {live.length > 0 && (
-              <Section title="Ao Vivo" accent="red" count={live.length}>
+              <Section title="Ao Vivo" accent="red" count={live.length} icon={<Radio className="size-4" />}>
                 {live.map((m) => <MatchCard key={m.id} match={m} onPick={(p, o) => setSlip({ match: m, pick: p, odd: o })} />)}
               </Section>
             )}
             {upcoming.length > 0 && (
-              <Section title="Próximos jogos" count={upcoming.length}>
+              <Section title="Próximos jogos" count={upcoming.length} icon={<Clock className="size-4" />}>
                 {upcoming.map((m) => <MatchCard key={m.id} match={m} onPick={(p, o) => setSlip({ match: m, pick: p, odd: o })} />)}
               </Section>
             )}
             {finished.length > 0 && (
-              <Section title="Encerrados" count={finished.length}>
+              <Section title="Encerrados" count={finished.length} icon={<TrendingUp className="size-4" />}>
                 {finished.map((m) => <MatchCard key={m.id} match={m} onPick={(p, o) => setSlip({ match: m, pick: p, odd: o })} />)}
               </Section>
             )}
@@ -179,7 +225,63 @@ function Page() {
       </div>
       <BetSlipDialog slip={slip} onClose={() => setSlip(null)} />
     </SiteShell>
+  );
+}
 
+function FeaturedCard({ match, onPick }: { match: RealMatch; onPick: (pick: "home" | "draw" | "away", odd: number) => void }) {
+  const { user } = useAuth();
+  const { open } = useAuthDialog();
+  function bet(pick: "home" | "draw" | "away", odd: number | null) {
+    if (!odd) return;
+    if (!user) { open("register"); return; }
+    onPick(pick, odd);
+  }
+  return (
+    <div className="relative h-full rounded-xl border border-primary/30 bg-black/30 backdrop-blur-sm p-4 ring-primary-glow">
+      <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-white/60">
+        <span className="flex items-center gap-1.5 truncate">
+          {match.leagueLogo && <img src={match.leagueLogo} alt="" className="size-4 object-contain" loading="lazy" />}
+          {match.league}
+        </span>
+        {match.isLive ? (
+          <span className="flex items-center gap-1 text-red-400">
+            <span className="relative flex size-1.5">
+              <span className="animate-ping absolute inset-0 rounded-full bg-red-500 opacity-75" />
+              <span className="relative inline-flex rounded-full size-1.5 bg-red-500" />
+            </span>
+            {match.statusDetail}
+          </span>
+        ) : (
+          <span className="text-primary">{formatKickoff(match.kickoff)}</span>
+        )}
+      </div>
+      <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+        <div className="flex flex-col items-center text-center gap-1.5 min-w-0">
+          {match.homeBadge ? <img src={match.homeBadge} alt={match.home} className="size-12 md:size-14 object-contain" /> : <div className="size-12 rounded-full bg-white/10" />}
+          <span className="text-xs md:text-sm font-black truncate w-full">{match.home}</span>
+        </div>
+        <div className="text-center">
+          {match.homeScore != null ? (
+            <div className="text-3xl md:text-4xl font-black tabular-nums text-white">
+              {match.homeScore}<span className="text-white/30 mx-1.5">·</span>{match.awayScore}
+            </div>
+          ) : (
+            <div className="text-xs font-black uppercase text-white/40 tracking-widest">VS</div>
+          )}
+        </div>
+        <div className="flex flex-col items-center text-center gap-1.5 min-w-0">
+          {match.awayBadge ? <img src={match.awayBadge} alt={match.away} className="size-12 md:size-14 object-contain" /> : <div className="size-12 rounded-full bg-white/10" />}
+          <span className="text-xs md:text-sm font-black truncate w-full">{match.away}</span>
+        </div>
+      </div>
+      {(match.odds.home || match.odds.away) && (
+        <div className="mt-3 grid grid-cols-3 gap-1.5">
+          <OddButton label="Casa" pick={match.homeShort} odd={match.odds.home} onClick={() => bet("home", match.odds.home)} />
+          <OddButton label="Empate" pick="X" odd={match.odds.draw} onClick={() => bet("draw", match.odds.draw)} />
+          <OddButton label="Fora" pick={match.awayShort} odd={match.odds.away} onClick={() => bet("away", match.odds.away)} />
+        </div>
+      )}
+    </div>
   );
 }
 
