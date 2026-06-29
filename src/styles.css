@@ -119,18 +119,29 @@
   .bg-brand-2 { background-color: var(--brand-2); }
   .clip-diagonal-r { clip-path: polygon(0 0, 100% 0, calc(100% - 32px) 100%, 0 100%); }
   .clip-diagonal-l { clip-path: polygon(32px 0, 100% 0, 100% 100%, 0 100%); }
-  
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 4px;
+
+  .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+  /* Sportsbook polish */
+  .card-rise { transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease; }
+  .card-rise:hover { transform: translateY(-2px); box-shadow: 0 12px 30px -18px color-mix(in oklch, var(--primary) 60%, transparent); }
+  .ring-primary-glow { box-shadow: 0 0 0 1px color-mix(in oklch, var(--primary) 60%, transparent), 0 0 32px -8px color-mix(in oklch, var(--primary) 50%, transparent); }
+  .stripes-live { background-image: repeating-linear-gradient(135deg, rgba(239,68,68,0.10) 0 10px, transparent 10px 20px); }
+  .stripes-gold { background-image: repeating-linear-gradient(135deg, color-mix(in oklch, var(--primary) 14%, transparent) 0 12px, transparent 12px 24px); }
+  @keyframes live-shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+  .live-shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+    background-size: 200% 100%;
+    animation: live-shimmer 2.4s linear infinite;
   }
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
+  @keyframes pitch-pan { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+  .pitch-bg {
+    background: radial-gradient(ellipse at center, color-mix(in oklch, var(--primary) 22%, transparent), transparent 70%),
+                linear-gradient(135deg, oklch(0.22 0.08 258), oklch(0.16 0.06 255));
+    background-size: 200% 200%;
+    animation: pitch-pan 14s ease-in-out infinite;
   }
 }
