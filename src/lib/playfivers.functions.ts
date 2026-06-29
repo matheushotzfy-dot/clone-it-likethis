@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { getPFGameCategory, sortPFSectionGames } from "./pf-game-classification";
 
 const PF_BASE = "https://api.playfivers.com";
 
@@ -123,15 +124,66 @@ async function loadProviderGames(providerId: number) {
   return list;
 }
 
-// Provedores prioritários (crash + live dealer). Garantem que Aviator, Spaceman,
-// JetX, Evolution Roleta/Baccarat etc. apareçam na home mesmo com limit pequeno.
-const PRIORITY_PROVIDER_HINTS = [
-  "SPRIBE", "SMARTSOFT", "TURBO", "ONLYPLAY", "HACKSAW", "BGAMING",
-  "GALAXSYS", "POPOK", "GAMING CORPS", "MASCOT",
-  "EVOLUTION", "PRAGMATIC PLAY LIVE", "PRAGMATIC LIVE", "EZUGI",
-  "VIVO", "ATMOSFERA", "AUTHENTIC", "BETGAMES",
-  "PRAGMATIC", "PG SOFT", "PGSOFT",
+const PROVIDER_PRIORITY_HINTS = [
+  "SPRIBE",
+  "JETX",
+  "AVIATRIX",
+  "TURBO GAMES",
+  "EVOLUTION LIVE",
+  "EZUGI",
+  "PRAGMATIC LIVE",
+  "LIVE88",
+  "DREAMGAMING LIVE",
+  "WINFINITY",
+  "GALAXSYS ORIGINAL",
+  "PRAGMATIC",
 ];
+
+function providerPriority(provider: PFProvider) {
+  const name = provider.name.toUpperCase();
+  const index = PROVIDER_PRIORITY_HINTS.findIndex((hint) => name.includes(hint));
+  return index === -1 ? 999 : index;
+}
+
+function interleaveByProvider(games: PFGame[]) {
+  const groups = new Map<string, PFGame[]>();
+  for (const game of games) {
+    const key = game.provider.name;
+    groups.set(key, [...(groups.get(key) ?? []), game]);
+  }
+  const queues = [...groups.values()];
+  const result: PFGame[] = [];
+  let added = true;
+  while (added) {
+    added = false;
+    for (const queue of queues) {
+      const next = queue.shift();
+      if (next) {
+        result.push(next);
+        added = true;
+      }
+    }
+  }
+  return result;
+}
+
+function orderLobbyGames(games: PFGame[]) {
+  const seen = new Set<string>();
+  const unique = games.filter((game) => {
+    const key = `${game.provider.name}:${game.game_code}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  const crash = unique.filter((game) => getPFGameCategory(game) === "crash");
+  const live = unique.filter((game) => getPFGameCategory(game) === "live");
+  const slots = unique.filter((game) => getPFGameCategory(game) === "slot");
+  return [
+    ...sortPFSectionGames(crash, "crash"),
+    ...sortPFSectionGames(live, "live"),
+    ...interleaveByProvider(slots),
+  ];
+}
 
 export const getPFGames = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({
@@ -146,17 +198,11 @@ export const getPFGames = createServerFn({ method: "GET" })
         list = await loadProviderGames(data.providerId);
       } else {
         const providers = await loadProviders();
-        // Sort: priority providers first, then everything else
-        const sorted = [...providers].sort((a, b) => {
-          const aP = PRIORITY_PROVIDER_HINTS.some((h) => a.name.toUpperCase().includes(h)) ? 0 : 1;
-          const bP = PRIORITY_PROVIDER_HINTS.some((h) => b.name.toUpperCase().includes(h)) ? 0 : 1;
-          return aP - bP;
-        });
-        // Load at least 18 providers (covers all major crash + live providers)
-        const minProviders = 18;
-        const providersToLoad = sorted.slice(0, Math.min(sorted.length, Math.max(minProviders, Math.ceil(data.limit / 30))));
+        const sorted = [...providers].sort((a, b) => providerPriority(a) - providerPriority(b));
+        const minProviders = 28;
+        const providersToLoad = sorted.slice(0, Math.min(sorted.length, Math.max(minProviders, Math.ceil(data.limit / 18))));
         const settled = await Promise.allSettled(providersToLoad.map((p) => loadProviderGames(p.id)));
-        list = settled.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
+        list = orderLobbyGames(settled.flatMap((r) => (r.status === "fulfilled" ? r.value : [])));
       }
       const query = data.q?.toLowerCase();
       const filtered = query

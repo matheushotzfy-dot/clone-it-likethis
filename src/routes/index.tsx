@@ -7,6 +7,7 @@ import { PFGameCard } from "@/components/casino/pf-game-card";
 import { CategoryPills } from "@/components/casino/category-pills";
 import { ProviderStrip } from "@/components/casino/provider-strip";
 import { usePFGames, usePFLaunch, type PFGameLite } from "@/hooks/use-pf-launch";
+import { splitPFGamesByCategory } from "@/lib/pf-game-classification";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [{ title: "SANTOSBET — Cassino e Apostas Online" }] }),
@@ -32,31 +33,6 @@ function Section({ title, items, play, launchingCode }: { title: string; items: 
   );
 }
 
-// Provider names known to be 100% live-dealer or 100% crash/instant
-const LIVE_PROVIDERS = [
-  "EVOLUTION", "PRAGMATIC PLAY LIVE", "PRAGMATIC LIVE", "EZUGI", "VIVO",
-  "ATMOSFERA", "AUTHENTIC GAMING", "LUCKYSTREAK", "BETGAMES", "ON AIR",
-  "ABSOLUTE LIVE", "BOMBAY LIVE", "WINFINITY",
-];
-const CRASH_PROVIDERS = [
-  "SPRIBE", "SMARTSOFT", "TURBO GAMES", "ONLYPLAY", "HACKSAW", "GAMING CORPS",
-  "BGAMING", "GALAXSYS", "UPGAMING", "MASCOT", "INOUT GAMES", "POPOK",
-];
-
-const LIVE_HINTS = [
-  "LIVE", "ROULETTE", "ROLETA", "BACCARAT", "BLACKJACK", "DEALER",
-  "CRAZY TIME", "MONOPOLY", "DREAM CATCHER", "LIGHTNING", "MEGA BALL",
-  "FUNKY TIME", "XXXTREME", "DEAL OR NO DEAL", "FOOTBALL STUDIO",
-  "BAC BO", "DRAGON TIGER", "SIC BO", "ANDAR BAHAR", "TEEN PATTI",
-  "HOLD'EM", "SIDE BET", "AUTO ROULETTE", "SPEED",
-];
-const CRASH_HINTS = [
-  "AVIATOR", "AVIATRIX", "SPACEMAN", "JETX", "JET X", "CRASH",
-  "MINES", "PLINKO", "DICE", "LIMBO", "TOWERS", "DRAGON TOWER",
-  "PENALTY", "GOAL", "HI-LO", "HILO", "COINFLIP", "CASH SHOW",
-  "ROCKET", "BALLOON", "FOOTBALL X", "CRICKET X", "BOMB", "KENO",
-];
-
 function Index() {
   const [q, setQ] = useState("");
   const gamesQ = usePFGames();
@@ -64,22 +40,8 @@ function Index() {
 
   const all = gamesQ.data ?? [];
   const { live, crash, slots, top } = useMemo(() => {
-    const live: PFGameLite[] = [];
-    const crash: PFGameLite[] = [];
-    const slots: PFGameLite[] = [];
-    for (const g of all) {
-      const prov = g.provider.name.toUpperCase();
-      const name = g.name.toUpperCase();
-      const txt = `${prov} ${name}`;
-      const isCrashProv = CRASH_PROVIDERS.some((p) => prov.includes(p));
-      const isLiveProv = LIVE_PROVIDERS.some((p) => prov.includes(p));
-      const isCrash = isCrashProv || CRASH_HINTS.some((h) => txt.includes(h));
-      const isLive = !isCrash && (isLiveProv || LIVE_HINTS.some((h) => txt.includes(h)));
-      if (isCrash) crash.push(g);
-      else if (isLive) live.push(g);
-      else slots.push(g);
-    }
-    return { live, crash, slots, top: all.slice(0, 8) };
+    const grouped = splitPFGamesByCategory(all);
+    return { ...grouped, top: [...grouped.crash, ...grouped.live, ...grouped.slots].slice(0, 8) };
   }, [all]);
 
   const filtered = q.trim()
