@@ -32,8 +32,30 @@ function Section({ title, items, play, launchingCode }: { title: string; items: 
   );
 }
 
-const LIVE_HINTS = ["LIVE", "EVOLUTION", "PRAGMATIC LIVE", "EZUGI", "ROULETTE", "BACCARAT", "BLACKJACK", "DEALER", "CRAZY"];
-const CRASH_HINTS = ["AVIATOR", "CRASH", "JETX", "SPACEMAN", "MINES", "PLINKO", "DICE", "LIMBO"];
+// Provider names known to be 100% live-dealer or 100% crash/instant
+const LIVE_PROVIDERS = [
+  "EVOLUTION", "PRAGMATIC PLAY LIVE", "PRAGMATIC LIVE", "EZUGI", "VIVO",
+  "ATMOSFERA", "AUTHENTIC GAMING", "LUCKYSTREAK", "BETGAMES", "ON AIR",
+  "ABSOLUTE LIVE", "BOMBAY LIVE", "WINFINITY",
+];
+const CRASH_PROVIDERS = [
+  "SPRIBE", "SMARTSOFT", "TURBO GAMES", "ONLYPLAY", "HACKSAW", "GAMING CORPS",
+  "BGAMING", "GALAXSYS", "UPGAMING", "MASCOT", "INOUT GAMES", "POPOK",
+];
+
+const LIVE_HINTS = [
+  "LIVE", "ROULETTE", "ROLETA", "BACCARAT", "BLACKJACK", "DEALER",
+  "CRAZY TIME", "MONOPOLY", "DREAM CATCHER", "LIGHTNING", "MEGA BALL",
+  "FUNKY TIME", "XXXTREME", "DEAL OR NO DEAL", "FOOTBALL STUDIO",
+  "BAC BO", "DRAGON TIGER", "SIC BO", "ANDAR BAHAR", "TEEN PATTI",
+  "HOLD'EM", "SIDE BET", "AUTO ROULETTE", "SPEED",
+];
+const CRASH_HINTS = [
+  "AVIATOR", "AVIATRIX", "SPACEMAN", "JETX", "JET X", "CRASH",
+  "MINES", "PLINKO", "DICE", "LIMBO", "TOWERS", "DRAGON TOWER",
+  "PENALTY", "GOAL", "HI-LO", "HILO", "COINFLIP", "CASH SHOW",
+  "ROCKET", "BALLOON", "FOOTBALL X", "CRICKET X", "BOMB", "KENO",
+];
 
 function Index() {
   const [q, setQ] = useState("");
@@ -46,9 +68,15 @@ function Index() {
     const crash: PFGameLite[] = [];
     const slots: PFGameLite[] = [];
     for (const g of all) {
-      const txt = `${g.provider.name} ${g.name}`.toUpperCase();
-      if (CRASH_HINTS.some((h) => txt.includes(h))) crash.push(g);
-      else if (LIVE_HINTS.some((h) => txt.includes(h))) live.push(g);
+      const prov = g.provider.name.toUpperCase();
+      const name = g.name.toUpperCase();
+      const txt = `${prov} ${name}`;
+      const isCrashProv = CRASH_PROVIDERS.some((p) => prov.includes(p));
+      const isLiveProv = LIVE_PROVIDERS.some((p) => prov.includes(p));
+      const isCrash = isCrashProv || CRASH_HINTS.some((h) => txt.includes(h));
+      const isLive = !isCrash && (isLiveProv || LIVE_HINTS.some((h) => txt.includes(h)));
+      if (isCrash) crash.push(g);
+      else if (isLive) live.push(g);
       else slots.push(g);
     }
     return { live, crash, slots, top: all.slice(0, 8) };
