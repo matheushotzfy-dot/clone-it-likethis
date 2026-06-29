@@ -127,9 +127,9 @@ function Index() {
               </div>
             </section>
 
+            <Section title="🚀 Crash Games" items={crash} play={play} launchingCode={launchingCode} />
+            <Section title="🎰 Cassino Ao Vivo" items={live} play={play} launchingCode={launchingCode} />
             <Section title="Slots" items={slots} play={play} launchingCode={launchingCode} />
-            <Section title="Cassino Ao Vivo" items={live} play={play} launchingCode={launchingCode} />
-            <Section title="Crash Games" items={crash} play={play} launchingCode={launchingCode} />
           </>
         )}
       </div>
