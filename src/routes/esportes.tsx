@@ -319,18 +319,21 @@ function Pill({
   );
 }
 
-function Section({ title, count, accent, children }: { title: string; count: number; accent?: "red"; children: React.ReactNode }) {
+function Section({ title, count, accent, icon, children }: { title: string; count: number; accent?: "red"; icon?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div>
       <div className="flex items-center gap-2 mb-3">
-        {accent === "red" && (
+        {accent === "red" ? (
           <span className="relative flex size-2.5">
             <span className="animate-ping absolute inset-0 rounded-full bg-red-500 opacity-75" />
             <span className="relative inline-flex rounded-full size-2.5 bg-red-500" />
           </span>
-        )}
-        <h2 className={cn("text-sm font-black uppercase tracking-wider", accent === "red" ? "text-red-400" : "text-white/70")}>{title}</h2>
+        ) : icon ? (
+          <span className="text-primary/80">{icon}</span>
+        ) : null}
+        <h2 className={cn("text-sm font-black uppercase tracking-wider", accent === "red" ? "text-red-400" : "text-white/80")}>{title}</h2>
         <span className="text-xs text-white/40">({count})</span>
+        <div className="flex-1 h-px bg-gradient-to-r from-white/10 to-transparent ml-2" />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5">{children}</div>
     </div>
