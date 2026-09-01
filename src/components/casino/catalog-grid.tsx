@@ -3,8 +3,9 @@ import { PFGameCard } from "@/components/casino/pf-game-card";
 import type { PFGameLite } from "@/hooks/use-pf-launch";
 import { cn } from "@/lib/utils";
 
+/** Grid compacto: mais jogos por tela, artes menores e nítidas. */
 export const CATALOG_GRID =
-  "grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4 md:gap-3 lg:grid-cols-5 xl:grid-cols-6";
+  "grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-9";
 
 export function CatalogHeader({
   title, subtitle, q, onQ, placeholder = "Buscar jogo ou provedor…",
