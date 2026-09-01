@@ -91,7 +91,7 @@ export function Header() {
           })}
         </nav>
 
-        <form onSubmit={submitSearch} className="relative ml-auto hidden xl:block xl:w-64">
+        <form onSubmit={submitSearch} className="relative ml-auto hidden shrink-0 2xl:block 2xl:w-64">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.75} />
           <input
             value={term}
