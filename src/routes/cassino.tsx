@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { SiteShell } from "@/components/layout/site-shell";
-import { CategoryPills } from "@/components/casino/category-pills";
 import { CatalogHeader, ProviderFilter, GameGrid, LoadMore, InlineSpinner } from "@/components/casino/catalog-grid";
 import { usePFGames, usePFProviders, usePFLaunch } from "@/hooks/use-pf-launch";
 import { splitPFGamesByCategory } from "@/lib/pf-game-classification";
@@ -73,8 +72,6 @@ function Page() {
       replace: true,
     });
 
-  const activePill = cat === "crash" ? "Crash" : cat === "mesas" ? "Mesas" : cat === "slots" ? "Slots" : "Todos";
-
   return (
     <SiteShell>
       <div className="mx-auto max-w-[1600px] space-y-6 px-3 py-5 md:px-6 md:py-7">
@@ -84,8 +81,6 @@ function Page() {
           q={q}
           onQ={setQ}
         />
-        <CategoryPills active={activePill} />
-
         <div className="no-scrollbar snap-row -mx-3 flex gap-2 overflow-x-auto px-3 md:mx-0 md:px-0">
           {CATS.map((c) => {
             const isActive = cat === c.id;
