@@ -47,6 +47,7 @@
   --color-hot: var(--accent-hot);
   --color-crash: var(--accent-crash);
   --color-live: var(--accent-live);
+  --color-gold: var(--accent-gold);
 }
 
 :root {
@@ -100,6 +101,7 @@
   --accent-crash: #ff6a4d;
   --accent-live: #b06bff;
   --accent-slots: #5cbdb9;
+  --accent-gold: #f0b429;
 }
 
 .dark { color-scheme: dark; }
@@ -313,5 +315,29 @@
     .float-y, .ring-pulse, .soft-pulse, .skeleton, .shine:hover::after { animation: none !important; }
     .slick:hover, .game-card:hover { transform: none; }
     html { scroll-behavior: auto; }
+  }
+}
+
+@layer utilities {
+  /* ---- Crisp tile: hairline + 2px lift, no glow ------------------------ */
+  .tile {
+    transition: transform .18s cubic-bezier(.2,.7,.3,1), border-color .18s ease;
+  }
+  @media (hover: hover) {
+    .tile:hover {
+      transform: translateY(-2px);
+      border-color: color-mix(in srgb, var(--accent-gold) 60%, transparent);
+    }
+  }
+  .tile:active { transform: translateY(0); }
+
+  .hair-t { border-top: 1px solid var(--line); }
+  .text-gold { color: var(--accent-gold); }
+  .bg-gold { background-color: var(--accent-gold); }
+  .border-gold { border-color: color-mix(in srgb, var(--accent-gold) 60%, transparent); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tile, .slick { transition: none !important; }
+    .tile:hover, .slick:hover { transform: none !important; }
   }
 }
