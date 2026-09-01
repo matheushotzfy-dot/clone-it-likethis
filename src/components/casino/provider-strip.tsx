@@ -14,11 +14,11 @@ export function ProviderStrip() {
 
   return (
     <section className="space-y-2.5">
-      <div className="flex items-baseline justify-between">
+      <div className="flex items-baseline justify-between border-b border-border pb-2">
         <h2 className="font-display text-[12px] font-extrabold uppercase tracking-[0.16em] text-muted-foreground">
           Provedores oficiais
         </h2>
-        <Link to="/cassino" className="text-[11px] font-bold text-primary hover:underline">
+        <Link to="/cassino" className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground hover:text-gold">
           Ver todos
         </Link>
       </div>
@@ -27,7 +27,7 @@ export function ProviderStrip() {
           <Link
             key={name}
             to="/cassino"
-            className="slick shine surface-grad relative flex h-12 shrink-0 items-center overflow-hidden rounded-xl border border-border px-5 text-[13px] font-extrabold uppercase tracking-wide text-foreground/70 hover:border-primary/60 hover:text-primary"
+            className="tile flex h-11 shrink-0 items-center rounded-[8px] border border-border bg-surface/50 px-5 text-[12px] font-bold uppercase tracking-[0.12em] text-foreground/70 hover:text-gold"
           >
             {name}
           </Link>
