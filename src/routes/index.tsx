@@ -35,16 +35,24 @@ function Index() {
   const all = gamesQ.data ?? [];
   const { live, crash, slots, top } = useMemo(() => {
     const grouped = splitPFGamesByCategory(all);
-    const seen = new Set<string>();
-    const top: PFGameLite[] = [];
-    for (const g of [...grouped.slots, ...grouped.crash, ...grouped.live]) {
-      const key = g.name.trim().toLowerCase();
-      if (seen.has(key)) continue;
-      seen.add(key);
-      top.push(g);
-      if (top.length === 18) break;
-    }
-    return { ...grouped, top };
+
+    /** Same title can be exposed by several provider aliases — keep the first. */
+    const dedupe = (list: PFGameLite[]) => {
+      const seen = new Set<string>();
+      return list.filter((g) => {
+        const key = g.name.trim().toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    };
+
+    const slots = dedupe(grouped.slots);
+    const crash = dedupe(grouped.crash);
+    const live = dedupe(grouped.live);
+    const top = dedupe([...slots, ...crash, ...live]).slice(0, 18);
+
+    return { slots, crash, live, top };
   }, [all]);
 
   const term = q.trim().toLowerCase();
