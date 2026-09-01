@@ -14,7 +14,7 @@ const jogar: Item[] = [
   { label: "Populares", to: "/", icon: Flame },
   { label: "Cassino", to: "/cassino", icon: LayoutGrid },
   { label: "Slots", to: "/slots", icon: Gamepad2 },
-  { label: "Crash", to: "/cassino", icon: Rocket, q: "crash" },
+  { label: "Crash", to: "/cassino", icon: Rocket, cat: "crash" },
   { label: "Ao Vivo", to: "/ao-vivo", icon: MonitorPlay },
 ];
 
@@ -29,7 +29,7 @@ function Row({ item, active, collapsed }: { item: Item; active: boolean; collaps
   return (
     <Link
       to={item.to}
-      search={item.q ? ({ q: item.q } as never) : undefined}
+      search={item.cat ? ({ cat: item.cat } as never) : undefined}
       title={item.label}
       className={cn(
         "slick group relative flex h-10 items-center gap-3 rounded-md px-3 text-sm font-semibold",
@@ -59,7 +59,7 @@ function Group({
     return (
       <div className="space-y-1 px-2 py-2">
         {items.map((it) => (
-          <Row key={it.label} item={it} active={path === it.to && !it.q} collapsed />
+          <Row key={it.label} item={it} active={path === it.to && !it.cat} collapsed />
         ))}
       </div>
     );
@@ -76,7 +76,7 @@ function Group({
       {open && (
         <div className="space-y-1 pb-1">
           {items.map((it) => (
-            <Row key={it.label} item={it} active={path === it.to && !it.q} collapsed={false} />
+            <Row key={it.label} item={it} active={path === it.to && !it.cat} collapsed={false} />
           ))}
         </div>
       )}
