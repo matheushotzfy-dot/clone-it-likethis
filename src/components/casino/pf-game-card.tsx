@@ -1,35 +1,50 @@
-import { Play, Loader2, Gamepad2 } from "lucide-react";
+import { Play, Loader2, Gamepad2, Flame, Radio } from "lucide-react";
 import { useState } from "react";
 import type { PFGameLite } from "@/hooks/use-pf-launch";
 import { cn } from "@/lib/utils";
 
+export type CardAccent = "hot" | "crash" | "live" | "slots" | "neutral";
+
+const accentClass: Record<CardAccent, string> = {
+  hot: "cat-hot",
+  crash: "cat-crash",
+  live: "cat-live",
+  slots: "cat-slots",
+  neutral: "cat-neutral",
+};
+
 interface Props {
   game: PFGameLite;
+  /** Category accent — drives border glow, badge and play button colour. */
+  accent?: CardAccent;
   rank?: number;
   priority?: boolean;
   loading?: boolean;
   onPlay: (g: PFGameLite) => void;
 }
 
-export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
+export function PFGameCard({ game, accent = "neutral", rank, priority, loading, onPlay }: Props) {
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
+  const topRank = rank !== undefined && rank <= 3;
+
   return (
-    <div className="group relative">
+    <div className={cn("group relative", accentClass[accent])}>
       <button
         onClick={() => onPlay(game)}
         disabled={loading}
         aria-label={`Jogar ${game.name}`}
         className={cn(
-          "slick relative z-10 block w-full overflow-hidden rounded-[10px] border border-border bg-surface text-left",
-          "aspect-[3/4] hover:border-primary/70",
+          "game-card relative z-10 block w-full overflow-hidden rounded-xl border bg-surface text-left",
+          "aspect-[3/4]",
+          topRank ? "border-cat" : "border-border",
         )}
       >
         {failed ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-surface p-3 text-center">
-            <span className="grid size-9 place-items-center rounded-md border border-primary/40 text-primary">
-              <Gamepad2 className="size-4" strokeWidth={1.75} />
+          <div className="surface-grad absolute inset-0 flex flex-col items-center justify-center gap-2 p-3 text-center">
+            <span className="bg-cat-soft border-cat grid size-9 place-items-center rounded-lg border">
+              <Gamepad2 className="text-cat size-4" strokeWidth={2} />
             </span>
             <p className="line-clamp-2 text-[11px] font-bold leading-tight">{game.name}</p>
             <p className="text-[10px] text-muted-foreground">{game.provider.name}</p>
@@ -47,7 +62,7 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
               onLoad={() => setLoaded(true)}
               onError={() => setFailed(true)}
               className={cn(
-                "size-full object-cover transition-[transform,opacity] duration-500 group-hover:scale-[1.06]",
+                "size-full object-cover transition-[transform,opacity] duration-500 group-hover:scale-[1.08]",
                 loaded ? "opacity-100" : "opacity-0",
               )}
               draggable={false}
@@ -55,24 +70,51 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
           </>
         )}
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-background via-background/60 to-transparent" />
+        {/* readability gradient */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-background via-background/70 to-transparent" />
 
-        <div className="pointer-events-none absolute inset-0 grid place-items-center opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-          <span className="grid size-12 place-items-center rounded-full bg-primary/90 text-primary-foreground backdrop-blur-sm">
+        {/* hover / press play */}
+        <div className="pointer-events-none absolute inset-0 grid place-items-center opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-active:opacity-100">
+          <span
+            className={cn(
+              "grid size-12 place-items-center rounded-full text-background shadow-lg backdrop-blur-sm transition-transform duration-200 group-hover:scale-110",
+            )}
+            style={{ background: "var(--cat, var(--primary))" }}
+          >
             {loading ? <Loader2 className="size-5 animate-spin" /> : <Play className="size-5 fill-current" />}
           </span>
         </div>
 
-        {rank !== undefined && (
-          <span className="rank-number pointer-events-none absolute left-1.5 top-0.5 z-10 select-none text-3xl leading-none md:text-4xl">
-            {rank}
-          </span>
-        )}
+        {/* badges */}
+        <div className="pointer-events-none absolute inset-x-1.5 top-1.5 flex items-start justify-between gap-1">
+          {rank !== undefined ? (
+            <span
+              className={cn(
+                "font-display select-none text-2xl font-extrabold italic leading-none md:text-3xl",
+                topRank ? "text-cat drop-shadow-[0_2px_6px_rgba(0,0,0,.6)]" : "text-foreground/45",
+              )}
+            >
+              {rank}
+            </span>
+          ) : (
+            <span />
+          )}
+          {accent === "hot" && (
+            <span className="badge-chip bg-cat-soft text-cat border-cat border">
+              <Flame className="size-2.5" strokeWidth={3} /> Hot
+            </span>
+          )}
+          {accent === "live" && (
+            <span className="badge-chip bg-cat-soft text-cat border-cat border">
+              <Radio className="size-2.5 soft-pulse" strokeWidth={3} /> Ao vivo
+            </span>
+          )}
+        </div>
 
         {!failed && (
           <div className="pointer-events-none absolute inset-x-0 bottom-0 p-2">
             <p className="truncate text-[11px] font-bold leading-tight md:text-xs">{game.name}</p>
-            <p className="truncate text-[10px] text-muted-foreground">{game.provider.name}</p>
+            <p className="truncate text-[10px] font-semibold text-muted-foreground">{game.provider.name}</p>
           </div>
         )}
       </button>

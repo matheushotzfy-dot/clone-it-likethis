@@ -91,7 +91,7 @@ export function Header() {
           })}
         </nav>
 
-        <form onSubmit={submitSearch} className="relative ml-auto hidden xl:block xl:w-64">
+        <form onSubmit={submitSearch} className="relative ml-auto hidden shrink-0 2xl:block 2xl:w-64">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.75} />
           <input
             value={term}
@@ -102,7 +102,7 @@ export function Header() {
           />
         </form>
 
-        <div className="ml-auto flex items-center gap-1.5 xl:ml-3 md:gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 md:gap-2 2xl:ml-3">
           {user ? (
             <>
               <div className="hidden h-9 items-center gap-2 rounded-md border border-border bg-surface pl-3 pr-1 text-sm font-bold md:flex">

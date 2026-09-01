@@ -1,27 +1,60 @@
+import { Zap, ShieldCheck, Gamepad2 } from "lucide-react";
 import shield from "@/assets/santos-shield.png";
+
+const proofs = [
+  { Icon: Zap, label: "PIX em segundos", sub: "Depósito aprovado na hora" },
+  { Icon: ShieldCheck, label: "Saque 24h", sub: "Sem burocracia" },
+  { Icon: Gamepad2, label: "+5.000 jogos", sub: "Provedores oficiais" },
+];
 
 export function PromoSide() {
   return (
-    <div className="relative w-full md:w-[320px] shrink-0 hidden md:flex bg-gradient-to-br from-brand via-brand-2 to-black flex-col items-center justify-center p-8 overflow-hidden">
-      <div className="absolute -top-16 -right-16 size-64 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-16 -left-16 size-64 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
-      <img
-        src={shield}
-        alt="Santos FC"
-        width={220}
-        height={220}
-        className="relative z-10 size-44 object-contain drop-shadow-2xl"
-        decoding="async"
-      />
-      <div className="relative z-10 mt-6 text-center">
-        <h3 className="text-3xl font-black text-white leading-none">
+    <div className="relative hidden w-full shrink-0 overflow-hidden md:flex md:w-[320px] md:flex-col md:justify-center">
+      <div className="absolute inset-0 bg-gradient-to-br from-surface-2 via-surface to-background" />
+      <div className="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-primary/18 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 -left-20 size-64 rounded-full bg-[var(--accent-live)]/18 blur-3xl" />
+
+      <div className="relative z-10 flex flex-col items-center px-7 py-9 text-center">
+        <img
+          src={shield}
+          alt="Santos FC"
+          width={160}
+          height={196}
+          className="float-y size-28 object-contain drop-shadow-2xl"
+          decoding="async"
+        />
+
+        <h3 className="font-display mt-5 text-2xl font-extrabold leading-none">
           SANTOS<span className="text-primary">BET</span>
         </h3>
-        <p className="mt-2 text-xs text-white/70 uppercase tracking-[0.2em] font-bold">A Casa da Torcida</p>
-        <div className="mt-6 inline-flex items-center gap-2 bg-primary/10 border border-primary/40 rounded-full px-3 py-1.5">
-          <span className="size-2 rounded-full bg-primary animate-pulse" />
-          <span className="text-[11px] font-black uppercase text-primary tracking-wider">Bônus 100% ativo</span>
-        </div>
+
+        <p className="mt-4 font-display text-3xl font-extrabold leading-tight">
+          Bônus de <span className="text-primary">100%</span>
+        </p>
+        <p className="mt-1 text-xs font-semibold text-muted-foreground">
+          no seu primeiro depósito via PIX
+        </p>
+
+        <ul className="mt-7 w-full space-y-2 text-left">
+          {proofs.map(({ Icon, label, sub }) => (
+            <li
+              key={label}
+              className="flex items-center gap-3 rounded-xl border border-border bg-background/40 px-3 py-2.5"
+            >
+              <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-primary/40 bg-primary/12 text-primary">
+                <Icon className="size-[15px]" strokeWidth={2.25} />
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-[12px] font-extrabold leading-tight">{label}</p>
+                <p className="truncate text-[10px] font-semibold text-muted-foreground">{sub}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        <p className="mt-6 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          18+ · Jogue com responsabilidade
+        </p>
       </div>
     </div>
   );
