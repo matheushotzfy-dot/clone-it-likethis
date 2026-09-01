@@ -183,13 +183,19 @@ function gameNameKey(name: string) {
 
 /** Remove duplicados exatos (mesmo provedor + code) e o mesmo jogo repetido
  *  entre variações do provedor (ex.: PG SOFT x OFICIAL - PG SOFT). */
-function dedupeGames<T extends { name: string; game_code: string; provider: { name: string } }>(games: T[]) {
+function dedupeGames<T extends { name: string; game_code: string; provider: { name: string } }>(
+  games: T[],
+  /** true no lobby geral: o mesmo título só aparece uma vez, mesmo em estúdios diferentes. */
+  globalByName = false,
+) {
   const seenCode = new Set<string>();
   const seenName = new Set<string>();
   const out: T[] = [];
   for (const game of games) {
     const codeKey = `${game.provider.name.toUpperCase()}:${game.game_code}`;
-    const nameKey = `${providerBaseKey(game.provider.name)}:${gameNameKey(game.name)}`;
+    const nameKey = globalByName
+      ? `*:${gameNameKey(game.name)}`
+      : `${providerBaseKey(game.provider.name)}:${gameNameKey(game.name)}`;
     if (seenCode.has(codeKey) || seenName.has(nameKey)) continue;
     seenCode.add(codeKey);
     seenName.add(nameKey);
