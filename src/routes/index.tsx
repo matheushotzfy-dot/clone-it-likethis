@@ -57,7 +57,14 @@ function Index() {
     const live = dedupe(grouped.live);
     const top = dedupe([...slots, ...crash, ...live]).slice(0, 18);
 
-    return { slots, crash, live, top };
+    /** Rails shouldn't repeat what the "most played" block already shows. */
+    const inTop = new Set(top.map((g) => g.game_code));
+    const rest = (list: PFGameLite[]) => {
+      const fresh = list.filter((g) => !inTop.has(g.game_code));
+      return fresh.length >= 9 ? fresh : list;
+    };
+
+    return { slots: rest(slots), crash: rest(crash), live: rest(live), top };
   }, [all]);
 
   const term = q.trim().toLowerCase();
