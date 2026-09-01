@@ -8,7 +8,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuthDialog } from "@/components/auth/auth-dialog-context";
 
-type Item = { label: string; to: string; icon: typeof Flame; q?: string };
+type Item = { label: string; to: string; icon: typeof Flame; cat?: string };
 
 const jogar: Item[] = [
   { label: "Populares", to: "/", icon: Flame },
