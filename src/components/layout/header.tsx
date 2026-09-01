@@ -1,7 +1,11 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { Logo } from "./logo";
 import { useAuth } from "@/hooks/use-auth";
-import { Wallet, User as UserIcon, LogOut, Menu, RefreshCw, Bell, Receipt, History, ShieldCheck, ArrowUpFromLine } from "lucide-react";
+import {
+  Wallet, User as UserIcon, LogOut, Menu, RefreshCw, Receipt, History,
+  ShieldCheck, ArrowUpFromLine, Search,
+} from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -11,18 +15,20 @@ import { useAuthDialog } from "@/components/auth/auth-dialog-context";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getMyProfile } from "@/lib/profile.functions";
+import { cn } from "@/lib/utils";
 
-type NavLink = { to: string; label: string };
-type NavAction = { label: string; action: "deposit" };
-
-const nav: (NavLink | NavAction)[] = [
-  { to: "/esportes", label: "Esportes" },
+const nav = [
+  { to: "/", label: "Início" },
   { to: "/cassino", label: "Cassino" },
+  { to: "/slots", label: "Slots" },
   { to: "/ao-vivo", label: "Ao Vivo" },
   { to: "/torneios", label: "Torneios" },
-  { label: "Depósito", action: "deposit" },
   { to: "/promocoes", label: "Promoções" },
-];
+] as const;
+
+function brl(n: number) {
+  return n.toFixed(2).replace(".", ",");
+}
 
 export function Header() {
   const { user, signOut } = useAuth();
@@ -30,6 +36,8 @@ export function Header() {
   const { toggleSidebar } = useSidebar();
   const { open } = useAuthDialog();
   const qc = useQueryClient();
+  const navigate = useNavigate();
+  const [term, setTerm] = useState("");
   const fetchProfile = useServerFn(getMyProfile);
   const { data: profile, isFetching, refetch } = useQuery({
     queryKey: ["my-profile"],
@@ -42,132 +50,141 @@ export function Header() {
   const balance = Number(profile?.balance ?? 0);
   const isAdmin = !!profile?.isAdmin;
 
-  return (
-    <header className="sticky top-0 z-40 w-full bg-brand shadow-sm overflow-x-clip">
-      <div className="flex items-center h-14 md:h-16 px-2 md:px-6 gap-1.5 md:gap-2 min-w-0">
+  function submitSearch(e: React.FormEvent) {
+    e.preventDefault();
+    const q = term.trim();
+    if (!q) return;
+    navigate({ to: "/cassino", search: { q } as never });
+  }
 
+  return (
+    <header className="sticky top-0 z-40 w-full border-b border-border bg-background/85 backdrop-blur-xl">
+      <div className="flex h-14 items-center gap-2 px-2 md:h-16 md:gap-3 md:px-5">
         <button
           onClick={toggleSidebar}
-          className="lg:hidden text-white p-2 -ml-1 hover:bg-white/10 rounded-md"
-          aria-label="Menu"
+          className="slick -ml-1 grid size-9 place-items-center rounded-md text-foreground/80 hover:bg-surface hover:text-foreground lg:hidden"
+          aria-label="Abrir menu"
         >
-          <Menu className="size-6" />
+          <Menu className="size-5" strokeWidth={1.75} />
         </button>
+
         <Logo />
-        <nav className="hidden lg:flex items-center gap-1 ml-4 flex-1">
+
+        <nav className="ml-3 hidden items-center gap-0.5 lg:flex">
           {nav.map((n) => {
-            if ("action" in n) {
-              return (
-                <button
-                  key={n.label}
-                  onClick={() => open(n.action)}
-                  className="relative px-3 py-5 text-sm font-bold uppercase tracking-wide transition-colors text-primary hover:text-primary/80"
-                >
-                  {n.label}
-                </button>
-              );
-            }
-            const active = path === n.to || (n.to === "/cassino" && path === "/");
+            const active = path === n.to;
             return (
               <Link
-                key={n.label}
+                key={n.to}
                 to={n.to}
-                className={`relative px-3 py-5 text-sm font-bold uppercase tracking-wide transition-colors ${
-                  active ? "text-primary" : "text-white/95 hover:text-primary"
-                }`}
+                className={cn(
+                  "slick relative rounded-md px-3 py-2 text-[13px] font-semibold tracking-tight",
+                  active ? "text-primary" : "text-foreground/70 hover:bg-surface hover:text-foreground",
+                )}
               >
                 {n.label}
-                {active && <span className="absolute bottom-2 left-3 right-3 h-0.5 bg-primary rounded-full" />}
+                {active && (
+                  <span className="absolute inset-x-3 -bottom-[9px] h-[2px] rounded-full bg-primary" />
+                )}
               </Link>
             );
           })}
         </nav>
-        <div className="flex-1 lg:flex-none" />
-        {user ? (
-          <>
-            <div className="hidden md:flex items-center gap-2 bg-brand-2 text-white rounded-full pl-3 pr-1 h-9 text-sm font-bold">
-              <span>R$ {balance.toFixed(2).replace(".", ",")}</span>
-              <button
-                onClick={() => { qc.invalidateQueries({ queryKey: ["my-profile"] }); refetch(); }}
-                className="size-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:brightness-110"
-                aria-label="Atualizar saldo"
-              >
-                <RefreshCw className={`size-3.5 ${isFetching ? "animate-spin" : ""}`} />
-              </button>
-            </div>
-            <Link
-              to="/saque"
-              className="hidden sm:inline-flex items-center gap-1.5 h-9 md:h-10 px-3 md:px-4 rounded-md border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground font-bold uppercase text-xs md:text-sm transition-colors"
-            >
-              <ArrowUpFromLine className="size-4" /> Sacar
-            </Link>
-            <button
-              onClick={() => open("deposit")}
-              className="h-9 md:h-10 px-3 md:px-5 rounded-md bg-primary text-primary-foreground hover:brightness-110 font-bold uppercase text-xs md:text-sm transition-all"
-            >
-              Depositar
-            </button>
-            <DropdownMenu modal={false}>
-              <DropdownMenuTrigger asChild>
-                <button className="relative size-9 md:size-10 rounded-full bg-brand-2 hover:bg-primary hover:text-primary-foreground transition-colors flex items-center justify-center text-white font-bold border-2 border-primary text-sm">
-                  {(profile?.username?.[0] ?? user.email?.[0] ?? "U").toUpperCase()}
-                  <span className="absolute -top-1 -right-1 size-4 rounded-full bg-destructive text-white text-[10px] font-bold flex items-center justify-center pointer-events-none">
-                    1
-                  </span>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-popover">
-                <div className="px-2 py-2 border-b border-border mb-1">
-                  <div className="text-sm font-bold truncate">{profile?.full_name || profile?.username || user.email}</div>
-                  <div className="text-xs text-primary font-bold">R$ {balance.toFixed(2).replace(".", ",")}</div>
-                </div>
-                <DropdownMenuItem asChild>
-                  <Link to="/perfil"><UserIcon className="mr-2 size-4" />Meu Perfil</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => open("deposit")}>
-                  <Wallet className="mr-2 size-4" />Depósito
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/saque"><Receipt className="mr-2 size-4" />Saque</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/historico"><History className="mr-2 size-4" />Histórico</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Bell className="mr-2 size-4" />Notificações
-                </DropdownMenuItem>
-                {isAdmin && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link to="/admin"><ShieldCheck className="mr-2 size-4 text-primary" />Painel Admin</Link>
-                    </DropdownMenuItem>
-                  </>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => signOut()} className="text-destructive">
-                  <LogOut className="mr-2 size-4" />Sair
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </>
-        ) : (
-          <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
-            <button
-              onClick={() => open("login")}
-              className="h-9 md:h-10 px-2.5 md:px-5 rounded-md border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground font-bold uppercase text-[11px] md:text-sm transition-colors whitespace-nowrap"
-            >
-              Entrar
-            </button>
-            <button
-              onClick={() => open("register")}
-              className="h-9 md:h-10 px-2.5 md:px-5 rounded-md bg-primary text-primary-foreground hover:brightness-110 font-bold uppercase text-[11px] md:text-sm transition-all whitespace-nowrap"
-            >
-              Registrar
-            </button>
-          </div>
 
-        )}
+        <form onSubmit={submitSearch} className="relative ml-auto hidden xl:block xl:w-64">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.75} />
+          <input
+            value={term}
+            onChange={(e) => setTerm(e.target.value)}
+            placeholder="Buscar jogo…"
+            aria-label="Buscar jogo"
+            className="h-9 w-full rounded-md border border-border bg-surface/70 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+          />
+        </form>
+
+        <div className="ml-auto flex items-center gap-1.5 xl:ml-3 md:gap-2">
+          {user ? (
+            <>
+              <div className="hidden h-9 items-center gap-2 rounded-md border border-border bg-surface pl-3 pr-1 text-sm font-bold md:flex">
+                <span className="tabular-nums">R$ {brl(balance)}</span>
+                <button
+                  onClick={() => { qc.invalidateQueries({ queryKey: ["my-profile"] }); refetch(); }}
+                  className="slick grid size-7 place-items-center rounded bg-primary text-primary-foreground hover:brightness-110"
+                  aria-label="Atualizar saldo"
+                >
+                  <RefreshCw className={cn("size-3.5", isFetching && "animate-spin")} strokeWidth={2} />
+                </button>
+              </div>
+
+              <Link
+                to="/saque"
+                className="slick hidden h-9 items-center gap-1.5 rounded-md border border-primary/60 px-3 text-xs font-bold uppercase tracking-wide text-primary hover:bg-primary hover:text-primary-foreground sm:inline-flex md:h-10 md:px-4"
+              >
+                <ArrowUpFromLine className="size-4" strokeWidth={1.75} /> Sacar
+              </Link>
+
+              <button
+                onClick={() => open("deposit")}
+                className="slick shine relative h-9 overflow-hidden rounded-md bg-primary px-3 text-xs font-bold uppercase tracking-wide text-primary-foreground hover:brightness-110 md:h-10 md:px-5"
+              >
+                Depositar
+              </button>
+
+              <DropdownMenu modal={false}>
+                <DropdownMenuTrigger asChild>
+                  <button className="slick grid size-9 place-items-center rounded-md border border-border bg-surface text-sm font-bold hover:border-primary md:size-10">
+                    {(profile?.username?.[0] ?? user.email?.[0] ?? "U").toUpperCase()}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 border-border bg-popover">
+                  <div className="mb-1 border-b border-border px-2 py-2">
+                    <div className="truncate text-sm font-bold">{profile?.full_name || profile?.username || user.email}</div>
+                    <div className="text-xs font-bold text-primary">R$ {brl(balance)}</div>
+                  </div>
+                  <DropdownMenuItem asChild>
+                    <Link to="/perfil"><UserIcon className="mr-2 size-4" strokeWidth={1.75} />Meu Perfil</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => open("deposit")}>
+                    <Wallet className="mr-2 size-4" strokeWidth={1.75} />Depósito
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/saque"><Receipt className="mr-2 size-4" strokeWidth={1.75} />Saque</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/historico"><History className="mr-2 size-4" strokeWidth={1.75} />Histórico</Link>
+                  </DropdownMenuItem>
+                  {isAdmin && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin"><ShieldCheck className="mr-2 size-4 text-primary" strokeWidth={1.75} />Painel Admin</Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => signOut()} className="text-destructive">
+                    <LogOut className="mr-2 size-4" strokeWidth={1.75} />Sair
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => open("login")}
+                className="slick h-9 whitespace-nowrap rounded-md border border-border px-3 text-xs font-bold uppercase tracking-wide text-foreground/85 hover:border-primary hover:text-primary md:h-10 md:px-5"
+              >
+                Entrar
+              </button>
+              <button
+                onClick={() => open("register")}
+                className="slick shine relative h-9 overflow-hidden whitespace-nowrap rounded-md bg-primary px-3 text-xs font-bold uppercase tracking-wide text-primary-foreground hover:brightness-110 md:h-10 md:px-5"
+              >
+                Cadastrar
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </header>
   );
