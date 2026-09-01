@@ -6,9 +6,8 @@ import { CatalogHeader, ProviderFilter, GameGrid, LoadMore, InlineSpinner } from
 import { usePFGames, usePFProviders, usePFLaunch } from "@/hooks/use-pf-launch";
 
 export const Route = createFileRoute("/cassino")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    q: typeof search.q === "string" ? search.q : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { q?: string } =>
+    typeof search.q === "string" && search.q ? { q: search.q } : {},
   head: () => ({
     meta: [
       { title: "Cassino — Catálogo completo | SANTOSBET" },
