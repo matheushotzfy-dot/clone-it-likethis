@@ -74,7 +74,7 @@ export function GameGrid({
   if (loading) {
     return (
       <div className={CATALOG_GRID}>
-        {Array.from({ length: 18 }).map((_, i) => (
+        {Array.from({ length: 27 }).map((_, i) => (
           <div key={i} className="skeleton aspect-[3/4] rounded-[10px]" />
         ))}
       </div>
