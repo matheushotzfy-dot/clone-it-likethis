@@ -167,14 +167,45 @@ function providerPriority(provider: PFProvider) {
   return index === -1 ? 999 : index;
 }
 
+/** Normaliza o provedor para agrupar variações do mesmo estúdio
+ *  ("OFICIAL - PG SOFT", "PG SOFT", "PGSOFT ORIGINAL" -> "PGSOFT"). */
+function providerBaseKey(name: string) {
+  return name
+    .toUpperCase()
+    .replace(/^OFICIAL\s*-\s*/, "")
+    .replace(/\b(ORIGINAL|OFICIAL|SLOTS|SLOT|LIVE|CASSINO|CASINO|GAMES|GAMING)\b/g, "")
+    .replace(/[^A-Z0-9]/g, "");
+}
+
+function gameNameKey(name: string) {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+/** Remove duplicados exatos (mesmo provedor + code) e o mesmo jogo repetido
+ *  entre variações do provedor (ex.: PG SOFT x OFICIAL - PG SOFT). */
+function dedupeGames<T extends { name: string; game_code: string; provider: { name: string } }>(
+  games: T[],
+  /** true no lobby geral: o mesmo título só aparece uma vez, mesmo em estúdios diferentes. */
+  globalByName = false,
+) {
+  const seenCode = new Set<string>();
+  const seenName = new Set<string>();
+  const out: T[] = [];
+  for (const game of games) {
+    const codeKey = `${game.provider.name.toUpperCase()}:${game.game_code}`;
+    const nameKey = globalByName
+      ? `*:${gameNameKey(game.name)}`
+      : `${providerBaseKey(game.provider.name)}:${gameNameKey(game.name)}`;
+    if (seenCode.has(codeKey) || seenName.has(nameKey)) continue;
+    seenCode.add(codeKey);
+    seenName.add(nameKey);
+    out.push(game);
+  }
+  return out;
+}
+
 function orderLobbyGames(games: PFGame[]) {
-  const seen = new Set<string>();
-  const unique = games.filter((game) => {
-    const key = `${game.provider.name}:${game.game_code}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+  const unique = dedupeGames(games, true);
   const crash = unique.filter((game) => getPFGameCategory(game) === "crash");
   const live = unique.filter((game) => getPFGameCategory(game) === "live");
   const slots = unique.filter((game) => getPFGameCategory(game) === "slot");
@@ -214,13 +245,13 @@ export const getPFGames = createServerFn({ method: "GET" })
         list = orderLobbyGames(settled.flatMap((r) => (r.status === "fulfilled" ? r.value : [])));
       }
       if (!data.providerId && list.length === 0) list = orderLobbyGames(CURATED_FEATURED_GAMES);
-      const filtered = applyGameQuery(list, data.q);
+      const filtered = dedupeGames(applyGameQuery(list, data.q), !data.providerId);
       return filtered.slice(0, data.limit);
     } catch (error) {
       console.error("PlayFivers games unavailable", error);
       const fallback = data.providerId ? gamesCache.get(String(data.providerId))?.data : [...gamesCache.values()].flatMap((c) => c.data);
       const list = data.providerId ? (fallback ?? []) : orderLobbyGames((fallback?.length ? fallback : CURATED_FEATURED_GAMES));
-      const filtered = applyGameQuery(list, data.q);
+      const filtered = dedupeGames(applyGameQuery(list, data.q), !data.providerId);
       return filtered.slice(0, data.limit);
     }
   });
