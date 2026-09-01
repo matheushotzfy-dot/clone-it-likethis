@@ -1,70 +1,66 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { SiteShell } from "@/components/layout/site-shell";
-import { PFGameCard } from "@/components/casino/pf-game-card";
+import { CategoryPills } from "@/components/casino/category-pills";
+import { CatalogHeader, ProviderFilter, GameGrid, LoadMore, InlineSpinner } from "@/components/casino/catalog-grid";
 import { usePFGames, usePFProviders, usePFLaunch } from "@/hooks/use-pf-launch";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Search, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/cassino")({
-  head: () => ({ meta: [{ title: "Cassino — SANTOSBET" }] }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    q: typeof search.q === "string" ? search.q : undefined,
+  }),
+  head: () => ({
+    meta: [
+      { title: "Cassino — Catálogo completo | SANTOSBET" },
+      { name: "description", content: "Explore o catálogo completo de jogos de cassino: slots, crash e mesas ao vivo, filtrados por provedor." },
+      { property: "og:title", content: "Cassino — Catálogo completo | SANTOSBET" },
+      { property: "og:description", content: "Milhares de jogos de cassino filtrados por provedor." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: Page,
 });
 
 function Page() {
-  const [q, setQ] = useState("");
+  const { q: initialQ } = Route.useSearch();
+  const [q, setQ] = useState(initialQ ?? "");
   const [providerId, setProviderId] = useState<number | null>(null);
   const [visibleCount, setVisibleCount] = useState(72);
+
   const providersQ = usePFProviders();
-  const gamesQ = usePFGames(providerId ?? undefined, { limit: Math.max(visibleCount + 48, 120), q });
+  const gamesQ = usePFGames(providerId ?? undefined, {
+    limit: Math.max(visibleCount + 48, 120),
+    q,
+  });
   const { play, launchingCode } = usePFLaunch();
 
-  const filtered = useMemo(() => {
-    return gamesQ.data ?? [];
-  }, [gamesQ.data]);
-  const visible = filtered.slice(0, visibleCount);
-  const hasMore = filtered.length > visible.length;
+  const all = gamesQ.data ?? [];
+  const visible = all.slice(0, visibleCount);
+  const remaining = all.length - visible.length;
 
   useEffect(() => { setVisibleCount(72); }, [providerId, q]);
 
   return (
     <SiteShell>
-      <div className="max-w-7xl mx-auto px-3 md:px-6 py-6 space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Cassino</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {gamesQ.isLoading ? "Carregando..." : `${filtered.length} jogos disponíveis`}
-          </p>
-        </div>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar jogo ou provedor..." className="pl-10 h-11 bg-surface" />
-        </div>
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-          <Button variant={providerId === null ? "default" : "outline"} size="sm" onClick={() => setProviderId(null)} className="shrink-0">Todos</Button>
-          {(providersQ.data ?? []).map((p) => (
-            <Button key={p.id} variant={providerId === p.id ? "default" : "outline"} size="sm" onClick={() => setProviderId(p.id)} className="shrink-0">{p.name}</Button>
-          ))}
-        </div>
-        {gamesQ.isLoading ? (
-          <div className="min-h-[40vh] flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>
-        ) : (
-          <>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-              {visible.map((g, i) => (
-                <PFGameCard key={`${g.provider.name}-${g.game_code}`} game={g} priority={i < 12} loading={launchingCode === g.game_code} onPlay={play} />
-              ))}
-            </div>
-            {hasMore && (
-              <div className="flex justify-center pt-4">
-                <Button onClick={() => setVisibleCount((c) => c + 72)} variant="outline" size="lg" className="min-w-[200px]">
-                  Carregar mais
-                </Button>
-              </div>
-            )}
-          </>
-        )}
+      <div className="mx-auto max-w-[1600px] space-y-6 px-3 py-5 md:px-6 md:py-7">
+        <CatalogHeader
+          title="Cassino"
+          subtitle={gamesQ.isLoading ? "Carregando catálogo…" : `${all.length} jogos disponíveis`}
+          q={q}
+          onQ={setQ}
+        />
+        <CategoryPills active="Todos" />
+        <ProviderFilter providers={providersQ.data ?? []} value={providerId} onChange={setProviderId} />
+        <GameGrid
+          games={visible}
+          loading={gamesQ.isLoading}
+          launchingCode={launchingCode}
+          onPlay={play}
+          emptyLabel="Nenhum jogo encontrado com esses filtros."
+        />
+        {remaining > 0 && <LoadMore remaining={remaining} onClick={() => setVisibleCount((c) => c + 72)} />}
+        {gamesQ.isFetching && !gamesQ.isLoading && <InlineSpinner />}
       </div>
     </SiteShell>
   );
