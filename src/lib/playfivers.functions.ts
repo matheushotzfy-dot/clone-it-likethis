@@ -167,14 +167,39 @@ function providerPriority(provider: PFProvider) {
   return index === -1 ? 999 : index;
 }
 
+/** Normaliza o provedor para agrupar variações do mesmo estúdio
+ *  ("OFICIAL - PG SOFT", "PG SOFT", "PGSOFT ORIGINAL" -> "PGSOFT"). */
+function providerBaseKey(name: string) {
+  return name
+    .toUpperCase()
+    .replace(/^OFICIAL\s*-\s*/, "")
+    .replace(/\b(ORIGINAL|OFICIAL|SLOTS|SLOT|LIVE|CASSINO|CASINO|GAMES|GAMING)\b/g, "")
+    .replace(/[^A-Z0-9]/g, "");
+}
+
+function gameNameKey(name: string) {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+/** Remove duplicados exatos (mesmo provedor + code) e o mesmo jogo repetido
+ *  entre variações do provedor (ex.: PG SOFT x OFICIAL - PG SOFT). */
+function dedupeGames<T extends { name: string; game_code: string; provider: { name: string } }>(games: T[]) {
+  const seenCode = new Set<string>();
+  const seenName = new Set<string>();
+  const out: T[] = [];
+  for (const game of games) {
+    const codeKey = `${game.provider.name.toUpperCase()}:${game.game_code}`;
+    const nameKey = `${providerBaseKey(game.provider.name)}:${gameNameKey(game.name)}`;
+    if (seenCode.has(codeKey) || seenName.has(nameKey)) continue;
+    seenCode.add(codeKey);
+    seenName.add(nameKey);
+    out.push(game);
+  }
+  return out;
+}
+
 function orderLobbyGames(games: PFGame[]) {
-  const seen = new Set<string>();
-  const unique = games.filter((game) => {
-    const key = `${game.provider.name}:${game.game_code}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+  const unique = dedupeGames(games);
   const crash = unique.filter((game) => getPFGameCategory(game) === "crash");
   const live = unique.filter((game) => getPFGameCategory(game) === "live");
   const slots = unique.filter((game) => getPFGameCategory(game) === "slot");
