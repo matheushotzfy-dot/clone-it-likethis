@@ -1,6 +1,7 @@
-import { Play, Loader2 } from "lucide-react";
+import { Play, Loader2, Gamepad2 } from "lucide-react";
 import { useState } from "react";
 import type { PFGameLite } from "@/hooks/use-pf-launch";
+import { cn } from "@/lib/utils";
 
 interface Props {
   game: PFGameLite;
@@ -12,50 +13,65 @@ interface Props {
 
 export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
   const [failed, setFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
   return (
-    <div className="relative group">
-      {rank && (
-        <span className="rank-number absolute left-0 top-1/2 -translate-y-1/2 text-5xl md:text-8xl z-0 pointer-events-none select-none opacity-70">
+    <div className="group relative">
+      {rank !== undefined && (
+        <span className="rank-number pointer-events-none absolute -left-1 top-1/2 z-0 -translate-y-1/2 select-none text-5xl opacity-60 md:text-7xl">
           {rank}
         </span>
       )}
       <button
         onClick={() => onPlay(game)}
         disabled={loading}
-        className="relative z-10 block w-full aspect-[3/4] rounded-xl overflow-hidden bg-surface border border-border hover:border-primary transition-all group-hover:scale-[1.02] touch-manipulation"
+        aria-label={`Jogar ${game.name}`}
+        className={cn(
+          "slick relative z-10 block w-full overflow-hidden rounded-[10px] border border-border bg-surface text-left",
+          "aspect-[3/4] hover:border-primary/70",
+          rank !== undefined && "ml-4 md:ml-6",
+        )}
       >
         {failed ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-surface-2 to-surface p-3 text-center">
-            <div className="size-10 rounded-full bg-primary/20 flex items-center justify-center">
-              <Play className="size-4 fill-primary text-primary" />
-            </div>
-            <p className="text-xs font-bold text-white line-clamp-2">{game.name}</p>
-            <p className="text-[10px] text-white/50">{game.provider.name}</p>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-surface p-3 text-center">
+            <span className="grid size-9 place-items-center rounded-md border border-primary/40 text-primary">
+              <Gamepad2 className="size-4" strokeWidth={1.75} />
+            </span>
+            <p className="line-clamp-2 text-[11px] font-bold leading-tight">{game.name}</p>
+            <p className="text-[10px] text-muted-foreground">{game.provider.name}</p>
           </div>
         ) : (
-          <img
-            src={game.image_url}
-            alt={game.name}
-            loading={priority ? "eager" : "lazy"}
-            decoding="async"
-            onError={() => setFailed(true)}
-            className="w-full h-full object-cover bg-surface-2"
-            draggable={false}
-          />
+          <>
+            {!loaded && <div className="skeleton absolute inset-0" />}
+            <img
+              src={game.image_url}
+              alt={game.name}
+              loading={priority ? "eager" : "lazy"}
+              fetchPriority={priority ? "high" : "auto"}
+              decoding="async"
+              sizes="(max-width: 640px) 45vw, (max-width: 1024px) 22vw, 220px"
+              onLoad={() => setLoaded(true)}
+              onError={() => setFailed(true)}
+              className={cn(
+                "size-full object-cover transition-[transform,opacity] duration-500 group-hover:scale-[1.06]",
+                loaded ? "opacity-100" : "opacity-0",
+              )}
+              draggable={false}
+            />
+          </>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent" />
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          {loading ? (
-            <Loader2 className="size-8 animate-spin text-white" />
-          ) : (
-            <div className="size-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-              <Play className="size-5 fill-current" />
-            </div>
-          )}
+
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-background via-background/60 to-transparent" />
+
+        <div className="pointer-events-none absolute inset-0 grid place-items-center opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+          <span className="grid size-12 place-items-center rounded-full bg-primary/90 text-primary-foreground backdrop-blur-sm">
+            {loading ? <Loader2 className="size-5 animate-spin" /> : <Play className="size-5 fill-current" />}
+          </span>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 p-2">
-          <p className="text-xs font-semibold text-white truncate">{game.name}</p>
-          <p className="text-[10px] text-white/60">{game.provider.name}</p>
+
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 p-2">
+          <p className="truncate text-[11px] font-bold leading-tight md:text-xs">{game.name}</p>
+          <p className="truncate text-[10px] text-muted-foreground">{game.provider.name}</p>
         </div>
       </button>
     </div>
