@@ -2,27 +2,36 @@ import { Link } from "@tanstack/react-router";
 import { Flame, Gamepad2, Rocket, MonitorPlay, LayoutGrid, Trophy, Gift, Dices } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const cats = [
+type Cat = {
+  label: string;
+  to: string;
+  Icon: typeof Flame;
+  accent: string;
+  search?: Record<string, string>;
+};
+
+const cats: Cat[] = [
   { label: "Populares", to: "/", Icon: Flame, accent: "cat-hot" },
   { label: "Slots", to: "/slots", Icon: Gamepad2, accent: "cat-slots" },
-  { label: "Crash", to: "/cassino", Icon: Rocket, accent: "cat-crash" },
+  { label: "Crash", to: "/cassino", Icon: Rocket, accent: "cat-crash", search: { cat: "crash" } },
   { label: "Ao Vivo", to: "/ao-vivo", Icon: MonitorPlay, accent: "cat-live" },
-  { label: "Mesas", to: "/ao-vivo", Icon: Dices, accent: "cat-live" },
+  { label: "Mesas", to: "/cassino", Icon: Dices, accent: "cat-live", search: { cat: "mesas" } },
   { label: "Todos", to: "/cassino", Icon: LayoutGrid, accent: "cat-neutral" },
   { label: "Torneios", to: "/torneios", Icon: Trophy, accent: "cat-hot" },
   { label: "Promoções", to: "/promocoes", Icon: Gift, accent: "cat-crash" },
-] as const;
+];
 
 export function CategoryPills({ active }: { active?: string }) {
   return (
     <div className="no-scrollbar snap-row -mx-3 overflow-x-auto px-3 md:mx-0 md:px-0">
       <div className="flex min-w-max gap-2 md:min-w-0 md:flex-wrap">
-        {cats.map(({ label, to, Icon, accent }) => {
+        {cats.map(({ label, to, Icon, accent, search }) => {
           const isActive = active === label;
           return (
             <Link
               key={label}
               to={to}
+              search={(search ?? {}) as never}
               className={cn(
                 accent,
                 "slick tap-44 flex h-11 shrink-0 items-center gap-2 rounded-xl border px-4 text-[13px] font-bold",
