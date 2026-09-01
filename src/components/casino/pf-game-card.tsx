@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 interface Props {
   game: PFGameLite;
-  /** 1-based position; only rendered on the "most played" rail. */
+  /** 1-based position; rendered as a small corner number on ranked rows. */
   rank?: number;
   priority?: boolean;
   loading?: boolean;
@@ -13,8 +13,8 @@ interface Props {
 }
 
 /**
- * Crisp game tile: hairline border, short bottom scrim, no floating badges.
- * Hover is a 2px lift plus a gold hairline — nothing blurred, nothing neon.
+ * Game tile: full artwork, hairline border, centred play overlay on hover/press.
+ * Effects stay crisp — 3px lift, gold hairline, light sweep. No blur, no neon.
  */
 export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
   const [failed, setFailed] = useState(false);
@@ -25,10 +25,7 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
       onClick={() => onPlay(game)}
       disabled={loading}
       aria-label={`Jogar ${game.name}`}
-      className={cn(
-        "tile group relative block w-full overflow-hidden rounded-[8px] border border-border bg-surface text-left",
-        "aspect-[3/4]",
-      )}
+      className="tile sweep group relative block w-full overflow-hidden rounded-[10px] border border-border bg-surface text-left aspect-[3/4]"
     >
       {failed ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-surface p-3 text-center">
@@ -49,7 +46,7 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
             onLoad={() => setLoaded(true)}
             onError={() => setFailed(true)}
             className={cn(
-              "size-full object-cover transition-[transform,opacity] duration-200 ease-out group-hover:scale-[1.02]",
+              "size-full object-cover transition-[transform,opacity] duration-300 ease-out group-hover:scale-[1.05]",
               loaded ? "opacity-100" : "opacity-0",
             )}
             draggable={false}
@@ -57,27 +54,30 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
         </>
       )}
 
-      {/* short scrim only where text sits */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[38%] bg-gradient-to-t from-background via-background/75 to-transparent" />
+      {/* scrim only where the text sits */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-t from-background via-background/70 to-transparent" />
 
-      {rank !== undefined && (
+      {/* centred play affordance */}
+      <div className="pointer-events-none absolute inset-0 grid place-items-center">
+        <span className="grid size-11 scale-90 place-items-center rounded-full bg-gold text-background opacity-0 shadow-[0_6px_18px_-8px_rgba(0,0,0,.9)] transition-[opacity,transform] duration-200 ease-out group-hover:scale-100 group-hover:opacity-100 group-active:scale-100 group-active:opacity-100">
+          {loading ? (
+            <Loader2 className="size-5 animate-spin" />
+          ) : (
+            <Play className="size-4 fill-current" />
+          )}
+        </span>
+      </div>
+
+      {rank !== undefined && rank <= 10 && (
         <span
           className={cn(
-            "font-display pointer-events-none absolute left-1.5 top-1 select-none text-[15px] font-bold leading-none tabular-nums",
-            rank <= 3 ? "text-gold" : "text-foreground/45",
+            "font-display pointer-events-none absolute left-0 top-0 grid h-6 min-w-6 place-items-center rounded-br-[8px] px-1.5 text-[11px] font-bold tabular-nums",
+            rank <= 3 ? "bg-gold text-background" : "bg-background/75 text-foreground/80",
           )}
         >
           {rank}
         </span>
       )}
-
-      <span className="pointer-events-none absolute right-1.5 top-1.5 grid size-7 place-items-center rounded-[6px] bg-background/70 opacity-0 backdrop-blur-[2px] transition-opacity duration-150 group-hover:opacity-100 group-active:opacity-100">
-        {loading ? (
-          <Loader2 className="size-3.5 animate-spin text-gold" />
-        ) : (
-          <Play className="size-3 fill-current text-gold" />
-        )}
-      </span>
 
       {!failed && (
         <div className="pointer-events-none absolute inset-x-0 bottom-0 px-2 pb-1.5">
