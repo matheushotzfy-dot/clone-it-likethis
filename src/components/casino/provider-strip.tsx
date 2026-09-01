@@ -1,31 +1,38 @@
-const providers = [
-  { name: "PG Soft", style: "tracking-tight" },
-  { name: "PRAGMATIC PLAY", style: "tracking-wider" },
-  { name: "SPRIBE", style: "tracking-widest" },
-  { name: "TaDa Gaming", style: "italic" },
-  { name: "SMARTSOFT", style: "tracking-wider" },
-  { name: "BGAMING", style: "tracking-wider" },
-  { name: "HACKSAW", style: "tracking-widest" },
-  { name: "Spinomenal", style: "" },
-  { name: "EVOPLAY", style: "tracking-wider" },
-  { name: "POPOK", style: "tracking-widest" },
-  { name: "NOLIMIT CITY", style: "tracking-wide" },
-  { name: "GALAXSYS", style: "tracking-widest" },
-  { name: "Platipus", style: "" },
-  { name: "IRONDOG", style: "tracking-wide" },
+import { Link } from "@tanstack/react-router";
+import { usePFProviders } from "@/hooks/use-pf-launch";
+
+const fallback = [
+  "PG Soft", "Pragmatic Play", "Spribe", "TaDa Gaming", "Smartsoft",
+  "BGaming", "Hacksaw", "Spinomenal", "Evoplay", "Popok",
+  "Nolimit City", "Galaxsys", "Platipus", "Irondog",
 ];
 
 export function ProviderStrip() {
+  const providersQ = usePFProviders();
+  const names = (providersQ.data ?? []).map((p) => p.name);
+  const list = names.length > 0 ? names.slice(0, 24) : fallback;
+
   return (
-    <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
-      {providers.map((p) => (
-        <div
-          key={p.name}
-          className={`shrink-0 px-6 h-12 rounded-xl bg-popover border border-white/5 flex items-center justify-center text-sm font-bold whitespace-nowrap text-white/80 hover:text-primary hover:border-primary transition-colors cursor-pointer ${p.style}`}
-        >
-          {p.name}
-        </div>
-      ))}
-    </div>
+    <section className="space-y-2.5">
+      <div className="flex items-baseline justify-between">
+        <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+          Provedores
+        </h2>
+        <Link to="/cassino" className="text-[11px] font-bold text-primary hover:underline">
+          Ver todos
+        </Link>
+      </div>
+      <div className="no-scrollbar snap-row -mx-3 flex gap-2 overflow-x-auto px-3 pb-1 md:mx-0 md:px-0">
+        {list.map((name) => (
+          <Link
+            key={name}
+            to="/cassino"
+            className="slick flex h-11 shrink-0 items-center rounded-md border border-border bg-surface/60 px-5 text-[13px] font-bold uppercase tracking-wide text-foreground/70 hover:border-primary/60 hover:text-primary"
+          >
+            {name}
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 }
