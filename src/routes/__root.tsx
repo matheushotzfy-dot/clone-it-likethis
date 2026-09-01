@@ -58,14 +58,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "SANTOSBET — Cassino, Esportes e Apostas" },
-      { name: "description", content: "Site de apostas e cassino online — projeto de demonstração." },
+      { title: "SANTOSBET — Cassino Online" },
+      { name: "description", content: "Cassino online com slots, crash games e mesas ao vivo dos melhores provedores." },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" },
     ],
   }),
   shellComponent: RootShell,

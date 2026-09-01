@@ -15,7 +15,6 @@ import { Route as RegistroRouteImport } from './routes/registro'
 import { Route as PromocoesRouteImport } from './routes/promocoes'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndiqueAmigosRouteImport } from './routes/indique-amigos'
-import { Route as EsportesRouteImport } from './routes/esportes'
 import { Route as CassinoRouteImport } from './routes/cassino'
 import { Route as AoVivoRouteImport } from './routes/ao-vivo'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -73,11 +72,6 @@ const LoginRoute = LoginRouteImport.update({
 const IndiqueAmigosRoute = IndiqueAmigosRouteImport.update({
   id: '/indique-amigos',
   path: '/indique-amigos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EsportesRoute = EsportesRouteImport.update({
-  id: '/esportes',
-  path: '/esportes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CassinoRoute = CassinoRouteImport.update({
@@ -227,7 +221,6 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/ao-vivo': typeof AoVivoRoute
   '/cassino': typeof CassinoRoute
-  '/esportes': typeof EsportesRoute
   '/indique-amigos': typeof IndiqueAmigosRoute
   '/login': typeof LoginRoute
   '/promocoes': typeof PromocoesRoute
@@ -262,7 +255,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/ao-vivo': typeof AoVivoRoute
   '/cassino': typeof CassinoRoute
-  '/esportes': typeof EsportesRoute
   '/indique-amigos': typeof IndiqueAmigosRoute
   '/login': typeof LoginRoute
   '/promocoes': typeof PromocoesRoute
@@ -300,7 +292,6 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/ao-vivo': typeof AoVivoRoute
   '/cassino': typeof CassinoRoute
-  '/esportes': typeof EsportesRoute
   '/indique-amigos': typeof IndiqueAmigosRoute
   '/login': typeof LoginRoute
   '/promocoes': typeof PromocoesRoute
@@ -338,7 +329,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/ao-vivo'
     | '/cassino'
-    | '/esportes'
     | '/indique-amigos'
     | '/login'
     | '/promocoes'
@@ -373,7 +363,6 @@ export interface FileRouteTypes {
     | '/'
     | '/ao-vivo'
     | '/cassino'
-    | '/esportes'
     | '/indique-amigos'
     | '/login'
     | '/promocoes'
@@ -410,7 +399,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/ao-vivo'
     | '/cassino'
-    | '/esportes'
     | '/indique-amigos'
     | '/login'
     | '/promocoes'
@@ -448,7 +436,6 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   AoVivoRoute: typeof AoVivoRoute
   CassinoRoute: typeof CassinoRoute
-  EsportesRoute: typeof EsportesRoute
   IndiqueAmigosRoute: typeof IndiqueAmigosRoute
   LoginRoute: typeof LoginRoute
   PromocoesRoute: typeof PromocoesRoute
@@ -507,13 +494,6 @@ declare module '@tanstack/react-router' {
       path: '/indique-amigos'
       fullPath: '/indique-amigos'
       preLoaderRoute: typeof IndiqueAmigosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/esportes': {
-      id: '/esportes'
-      path: '/esportes'
-      fullPath: '/esportes'
-      preLoaderRoute: typeof EsportesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cassino': {
@@ -769,7 +749,6 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   AoVivoRoute: AoVivoRoute,
   CassinoRoute: CassinoRoute,
-  EsportesRoute: EsportesRoute,
   IndiqueAmigosRoute: IndiqueAmigosRoute,
   LoginRoute: LoginRoute,
   PromocoesRoute: PromocoesRoute,

@@ -1,43 +1,63 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { SiteShell } from "@/components/layout/site-shell";
-import { PFGameCard } from "@/components/casino/pf-game-card";
+import { CategoryPills } from "@/components/casino/category-pills";
+import { CatalogHeader, GameGrid, LoadMore, InlineSpinner } from "@/components/casino/catalog-grid";
 import { usePFGames, usePFLaunch } from "@/hooks/use-pf-launch";
 import { splitPFGamesByCategory } from "@/lib/pf-game-classification";
-import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/ao-vivo")({
-  head: () => ({ meta: [{ title: "Ao Vivo — SANTOSBET" }] }),
+  head: () => ({
+    meta: [
+      { title: "Cassino Ao Vivo — Mesas com crupiês reais | SANTOSBET" },
+      { name: "description", content: "Roleta, blackjack, bacará e game shows ao vivo com crupiês reais transmitidos em alta definição." },
+      { property: "og:title", content: "Cassino Ao Vivo | SANTOSBET" },
+      { property: "og:description", content: "Mesas ao vivo com crupiês reais em alta definição." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: Page,
 });
 
 function Page() {
+  const [q, setQ] = useState("");
+  const [visibleCount, setVisibleCount] = useState(60);
   const gamesQ = usePFGames();
   const { play, launchingCode } = usePFLaunch();
 
   const live = useMemo(() => {
-    const list = gamesQ.data ?? [];
-    return splitPFGamesByCategory(list).live;
-  }, [gamesQ.data]);
+    const list = splitPFGamesByCategory(gamesQ.data ?? []).live;
+    const term = q.trim().toLowerCase();
+    if (!term) return list;
+    return list.filter(
+      (g) => g.name.toLowerCase().includes(term) || g.provider.name.toLowerCase().includes(term),
+    );
+  }, [gamesQ.data, q]);
+
+  const visible = live.slice(0, visibleCount);
+  const remaining = live.length - visible.length;
 
   return (
     <SiteShell>
-      <div className="max-w-7xl mx-auto px-3 md:px-6 py-6 space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Cassino Ao Vivo</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {gamesQ.isLoading ? "Carregando..." : `${live.length} mesas com crupiês reais`}
-          </p>
-        </div>
-        {gamesQ.isLoading ? (
-          <div className="min-h-[40vh] flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
-            {live.map((g, i) => (
-              <PFGameCard key={`${g.provider.name}-${g.game_code}`} game={g} priority={i < 12} loading={launchingCode === g.game_code} onPlay={play} />
-            ))}
-          </div>
-        )}
+      <div className="mx-auto max-w-[1600px] space-y-6 px-3 py-5 md:px-6 md:py-7">
+        <CatalogHeader
+          title="Cassino Ao Vivo"
+          subtitle={gamesQ.isLoading ? "Carregando mesas…" : `${live.length} mesas com crupiês reais`}
+          q={q}
+          onQ={setQ}
+          placeholder="Buscar mesa ou provedor…"
+        />
+        <CategoryPills active="Ao Vivo" />
+        <GameGrid
+          games={visible}
+          loading={gamesQ.isLoading}
+          launchingCode={launchingCode}
+          onPlay={play}
+          emptyLabel="Nenhuma mesa encontrada."
+        />
+        {remaining > 0 && <LoadMore remaining={remaining} onClick={() => setVisibleCount((c) => c + 60)} />}
+        {gamesQ.isFetching && !gamesQ.isLoading && <InlineSpinner />}
       </div>
     </SiteShell>
   );
