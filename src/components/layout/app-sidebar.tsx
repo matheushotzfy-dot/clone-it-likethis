@@ -1,81 +1,83 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+import { Sidebar, SidebarContent, useSidebar } from "@/components/ui/sidebar";
 import {
-  Sidebar, SidebarContent,
-  useSidebar,
-} from "@/components/ui/sidebar";
-import { Target, Trophy, Gift, Compass, Ticket, ChevronDown, ChevronLeft, Circle } from "lucide-react";
+  Flame, Gamepad2, Rocket, MonitorPlay, LayoutGrid, Trophy, Gift,
+  Users, ChevronDown, ChevronsLeft, Wallet, LifeBuoy,
+} from "lucide-react";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
+import { useAuthDialog } from "@/components/auth/auth-dialog-context";
 
-const bigButtons = [
-  { title: "Missões", url: "/promocoes", icon: Target, gradient: "from-violet-600 to-indigo-700" },
-  { title: "Torneios", url: "/torneios", icon: Trophy, gradient: "from-pink-500 to-purple-700" },
-  { title: "Resgatar", url: "/promocoes", icon: Gift, gradient: "from-orange-400 to-yellow-500" },
-  { title: "Roleta", url: "/ao-vivo", icon: Compass, gradient: "from-green-500 to-emerald-600" },
-  { title: "Bolões", url: "/esportes", icon: Ticket, gradient: "from-orange-500 via-red-500 to-pink-500" },
+type Item = { label: string; to: string; icon: typeof Flame };
+
+const jogar: Item[] = [
+  { label: "Populares", to: "/", icon: Flame },
+  { label: "Cassino", to: "/cassino", icon: LayoutGrid },
+  { label: "Slots", to: "/slots", icon: Gamepad2 },
+  { label: "Crash", to: "/cassino", icon: Rocket },
+  { label: "Ao Vivo", to: "/ao-vivo", icon: MonitorPlay },
 ];
 
-const esportes: { label: string; slug: string }[] = [
-  { label: "Copa do Mundo FIFA", slug: "fifa.world" },
-  { label: "Mundial de Clubes", slug: "fifa.cwc" },
-  { label: "Brasileirão Série A", slug: "bra.1" },
-  { label: "Brasileirão Série B", slug: "bra.2" },
-  { label: "Copa do Brasil", slug: "bra.copa_do_brazil" },
-  { label: "Libertadores", slug: "conmebol.libertadores" },
-  { label: "Sul-Americana", slug: "conmebol.sudamericana" },
-  { label: "Champions League", slug: "uefa.champions" },
-  { label: "Premier League", slug: "eng.1" },
-  { label: "La Liga", slug: "esp.1" },
+const extras: Item[] = [
+  { label: "Torneios", to: "/torneios", icon: Trophy },
+  { label: "Promoções", to: "/promocoes", icon: Gift },
+  { label: "Indique e ganhe", to: "/indique-amigos", icon: Users },
 ];
-const cassino = ["Slots", "Crash", "Ao Vivo", "Mesas", "Bingo"];
-const promocoes = ["Boas-vindas", "Cashback", "Indique e Ganhe"];
 
-function EsportesSection() {
-  const [open, setOpen] = useState(true);
+function Row({ item, active, collapsed }: { item: Item; active: boolean; collapsed: boolean }) {
+  const Icon = item.icon;
   return (
-    <div className="border-t border-white/10 px-3 py-2">
-      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between text-white font-bold text-sm py-2">
-        <span>Esportes</span>
-        <ChevronDown className={`size-4 transition-transform ${open ? "" : "-rotate-90"}`} />
-      </button>
-      {open && (
-        <ul className="space-y-0.5 pb-2">
-          {esportes.map((it) => (
-            <li key={it.slug}>
-              <Link
-                to="/esportes"
-                search={{ liga: it.slug }}
-                className="flex items-center gap-2 text-white/85 hover:text-primary hover:bg-white/5 text-sm py-1.5 px-2 rounded-md transition-colors"
-              >
-                <Circle className="size-3 opacity-60" />
-                <span className="truncate">{it.label}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+    <Link
+      to={item.to}
+      title={item.label}
+      className={cn(
+        "slick group relative flex h-10 items-center gap-3 rounded-md px-3 text-sm font-semibold",
+        collapsed && "justify-center px-0",
+        active
+          ? "bg-surface text-primary"
+          : "text-foreground/70 hover:bg-surface/70 hover:text-foreground",
       )}
-    </div>
+    >
+      <span
+        className={cn(
+          "absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-primary transition-opacity",
+          active ? "opacity-100" : "opacity-0",
+        )}
+      />
+      <Icon className="size-[18px] shrink-0" strokeWidth={1.75} />
+      {!collapsed && <span className="truncate">{item.label}</span>}
+    </Link>
   );
 }
 
-function Section({ title, items }: { title: string; items: string[] }) {
+function Group({
+  title, items, path, collapsed,
+}: { title: string; items: Item[]; path: string; collapsed: boolean }) {
   const [open, setOpen] = useState(true);
+  if (collapsed) {
+    return (
+      <div className="space-y-1 px-2 py-2">
+        {items.map((it) => (
+          <Row key={it.label} item={it} active={path === it.to} collapsed />
+        ))}
+      </div>
+    );
+  }
   return (
-    <div className="border-t border-white/10 px-3 py-2">
-      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between text-white font-bold text-sm py-2">
+    <div className="border-t border-border px-2 py-2 first:border-t-0">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between px-1 py-2 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground"
+      >
         <span>{title}</span>
-        <ChevronDown className={`size-4 transition-transform ${open ? "" : "-rotate-90"}`} />
+        <ChevronDown className={cn("size-3.5 transition-transform", !open && "-rotate-90")} strokeWidth={2} />
       </button>
       {open && (
-        <ul className="space-y-0.5 pb-2">
+        <div className="space-y-1 pb-1">
           {items.map((it) => (
-            <li key={it}>
-              <Link to="/esportes" className="flex items-center gap-2 text-white/85 hover:text-primary hover:bg-white/5 text-sm py-1.5 px-2 rounded-md transition-colors">
-                <Circle className="size-3 opacity-60" />
-                <span>{it}</span>
-              </Link>
-            </li>
+            <Row key={it.label} item={it} active={path === it.to} collapsed={false} />
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );
@@ -85,40 +87,56 @@ export function AppSidebar() {
   const { state, toggleSidebar } = useSidebar();
   const collapsed = state === "collapsed";
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const { open } = useAuthDialog();
 
   return (
-    <Sidebar collapsible="icon" className="border-r-0">
-      <SidebarContent className="bg-brand text-white">
+    <Sidebar collapsible="icon" className="border-r border-border">
+      <SidebarContent className="bg-sidebar text-sidebar-foreground custom-scrollbar">
         {!collapsed && (
-          <div className="flex items-center justify-between px-4 pt-3 pb-2">
-            <span className="text-xs uppercase font-bold tracking-wide text-white/90">Divirta-se com</span>
-            <button onClick={toggleSidebar} className="size-6 rounded bg-brand-2 hover:bg-primary hover:text-primary-foreground flex items-center justify-center">
-              <ChevronLeft className="size-4" />
+          <div className="flex items-center justify-between px-3 pb-1 pt-3">
+            <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+              Navegar
+            </span>
+            <button
+              onClick={toggleSidebar}
+              className="slick grid size-7 place-items-center rounded-md border border-border text-foreground/70 hover:border-primary hover:text-primary"
+              aria-label="Recolher menu"
+            >
+              <ChevronsLeft className="size-4" strokeWidth={1.75} />
             </button>
           </div>
         )}
 
-        <div className="px-2 space-y-2">
-          {bigButtons.map((b) => {
-            const active = path === b.url;
-            return (
-              <Link
-                key={b.title}
-                to={b.url}
-                className={`flex items-center justify-between gap-2 px-3 h-12 rounded-xl bg-gradient-to-r ${b.gradient} text-white font-bold shadow-md hover:brightness-110 transition-all ${active ? "ring-2 ring-primary" : ""}`}
-              >
-                {!collapsed && <span className="text-sm">{b.title}</span>}
-                <b.icon className="size-5 ml-auto" />
-              </Link>
-            );
-          })}
+        <div className="px-2 pt-2">
+          <button
+            onClick={() => open("deposit")}
+            title="Depositar"
+            className={cn(
+              "slick shine relative flex h-10 w-full items-center gap-2 overflow-hidden rounded-md bg-primary px-3 text-sm font-bold text-primary-foreground hover:brightness-110",
+              collapsed && "justify-center px-0",
+            )}
+          >
+            <Wallet className="size-[18px] shrink-0" strokeWidth={2} />
+            {!collapsed && <span>Depositar</span>}
+          </button>
+        </div>
+
+        <div className="mt-2">
+          <Group title="Jogar" items={jogar} path={path} collapsed={collapsed} />
+          <Group title="Mais" items={extras} path={path} collapsed={collapsed} />
         </div>
 
         {!collapsed && (
-          <div className="mt-3">
-            <EsportesSection />
-            <Section title="Cassino" items={cassino} />
-            <Section title="Promoções" items={promocoes} />
+          <div className="mt-auto border-t border-border p-3">
+            <div className="panel-flat flex items-start gap-2.5 rounded-md p-3">
+              <LifeBuoy className="mt-0.5 size-4 shrink-0 text-primary" strokeWidth={1.75} />
+              <div className="min-w-0">
+                <p className="text-xs font-bold">Suporte 24h</p>
+                <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+                  Atendimento por chat todos os dias.
+                </p>
+              </div>
+            </div>
           </div>
         )}
       </SidebarContent>
