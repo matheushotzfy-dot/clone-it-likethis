@@ -72,12 +72,12 @@ function Index() {
       <div className="mx-auto max-w-[1600px] space-y-6 px-3 py-4 md:space-y-9 md:px-6 md:py-6">
         {/* asymmetric top: banner 60 / ranking 40 */}
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-5">
-          <BannerCarousel />
+          <BannerCarousel aspectClass="aspect-[16/9] sm:aspect-[2.4/1] lg:aspect-[1.92/1]" />
 
           <aside className="space-y-2.5">
             <div className="flex items-end justify-between border-b border-border pb-2">
               <h2 className="font-display text-[13px] font-bold uppercase tracking-[0.18em]">
-                Top 8 do momento
+                Top 5 do momento
               </h2>
               <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
                 Agora
@@ -85,12 +85,12 @@ function Index() {
             </div>
             {gamesQ.isLoading ? (
               <div className="space-y-2">
-                {Array.from({ length: 8 }).map((_, i) => (
+                {Array.from({ length: 5 }).map((_, i) => (
                   <div key={i} className="skeleton h-[52px] rounded-[6px]" />
                 ))}
               </div>
             ) : (
-              <TopList items={top.slice(0, 8)} launchingCode={launchingCode} onPlay={play} />
+              <TopList items={top.slice(0, 5)} launchingCode={launchingCode} onPlay={play} />
             )}
           </aside>
         </div>
