@@ -1,190 +1,66 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { SiteShell } from "@/components/layout/site-shell";
-import { getPFProviders, getPFGames, launchPFGame } from "@/lib/playfivers.functions";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Search, Play, Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import { useAuth } from "@/hooks/use-auth";
-import { useAuthDialog } from "@/components/auth/auth-dialog-context";
-import { getMyProfile } from "@/lib/profile.functions";
+import { CategoryPills } from "@/components/casino/category-pills";
+import { CatalogHeader, ProviderFilter, GameGrid, LoadMore, InlineSpinner } from "@/components/casino/catalog-grid";
+import { usePFGames, usePFProviders, usePFLaunch } from "@/hooks/use-pf-launch";
+import { splitPFGamesByCategory } from "@/lib/pf-game-classification";
 
 export const Route = createFileRoute("/slots")({
   head: () => ({
     meta: [
-      { title: "Slots — SANTOSBET" },
-      { name: "description", content: "Mais de 5.000 slots e jogos de cassino ao vivo dos melhores provedores." },
+      { title: "Slots — Milhares de jogos | SANTOSBET" },
+      { name: "description", content: "Slots dos melhores provedores: PG Soft, Pragmatic, Hacksaw e mais. Gire com PIX instantâneo." },
+      { property: "og:title", content: "Slots — Milhares de jogos | SANTOSBET" },
+      { property: "og:description", content: "Slots dos melhores provedores com PIX instantâneo." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: SlotsPage,
 });
 
 function SlotsPage() {
-  const { user } = useAuth();
-  const { open } = useAuthDialog();
-  const fetchProviders = useServerFn(getPFProviders);
-  const fetchGames = useServerFn(getPFGames);
-  const fetchProfile = useServerFn(getMyProfile);
-  const launch = useServerFn(launchPFGame);
-
-  const [providerId, setProviderId] = useState<number | null>(null);
   const [q, setQ] = useState("");
-  const [launchingCode, setLaunchingCode] = useState<string | null>(null);
+  const [providerId, setProviderId] = useState<number | null>(null);
   const [visibleCount, setVisibleCount] = useState(60);
 
-  const providersQ = useQuery({
-    queryKey: ["pf-providers"],
-    queryFn: () => fetchProviders(),
-    staleTime: 5 * 60_000,
+  const providersQ = usePFProviders();
+  const gamesQ = usePFGames(providerId ?? undefined, {
+    limit: Math.max(visibleCount + 60, 120),
+    q,
   });
-  const gamesQ = useQuery({
-    queryKey: ["pf-games", providerId ?? "all", visibleCount, q.trim()],
-    queryFn: () => fetchGames({ data: { providerId: providerId ?? undefined, limit: Math.max(visibleCount + 60, 120), q: q.trim() || undefined } }),
-    staleTime: 5 * 60_000,
-  });
-  const profileQ = useQuery({
-    queryKey: ["my-profile"],
-    queryFn: () => fetchProfile(),
-    enabled: !!user,
-    staleTime: 20_000,
-  });
+  const { play, launchingCode } = usePFLaunch();
 
-  const filtered = useMemo(() => {
-    return gamesQ.data ?? [];
-  }, [gamesQ.data]);
-
-  // Reset pagination when filters/search change
-  const visible = filtered.slice(0, visibleCount);
-  const hasMore = filtered.length > visible.length;
+  const slots = useMemo(
+    () => splitPFGamesByCategory(gamesQ.data ?? []).slots,
+    [gamesQ.data],
+  );
+  const visible = slots.slice(0, visibleCount);
+  const remaining = slots.length - visible.length;
 
   useEffect(() => { setVisibleCount(60); }, [providerId, q]);
 
-  async function handlePlay(game: { game_code: string; provider: { name: string }; original: boolean; name: string }) {
-    if (!user) { open("register"); return; }
-    if (!profileQ.data?.hasDeposited) { open("deposit"); return; }
-    const gameWindow = window.open("about:blank", "_blank");
-    setLaunchingCode(game.game_code);
-    try {
-      const res = await launch({
-        data: {
-          game_code: game.game_code,
-          provider: game.provider.name,
-          game_original: game.original,
-          lang: "pt",
-        },
-      });
-      if (!res.ok) {
-        gameWindow?.close();
-        toast.error(res.error);
-        return;
-      }
-      if (gameWindow) {
-        gameWindow.opener = null;
-        gameWindow.location.replace(res.launch_url);
-      } else {
-        window.location.assign(res.launch_url);
-      }
-    } catch (e: any) {
-      gameWindow?.close();
-      toast.error(e?.message ?? "Não foi possível abrir o jogo");
-    } finally {
-      setLaunchingCode(null);
-    }
-  }
-
   return (
     <SiteShell>
-      <div className="max-w-7xl mx-auto px-3 md:px-6 py-6 space-y-6">
-        <div className="flex items-end justify-between flex-wrap gap-3">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold">Slots</h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              {gamesQ.isLoading ? "Carregando..." : `${filtered.length} jogos disponíveis`}
-            </p>
-          </div>
-          <div className="relative w-full md:w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-            <Input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Buscar jogo ou provedor..."
-              className="pl-10 h-11 bg-surface"
-            />
-          </div>
-        </div>
-
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-          <Button
-            variant={providerId === null ? "default" : "outline"}
-            size="sm"
-            onClick={() => setProviderId(null)}
-            className="shrink-0"
-          >Todos</Button>
-          {(providersQ.data ?? []).map((p) => (
-            <Button
-              key={p.id}
-              variant={providerId === p.id ? "default" : "outline"}
-              size="sm"
-              onClick={() => setProviderId(p.id)}
-              className="shrink-0"
-            >
-              {p.name}
-            </Button>
-          ))}
-        </div>
-
-        {gamesQ.isLoading ? (
-          <div className="min-h-[40vh] flex items-center justify-center">
-            <Loader2 className="size-8 animate-spin text-primary" />
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
-              {visible.map((g) => (
-                <button
-                  key={`${g.provider.name}-${g.game_code}`}
-                  onClick={() => handlePlay(g)}
-                  disabled={launchingCode === g.game_code}
-                  className="relative group block aspect-[3/4] rounded-2xl overflow-hidden bg-surface border border-white/5 shadow-lg shadow-black/30 hover:border-primary/60 hover:shadow-primary/20 transition-all hover:-translate-y-0.5 touch-manipulation"
-                >
-                  <img
-                    src={g.image_url}
-                    alt={g.name}
-                    loading="lazy"
-                    decoding="async"
-                    className="w-full h-full object-cover bg-surface-2"
-                    draggable={false}
-                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = "0.2"; }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
-                    {launchingCode === g.game_code ? (
-                      <Loader2 className="size-9 animate-spin text-white" />
-                    ) : (
-                      <div className="size-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-xl shadow-primary/40">
-                        <Play className="size-6 fill-current" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-2.5">
-                    <p className="text-xs md:text-sm font-bold text-white truncate">{g.name}</p>
-                    <p className="text-[10px] md:text-xs text-white/60 truncate">{g.provider.name}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-            {hasMore && (
-              <div className="flex justify-center pt-4">
-                <Button onClick={() => setVisibleCount((c) => c + 60)} variant="outline" size="lg" className="min-w-[200px]">
-                  Carregar mais ({filtered.length - visible.length})
-                </Button>
-              </div>
-            )}
-          </>
-        )}
+      <div className="mx-auto max-w-[1600px] space-y-6 px-3 py-5 md:px-6 md:py-7">
+        <CatalogHeader
+          title="Slots"
+          subtitle={gamesQ.isLoading ? "Carregando catálogo…" : `${slots.length} slots disponíveis`}
+          q={q}
+          onQ={setQ}
+        />
+        <CategoryPills active="Slots" />
+        <ProviderFilter providers={providersQ.data ?? []} value={providerId} onChange={setProviderId} />
+        <GameGrid
+          games={visible}
+          loading={gamesQ.isLoading}
+          launchingCode={launchingCode}
+          onPlay={play}
+          emptyLabel="Nenhum slot encontrado com esses filtros."
+        />
+        {remaining > 0 && <LoadMore remaining={remaining} onClick={() => setVisibleCount((c) => c + 60)} />}
+        {gamesQ.isFetching && !gamesQ.isLoading && <InlineSpinner />}
       </div>
     </SiteShell>
   );
