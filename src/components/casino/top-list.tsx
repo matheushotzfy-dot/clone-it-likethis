@@ -19,7 +19,7 @@ export function TopList({ items, launchingCode, onPlay }: Props) {
           key={`t-${g.game_code}-${i}`}
           onClick={() => onPlay(g)}
           disabled={launchingCode === g.game_code}
-          className="group flex w-full items-center gap-3 py-2 text-left transition-colors hover:bg-surface/50"
+          className="group flex w-full items-center gap-3 py-1.5 text-left transition-colors hover:bg-surface/50"
         >
           <span
             className={cn(
@@ -34,7 +34,7 @@ export function TopList({ items, launchingCode, onPlay }: Props) {
             alt={g.name}
             loading="lazy"
             decoding="async"
-            className="size-11 shrink-0 rounded-[6px] border border-border object-cover"
+            className="size-10 shrink-0 rounded-[6px] border border-border object-cover"
             draggable={false}
           />
           <span className="min-w-0 flex-1">
