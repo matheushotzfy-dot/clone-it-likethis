@@ -17,11 +17,6 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
 
   return (
     <div className="group relative">
-      {rank !== undefined && (
-        <span className="rank-number pointer-events-none absolute -left-1 top-1/2 z-0 -translate-y-1/2 select-none text-5xl opacity-60 md:text-7xl">
-          {rank}
-        </span>
-      )}
       <button
         onClick={() => onPlay(game)}
         disabled={loading}
@@ -29,7 +24,6 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
         className={cn(
           "slick relative z-10 block w-full overflow-hidden rounded-[10px] border border-border bg-surface text-left",
           "aspect-[3/4] hover:border-primary/70",
-          rank !== undefined && "ml-4 md:ml-6",
         )}
       >
         {failed ? (
@@ -69,10 +63,18 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
           </span>
         </div>
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 p-2">
-          <p className="truncate text-[11px] font-bold leading-tight md:text-xs">{game.name}</p>
-          <p className="truncate text-[10px] text-muted-foreground">{game.provider.name}</p>
-        </div>
+        {rank !== undefined && (
+          <span className="rank-number pointer-events-none absolute left-1.5 top-0.5 z-10 select-none text-3xl leading-none md:text-4xl">
+            {rank}
+          </span>
+        )}
+
+        {!failed && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 p-2">
+            <p className="truncate text-[11px] font-bold leading-tight md:text-xs">{game.name}</p>
+            <p className="truncate text-[10px] text-muted-foreground">{game.provider.name}</p>
+          </div>
+        )}
       </button>
     </div>
   );

@@ -76,7 +76,16 @@ function Index() {
   const all = gamesQ.data ?? [];
   const { live, crash, slots, top } = useMemo(() => {
     const grouped = splitPFGamesByCategory(all);
-    return { ...grouped, top: [...grouped.slots, ...grouped.crash, ...grouped.live].slice(0, 8) };
+    const seen = new Set<string>();
+    const top: PFGameLite[] = [];
+    for (const g of [...grouped.slots, ...grouped.crash, ...grouped.live]) {
+      const key = g.name.trim().toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      top.push(g);
+      if (top.length === 8) break;
+    }
+    return { ...grouped, top };
   }, [all]);
 
   const filtered = q.trim()
