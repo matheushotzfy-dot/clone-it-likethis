@@ -37,7 +37,7 @@ export function BannerCarousel() {
 
   return (
     <div className="space-y-2.5">
-      <div className="relative w-full overflow-hidden rounded-[10px] border border-border bg-surface aspect-[3/2] sm:aspect-[2/1] md:aspect-[1920/560]">
+      <div className="relative w-full overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_20px_50px_-30px_rgba(0,0,0,.9)] aspect-[16/9] sm:aspect-[2.4/1] md:aspect-[1920/560]">
         {slides.map((s, i) => {
           const desktopImage = "desktop_image_url" in s ? s.desktop_image_url : null;
           const content = (
@@ -68,19 +68,27 @@ export function BannerCarousel() {
             <span key={s.id}>{content}</span>
           );
         })}
+
+        {/* subtle inner light so the banner blends with the new surfaces */}
+        <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10" />
       </div>
+
       {slides.length > 1 && (
-        <div className="flex justify-center gap-1.5">
+        <div className="flex justify-center gap-2">
           {slides.map((s, i) => (
             <button
               key={s.id}
               onClick={() => setIdx(i)}
-              className={cn(
-                "h-[3px] rounded-full transition-all duration-300",
-                i === idx ? "w-10 bg-primary" : "w-4 bg-foreground/20 hover:bg-foreground/40",
-              )}
+              className="grid h-6 place-items-center px-0.5"
               aria-label={`Banner ${i + 1}`}
-            />
+            >
+              <span
+                className={cn(
+                  "h-1.5 rounded-full transition-all duration-300",
+                  i === idx ? "w-9 bg-primary cta-glow" : "w-2.5 bg-foreground/25 hover:bg-foreground/50",
+                )}
+              />
+            </button>
           ))}
         </div>
       )}

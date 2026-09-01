@@ -1,11 +1,13 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Search, Flame, Rocket, MonitorPlay, Gamepad2, ChevronRight, Loader2 } from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
+import { Search, Flame, Rocket, MonitorPlay, Gamepad2, Loader2, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { SiteShell } from "@/components/layout/site-shell";
 import { BannerCarousel } from "@/components/casino/banner-carousel";
 import { PFGameCard } from "@/components/casino/pf-game-card";
 import { CategoryPills } from "@/components/casino/category-pills";
 import { ProviderStrip } from "@/components/casino/provider-strip";
+import { TrustBar } from "@/components/casino/trust-bar";
+import { GameRail } from "@/components/casino/game-rail";
 import { usePFGames, usePFLaunch, type PFGameLite } from "@/hooks/use-pf-launch";
 import { splitPFGamesByCategory } from "@/lib/pf-game-classification";
 
@@ -25,51 +27,8 @@ export const Route = createFileRoute("/")({
 
 const GRID = "grid grid-cols-3 gap-2.5 sm:grid-cols-4 md:grid-cols-6 md:gap-3 xl:grid-cols-8";
 
-function Rail({
-  title, Icon, items, play, launchingCode, to, ranked,
-}: {
-  title: string;
-  Icon: typeof Flame;
-  items: PFGameLite[];
-  play: (g: PFGameLite) => void;
-  launchingCode: string | null;
-  to: string;
-  ranked?: boolean;
-}) {
-  if (items.length === 0) return null;
-  return (
-    <section className="space-y-3">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="flex min-w-0 items-center gap-2 text-sm font-bold uppercase tracking-wide">
-          <Icon className="size-4 shrink-0 text-primary" strokeWidth={2} />
-          <span className="truncate">{title}</span>
-        </h2>
-        <Link
-          to={to}
-          className="slick flex shrink-0 items-center gap-1 rounded-md border border-border px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-foreground/70 hover:border-primary hover:text-primary"
-        >
-          Ver mais <ChevronRight className="size-3.5" strokeWidth={2} />
-        </Link>
-      </div>
-      <div className={GRID}>
-        {items.slice(0, 16).map((g, i) => (
-          <PFGameCard
-            key={`${title}-${g.game_code}-${i}`}
-            game={g}
-            rank={ranked ? i + 1 : undefined}
-            priority={i < 8}
-            loading={launchingCode === g.game_code}
-            onPlay={play}
-          />
-        ))}
-      </div>
-    </section>
-  );
-}
-
 function Index() {
   const [q, setQ] = useState("");
-  const navigate = useNavigate();
   const gamesQ = usePFGames();
   const { play, launchingCode } = usePFLaunch();
 
@@ -83,61 +42,60 @@ function Index() {
       if (seen.has(key)) continue;
       seen.add(key);
       top.push(g);
-      if (top.length === 8) break;
+      if (top.length === 18) break;
     }
     return { ...grouped, top };
   }, [all]);
 
-  const filtered = q.trim()
+  const term = q.trim().toLowerCase();
+  const filtered = term
     ? all.filter(
-        (g) =>
-          g.name.toLowerCase().includes(q.toLowerCase()) ||
-          g.provider.name.toLowerCase().includes(q.toLowerCase()),
+        (g) => g.name.toLowerCase().includes(term) || g.provider.name.toLowerCase().includes(term),
       )
     : null;
 
   return (
     <SiteShell>
-      <div className="mx-auto max-w-[1600px] space-y-7 px-3 py-4 md:px-6 md:py-6">
+      <div className="app-glow mx-auto max-w-[1600px] space-y-6 px-3 py-4 md:space-y-8 md:px-6 md:py-6">
         <BannerCarousel />
 
-        <div className="flex flex-col gap-3 md:flex-row md:items-center">
-          <form
-            onSubmit={(e) => { e.preventDefault(); }}
-            className="relative flex-1"
-          >
-            <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.75} />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Buscar por jogo ou provedor…"
-              aria-label="Buscar jogo"
-              className="h-12 w-full rounded-md border border-border bg-surface/60 pl-11 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-            />
-          </form>
-          <button
-            onClick={() => navigate({ to: "/cassino" })}
-            className="slick h-12 rounded-md border border-border px-5 text-[13px] font-bold uppercase tracking-wide text-foreground/75 hover:border-primary hover:text-primary"
-          >
-            Catálogo completo
-          </button>
-        </div>
+        <TrustBar />
 
         <CategoryPills active="Populares" />
+
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" strokeWidth={2} />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Buscar jogo ou provedor…"
+            aria-label="Buscar jogo"
+            className="surface-grad h-11 w-full rounded-xl border border-border pl-11 pr-11 text-sm font-semibold text-foreground placeholder:font-normal placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+          />
+          {q && (
+            <button
+              onClick={() => setQ("")}
+              aria-label="Limpar busca"
+              className="absolute right-3 top-1/2 grid size-7 -translate-y-1/2 place-items-center rounded-lg text-muted-foreground hover:text-foreground"
+            >
+              <X className="size-4" strokeWidth={2.25} />
+            </button>
+          )}
+        </div>
 
         {gamesQ.isLoading ? (
           <div className={GRID}>
             {Array.from({ length: 16 }).map((_, i) => (
-              <div key={i} className="skeleton aspect-[3/4] rounded-[10px]" />
+              <div key={i} className="skeleton aspect-[3/4] rounded-xl" />
             ))}
           </div>
         ) : filtered ? (
           <section className="space-y-3">
-            <h2 className="text-sm font-bold uppercase tracking-wide">
+            <h2 className="font-display text-sm font-extrabold uppercase tracking-wide">
               {filtered.length} resultado{filtered.length === 1 ? "" : "s"} para “{q.trim()}”
             </h2>
             {filtered.length === 0 ? (
-              <p className="panel p-6 text-sm text-muted-foreground">
+              <p className="panel surface-grad p-6 text-sm text-muted-foreground">
                 Nenhum jogo encontrado. Tente outro termo.
               </p>
             ) : (
@@ -156,10 +114,46 @@ function Index() {
           </section>
         ) : (
           <>
-            <Rail title="Mais jogados agora" Icon={Flame} items={top} play={play} launchingCode={launchingCode} to="/cassino" ranked />
-            <Rail title="Crash Games" Icon={Rocket} items={crash} play={play} launchingCode={launchingCode} to="/cassino" />
-            <Rail title="Cassino Ao Vivo" Icon={MonitorPlay} items={live} play={play} launchingCode={launchingCode} to="/ao-vivo" />
-            <Rail title="Slots" Icon={Gamepad2} items={slots} play={play} launchingCode={launchingCode} to="/slots" />
+            <GameRail
+              title="Mais jogados agora"
+              Icon={Flame}
+              accent="hot"
+              badge="Em alta"
+              items={top}
+              ranked
+              priority
+              to="/cassino"
+              launchingCode={launchingCode}
+              onPlay={play}
+            />
+            <GameRail
+              title="Crash Games"
+              Icon={Rocket}
+              accent="crash"
+              items={crash}
+              to="/cassino"
+              launchingCode={launchingCode}
+              onPlay={play}
+            />
+            <GameRail
+              title="Cassino Ao Vivo"
+              Icon={MonitorPlay}
+              accent="live"
+              badge="Crupiê real"
+              items={live}
+              to="/ao-vivo"
+              launchingCode={launchingCode}
+              onPlay={play}
+            />
+            <GameRail
+              title="Slots"
+              Icon={Gamepad2}
+              accent="slots"
+              items={slots}
+              to="/slots"
+              launchingCode={launchingCode}
+              onPlay={play}
+            />
             <ProviderStrip />
           </>
         )}

@@ -44,6 +44,9 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-hot: var(--accent-hot);
+  --color-crash: var(--accent-crash);
+  --color-live: var(--accent-live);
 }
 
 :root {
@@ -91,6 +94,12 @@
   --sidebar-accent-foreground: #eef3ff;
   --sidebar-border: rgba(255, 255, 255, 0.08);
   --sidebar-ring: #5cbdb9;
+
+  /* Category accents — energy without neon overload */
+  --accent-hot: #ffb43c;
+  --accent-crash: #ff6a4d;
+  --accent-live: #b06bff;
+  --accent-slots: #5cbdb9;
 }
 
 .dark { color-scheme: dark; }
@@ -203,5 +212,106 @@
     background: linear-gradient(90deg, var(--surface) 25%, var(--surface-2) 50%, var(--surface) 75%);
     background-size: 200% 100%;
     animation: skeleton-shift 1.4s linear infinite;
+  }
+}
+
+@layer utilities {
+  /* ---- Category accent scoping ---------------------------------------- */
+  .cat-hot { --cat: var(--accent-hot); }
+  .cat-crash { --cat: var(--accent-crash); }
+  .cat-live { --cat: var(--accent-live); }
+  .cat-slots { --cat: var(--accent-slots); }
+  .cat-neutral { --cat: var(--primary); }
+
+  .text-cat { color: var(--cat, var(--primary)); }
+  .bg-cat-soft { background-color: color-mix(in srgb, var(--cat, var(--primary)) 16%, transparent); }
+  .border-cat { border-color: color-mix(in srgb, var(--cat, var(--primary)) 55%, transparent); }
+
+  /* ---- Depth: surfaces stop being flat -------------------------------- */
+  .surface-grad {
+    background-image: linear-gradient(180deg,
+      color-mix(in srgb, var(--surface-2) 70%, transparent),
+      color-mix(in srgb, var(--surface) 85%, transparent));
+  }
+  .app-glow {
+    position: relative;
+    isolation: isolate;
+  }
+  .app-glow::before {
+    content: "";
+    position: absolute;
+    inset: -20% -10% auto -10%;
+    height: 340px;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(50% 60% at 18% 0%, color-mix(in srgb, var(--accent-live) 16%, transparent), transparent 70%),
+      radial-gradient(45% 60% at 82% 10%, color-mix(in srgb, var(--primary) 16%, transparent), transparent 70%);
+  }
+
+  /* ---- Rail heading --------------------------------------------------- */
+  .rail-line {
+    background-image: linear-gradient(90deg,
+      color-mix(in srgb, var(--cat, var(--primary)) 45%, transparent),
+      transparent 65%);
+  }
+
+  /* ---- Cards ---------------------------------------------------------- */
+  .game-card {
+    transition: transform .25s cubic-bezier(.2,.7,.3,1), border-color .25s ease, box-shadow .25s ease;
+  }
+  @media (hover: hover) {
+    .game-card:hover {
+      transform: translateY(-4px);
+      border-color: color-mix(in srgb, var(--cat, var(--primary)) 70%, transparent);
+      box-shadow:
+        0 14px 34px -18px color-mix(in srgb, var(--cat, var(--primary)) 65%, transparent),
+        0 0 0 1px color-mix(in srgb, var(--cat, var(--primary)) 35%, transparent);
+    }
+  }
+  .game-card:active { transform: scale(.97); }
+
+  .cta-glow {
+    box-shadow: 0 10px 30px -14px color-mix(in srgb, var(--primary) 70%, transparent);
+  }
+  .cta-hot {
+    background-image: linear-gradient(135deg, var(--accent-hot), color-mix(in srgb, var(--accent-hot) 60%, var(--accent-crash)));
+    color: #1b1200;
+  }
+
+  /* ---- Badges --------------------------------------------------------- */
+  .badge-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    border-radius: 999px;
+    padding: .15rem .45rem;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    backdrop-filter: blur(6px);
+  }
+
+  /* ---- Motion --------------------------------------------------------- */
+  @keyframes float-y {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+  .float-y { animation: float-y 3.4s ease-in-out infinite; }
+
+  @keyframes ring-pulse {
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--cat, var(--primary)) 45%, transparent); }
+    70% { box-shadow: 0 0 0 10px transparent; }
+    100% { box-shadow: 0 0 0 0 transparent; }
+  }
+  .ring-pulse { animation: ring-pulse 2.2s ease-out infinite; }
+
+  .tap-44 { min-height: 44px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .float-y, .ring-pulse, .soft-pulse, .skeleton, .shine:hover::after { animation: none !important; }
+    .slick:hover, .game-card:hover { transform: none; }
+    html { scroll-behavior: auto; }
   }
 }

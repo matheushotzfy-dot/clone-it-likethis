@@ -1,13 +1,34 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthDialog } from "./auth-dialog-context";
 import { PromoSide } from "./promo-side";
-import { User, Mail, Phone, Lock, Eye, EyeOff, Info, Check } from "lucide-react";
+import { User, Mail, Phone, Lock, Eye, EyeOff, ShieldCheck, Check, Gift, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { maskCPF, maskPhone, validateCPF, EMAIL_DOMAINS } from "@/lib/validations";
 import { getTrackingMetadata } from "@/lib/tracking";
 import { cn } from "@/lib/utils";
+
+type FieldErrors = Partial<Record<"cpf" | "email" | "phone" | "password" | "accept", string>>;
+
+/** Simple, explicit strength scoring — 0..3. */
+function scorePassword(pw: string) {
+  if (pw.length < 6) return 0;
+  let score = 1;
+  if (pw.length >= 8 && /[a-zA-Z]/.test(pw) && /\d/.test(pw)) score = 2;
+  if (pw.length >= 10 && /[^a-zA-Z0-9]/.test(pw)) score = 3;
+  return score;
+}
+
+const strengthMeta = [
+  { label: "Muito curta", color: "bg-destructive" },
+  { label: "Fraca", color: "bg-destructive" },
+  { label: "Boa", color: "bg-[var(--accent-hot)]" },
+  { label: "Forte", color: "bg-success" },
+] as const;
+
+const inputBase =
+  "h-12 w-full rounded-xl border bg-background/50 pl-11 pr-3 text-base font-semibold text-foreground placeholder:font-normal placeholder:text-muted-foreground focus:outline-none";
 
 export function RegisterDialog() {
   const { current, close, open } = useAuthDialog();
@@ -18,6 +39,7 @@ export function RegisterDialog() {
   const [show, setShow] = useState(false);
   const [accept, setAccept] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<FieldErrors>({});
   const [showEmailHints, setShowEmailHints] = useState(false);
   const emailRef = useRef<HTMLDivElement>(null);
 
@@ -31,36 +53,49 @@ export function RegisterDialog() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleEmailChange = (val: string) => {
+  const strength = scorePassword(password);
+  const filled = useMemo(
+    () => [cpf.replace(/\D/g, "").length === 11, email.includes("@"), phone.replace(/\D/g, "").length >= 10, password.length >= 6].filter(Boolean).length,
+    [cpf, email, phone, password],
+  );
+
+  function handleEmailChange(val: string) {
     setEmail(val);
+    setErrors((e) => ({ ...e, email: undefined }));
     if (val.includes("@")) {
       const parts = val.split("@");
-      if (parts[1].length < 3) {
-        setShowEmailHints(true);
-      } else {
-        setShowEmailHints(false);
-      }
+      setShowEmailHints((parts[1] ?? "").length < 3);
     } else {
       setShowEmailHints(false);
     }
-  };
+  }
 
-  const selectHint = (domain: string) => {
+  function selectHint(domain: string) {
     const prefix = email.split("@")[0];
     setEmail(`${prefix}@${domain}`);
     setShowEmailHints(false);
-  };
+  }
+
+  function validate(): FieldErrors {
+    const next: FieldErrors = {};
+    if (!validateCPF(cpf)) next.cpf = "Informe um CPF válido.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) next.email = "Informe um e-mail válido.";
+    if (phone.replace(/\D/g, "").length < 10) next.phone = "Informe o DDD + número.";
+    if (password.length < 6) next.password = "Use no mínimo 6 caracteres.";
+    if (!accept) next.accept = "Você precisa aceitar os termos.";
+    return next;
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!accept) { toast.error("Você precisa aceitar os termos"); return; }
-    if (!validateCPF(cpf)) { toast.error("CPF inválido"); return; }
-    if (password.length < 1) { toast.error("Informe uma senha"); return; }
-    
+    const next = validate();
+    setErrors(next);
+    if (Object.keys(next).length > 0) return;
+
     setLoading(true);
     const tracking = getTrackingMetadata();
     const { error } = await supabase.auth.signUp({
-      email,
+      email: email.trim(),
       password,
       options: {
         emailRedirectTo: window.location.origin,
@@ -71,163 +106,217 @@ export function RegisterDialog() {
         },
       },
     });
-    
+
     setLoading(false);
     if (error) {
       const msg = error.message?.toLowerCase() || "";
       let friendly = error.message;
       if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
         friendly = "Este email já está cadastrado. Faça login.";
+        setErrors({ email: friendly });
       } else if (msg.includes("weak") || msg.includes("pwned") || msg.includes("compromised")) {
         friendly = "Senha muito fraca ou vazada. Use uma senha mais forte.";
+        setErrors({ password: friendly });
       } else if (msg.includes("invalid") && msg.includes("email")) {
         friendly = "Email inválido. Verifique e tente novamente.";
+        setErrors({ email: friendly });
       } else if (msg.includes("rate") || msg.includes("limit")) {
         friendly = "Muitas tentativas. Aguarde alguns segundos.";
       }
       toast.error(friendly);
       return;
     }
-    
-    
+
     toast.success("Conta criada! Bem-vindo.");
-    // Abrir depósito imediatamente após cadastro
     open("deposit");
   }
 
+  const fieldClass = (hasError?: string) =>
+    cn(inputBase, hasError ? "border-destructive" : "border-border focus:border-primary");
+
   return (
     <Dialog open={current === "register"} onOpenChange={(o) => !o && close()}>
-      <DialogContent className="p-0 max-w-[860px] w-[calc(100vw-1rem)] sm:w-[calc(100vw-2rem)] bg-brand border-brand overflow-hidden gap-0 flex flex-col md:flex-row max-h-[95vh] sm:max-h-[92vh] sm:rounded-2xl">
+      <DialogContent className="flex max-h-[100dvh] w-screen max-w-none flex-col gap-0 overflow-hidden border-border bg-background p-0 sm:max-h-[94vh] sm:w-[calc(100vw-2rem)] sm:max-w-[880px] sm:rounded-2xl md:flex-row">
         <PromoSide />
 
-        <div className="flex-1 p-5 md:p-8 bg-brand text-white overflow-y-auto">
-          <div className="flex items-start justify-between gap-3 mb-6 pr-8">
-            <span className="text-xl md:text-2xl font-black flex items-center gap-0.5 shrink-0">
-              <span className="text-white">SANTOS</span>
-              <span className="text-primary">BET</span>
+        <div className="flex-1 overflow-y-auto px-5 pb-8 pt-6 md:px-8 md:py-8">
+          <div className="mb-5 flex items-start justify-between gap-3 pr-8">
+            <span className="font-display shrink-0 text-xl font-extrabold md:text-2xl">
+              SANTOS<span className="text-primary">BET</span>
             </span>
-            <div className="text-right text-xs min-w-0">
-              <p className="text-white/60">Já tem uma conta?</p>
-              <button onClick={() => open("login")} className="text-primary font-bold hover:underline">Entrar</button>
+            <div className="min-w-0 text-right text-xs">
+              <p className="text-muted-foreground">Já tem conta?</p>
+              <button onClick={() => open("login")} className="font-bold text-primary hover:underline">
+                Entrar
+              </button>
             </div>
           </div>
 
-          <div className="mb-6">
-            <DialogTitle className="text-2xl font-black text-primary leading-tight">Cadastre-se!</DialogTitle>
-            <DialogDescription className="text-sm text-white/70">De forma fácil e rápida!</DialogDescription>
+          <div className="mb-5">
+            <DialogTitle className="font-display text-2xl font-extrabold leading-tight">
+              Crie sua conta em 1 minuto
+            </DialogTitle>
+            <DialogDescription className="mt-1 text-sm text-muted-foreground">
+              Cadastro rápido, depósito por PIX e bônus liberado na hora.
+            </DialogDescription>
           </div>
 
-          <form onSubmit={submit} className="space-y-4">
-            <div className="space-y-1">
-              <label className="text-[11px] font-bold text-white/50 uppercase ml-1">CPF</label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-white/40" />
-                <input 
-                  value={cpf} 
-                  onChange={(e) => setCpf(maskCPF(e.target.value))} 
-                  placeholder="000.000.000-00" 
-                  inputMode="numeric"
-                  className="w-full h-12 pl-10 pr-3 rounded-lg bg-brand-2 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:border-primary text-base" 
-                  required
-                />
-              </div>
-            </div>
+          {/* bonus highlight */}
+          <div className="mb-5 flex items-center gap-3 rounded-xl border border-primary/35 bg-primary/10 px-3.5 py-3">
+            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground">
+              <Gift className="size-[18px]" strokeWidth={2.25} />
+            </span>
+            <p className="text-[12px] font-bold leading-snug">
+              Bônus de 100% no 1º depósito
+              <span className="block text-[11px] font-semibold text-muted-foreground">
+                Válido a partir de R$ 30 via PIX
+              </span>
+            </p>
+          </div>
 
-            <div className="space-y-1" ref={emailRef}>
-              <label className="text-[11px] font-bold text-white/50 uppercase ml-1">Email</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-white/40" />
-                <input 
-                  type="email" 
-                  required 
-                  value={email} 
-                  onChange={(e) => handleEmailChange(e.target.value)} 
-                  placeholder="exemplo@email.com" 
-                  className="w-full h-12 pl-10 pr-3 rounded-lg bg-brand-2 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:border-primary text-base" 
+          {/* progress */}
+          <div className="mb-5 flex items-center gap-2">
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface">
+              <div
+                className="h-full rounded-full bg-primary transition-all duration-300"
+                style={{ width: `${(filled / 4) * 100}%` }}
+              />
+            </div>
+            <span className="text-[10px] font-extrabold uppercase tracking-wide text-muted-foreground">
+              {filled}/4
+            </span>
+          </div>
+
+          <form onSubmit={submit} className="space-y-4" noValidate>
+            <Field label="CPF" error={errors.cpf}>
+              <User className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" strokeWidth={2} />
+              <input
+                value={cpf}
+                onChange={(e) => { setCpf(maskCPF(e.target.value)); setErrors((x) => ({ ...x, cpf: undefined })); }}
+                placeholder="000.000.000-00"
+                inputMode="numeric"
+                autoComplete="off"
+                aria-invalid={!!errors.cpf}
+                className={fieldClass(errors.cpf)}
+              />
+            </Field>
+
+            <div ref={emailRef}>
+              <Field label="E-mail" error={errors.email}>
+                <Mail className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" strokeWidth={2} />
+                <input
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => handleEmailChange(e.target.value)}
+                  placeholder="voce@email.com"
+                  aria-invalid={!!errors.email}
+                  className={fieldClass(errors.email)}
                 />
                 {showEmailHints && (
-                  <div className="absolute top-[calc(100%+4px)] left-0 w-full bg-brand-2 border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden">
+                  <div className="absolute left-0 top-[calc(100%+4px)] z-50 w-full overflow-hidden rounded-xl border border-border bg-popover shadow-xl">
                     {EMAIL_DOMAINS.map((domain) => (
                       <button
                         key={domain}
                         type="button"
                         onClick={() => selectHint(domain)}
-                        className="w-full text-left px-4 py-2 text-sm hover:bg-white/5 text-white/80 transition-colors border-b border-white/5 last:border-0"
+                        className="w-full border-b border-border/60 px-4 py-2.5 text-left text-sm font-semibold last:border-0 hover:bg-surface"
                       >
                         @{domain}
                       </button>
                     ))}
                   </div>
                 )}
-              </div>
+              </Field>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-[11px] font-bold text-white/50 uppercase ml-1">Celular</label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-white/40" />
-                <input 
-                  value={phone} 
-                  onChange={(e) => setPhone(maskPhone(e.target.value))} 
-                  placeholder="(00) 00000-0000" 
-                  inputMode="numeric"
-                  className="w-full h-12 pl-10 pr-3 rounded-lg bg-brand-2 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:border-primary text-base" 
-                  required
-                />
-              </div>
-            </div>
+            <Field label="Celular" error={errors.phone}>
+              <Phone className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" strokeWidth={2} />
+              <input
+                value={phone}
+                onChange={(e) => { setPhone(maskPhone(e.target.value)); setErrors((x) => ({ ...x, phone: undefined })); }}
+                placeholder="(00) 00000-0000"
+                inputMode="numeric"
+                autoComplete="tel"
+                aria-invalid={!!errors.phone}
+                className={fieldClass(errors.phone)}
+              />
+            </Field>
 
-            <div className="space-y-1">
-              <label className="text-[11px] font-bold text-white/50 uppercase ml-1">Senha</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-white/40" />
-                <input 
-                  type={show ? "text" : "password"} 
-                  required 
-                  value={password} 
-                  onChange={(e) => setPassword(e.target.value)} 
-                  placeholder="Mínimo 6 caracteres" 
-                  className="w-full h-12 pl-10 pr-10 rounded-lg bg-brand-2 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:border-primary text-base" 
-                />
-                <button type="button" onClick={() => setShow(!show)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40">
-                  {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                </button>
-              </div>
-            </div>
+            <Field label="Senha" error={errors.password}>
+              <Lock className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" strokeWidth={2} />
+              <input
+                type={show ? "text" : "password"}
+                autoComplete="new-password"
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setErrors((x) => ({ ...x, password: undefined })); }}
+                placeholder="Mínimo 6 caracteres"
+                aria-invalid={!!errors.password}
+                className={cn(fieldClass(errors.password), "pr-11")}
+              />
+              <button
+                type="button"
+                onClick={() => setShow(!show)}
+                aria-label={show ? "Ocultar senha" : "Mostrar senha"}
+                className="absolute right-3 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-lg text-muted-foreground hover:text-foreground"
+              >
+                {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
+            </Field>
 
-            <div className="pt-2">
-              <label className="flex items-start gap-3 text-[11px] text-white/60 cursor-pointer group">
-                <div className="relative mt-0.5">
-                  <input 
-                    type="checkbox" 
-                    checked={accept} 
-                    onChange={(e) => setAccept(e.target.checked)} 
-                    className="appearance-none size-4 rounded bg-brand-2 border border-white/20 checked:bg-primary checked:border-primary cursor-pointer transition-all" 
-                  />
-                  {accept && <Check className="absolute inset-0 size-3 m-auto text-primary-foreground pointer-events-none" strokeWidth={4} />}
+            {password.length > 0 && (
+              <div className="flex items-center gap-2">
+                <div className="flex flex-1 gap-1">
+                  {[0, 1, 2].map((i) => (
+                    <span
+                      key={i}
+                      className={cn(
+                        "h-1.5 flex-1 rounded-full transition-colors",
+                        i < strength ? strengthMeta[strength].color : "bg-surface",
+                      )}
+                    />
+                  ))}
                 </div>
-                <span className="leading-normal">
-                  Declaro ter mais de 18 anos e aceitar os <span className="text-primary font-bold">Termos e Condições</span> e a <span className="text-primary font-bold">Política de Privacidade</span>.
+                <span className="text-[10px] font-extrabold uppercase tracking-wide text-muted-foreground">
+                  {strengthMeta[strength].label}
                 </span>
-              </label>
-            </div>
+              </div>
+            )}
 
-            <button 
-              type="submit" 
-              disabled={loading} 
-              className="w-full h-12 mt-4 rounded-lg bg-primary text-primary-foreground font-black uppercase text-sm tracking-wider hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50"
+            <label className="flex cursor-pointer items-start gap-3 pt-1 text-[11px] text-muted-foreground">
+              <span className="relative mt-0.5">
+                <input
+                  type="checkbox"
+                  checked={accept}
+                  onChange={(e) => { setAccept(e.target.checked); setErrors((x) => ({ ...x, accept: undefined })); }}
+                  className="size-[18px] cursor-pointer appearance-none rounded-md border border-border bg-background/60 transition-all checked:border-primary checked:bg-primary"
+                />
+                {accept && (
+                  <Check className="pointer-events-none absolute inset-0 m-auto size-3 text-primary-foreground" strokeWidth={4} />
+                )}
+              </span>
+              <span className="leading-normal">
+                Declaro ter mais de 18 anos e aceitar os{" "}
+                <span className="font-bold text-primary">Termos</span> e a{" "}
+                <span className="font-bold text-primary">Política de Privacidade</span>.
+              </span>
+            </label>
+            {errors.accept && <p className="text-[11px] font-semibold text-destructive">{errors.accept}</p>}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="cta-glow slick mt-2 flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-extrabold uppercase tracking-wide text-primary-foreground disabled:opacity-60"
             >
-              {loading ? "Processando..." : "Criar minha conta"}
+              {loading ? <Loader2 className="size-4 animate-spin" /> : <Gift className="size-4" strokeWidth={2.5} />}
+              {loading ? "Criando conta…" : "Criar conta e receber bônus"}
             </button>
           </form>
 
-          <div className="mt-6 p-4 bg-brand-2/40 rounded-xl border border-white/5 flex items-center gap-3">
-            <div className="size-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-              <Info className="size-5" />
-            </div>
-            <div className="flex-1">
-              <p className="text-[10px] text-white/50 leading-tight">Seus dados estão protegidos por criptografia de ponta a ponta e de acordo com a LGPD.</p>
-            </div>
+          <div className="mt-5 flex items-center justify-center gap-2 text-[10px] font-semibold text-muted-foreground">
+            <ShieldCheck className="size-3.5 text-success" strokeWidth={2.25} />
+            Dados protegidos com criptografia · LGPD · 18+
           </div>
         </div>
       </DialogContent>
@@ -235,3 +324,20 @@ export function RegisterDialog() {
   );
 }
 
+function Field({
+  label, error, children,
+}: {
+  label: string;
+  error?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label className="ml-0.5 text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </label>
+      <div className="relative">{children}</div>
+      {error && <p className="text-[11px] font-semibold text-destructive">{error}</p>}
+    </div>
+  );
+}
