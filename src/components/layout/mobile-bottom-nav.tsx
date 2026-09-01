@@ -1,16 +1,17 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Menu, Volleyball, Dice5, Radio, Plus } from "lucide-react";
+import { Menu, LayoutGrid, MonitorPlay, Plus, User } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useAuthDialog } from "@/components/auth/auth-dialog-context";
 import { useAuth } from "@/hooks/use-auth";
+import { cn } from "@/lib/utils";
 
-const sideItems = [
-  { to: "/esportes", label: "Esportes", icon: Volleyball, side: "left" as const },
-];
-const rightItems = [
-  { to: "/cassino", label: "Cassino", icon: Dice5 },
-  { to: "/ao-vivo", label: "Ao vivo", icon: Radio, dot: true },
-];
+const left = [
+  { to: "/cassino", label: "Cassino", icon: LayoutGrid },
+] as const;
+
+const right = [
+  { to: "/ao-vivo", label: "Ao vivo", icon: MonitorPlay },
+] as const;
 
 export function MobileBottomNav() {
   const path = useRouterState({ select: (s) => s.location.pathname });
@@ -18,64 +19,93 @@ export function MobileBottomNav() {
   const { open } = useAuthDialog();
   const { user } = useAuth();
 
-  const itemClass = (active: boolean) =>
-    `flex flex-col items-center justify-center gap-0.5 h-full text-[11px] font-bold ${
-      active ? "text-primary" : "text-white/85"
-    }`;
+  const cell = (active: boolean) =>
+    cn(
+      "relative flex h-full flex-col items-center justify-center gap-1 text-[10px] font-bold uppercase tracking-wide transition-colors",
+      active ? "text-primary" : "text-foreground/60",
+    );
+
+  const indicator = (active: boolean) => (
+    <span
+      className={cn(
+        "absolute top-0 h-[2px] w-8 rounded-full bg-primary transition-all duration-300",
+        active ? "opacity-100" : "w-0 opacity-0",
+      )}
+    />
+  );
 
   return (
-    <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-brand border-t border-white/10 pb-[env(safe-area-inset-bottom)]">
-      <ul className="grid grid-cols-5 h-16">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
+      <ul className="grid h-16 grid-cols-5">
         <li>
-          <button onClick={toggleSidebar} className="w-full h-full">
-            <span className={itemClass(false)}>
-              <Menu className="size-5" />
-              <span>Menu</span>
+          <button onClick={toggleSidebar} className="h-full w-full">
+            <span className={cell(false)}>
+              <Menu className="size-5" strokeWidth={1.75} />
+              Menu
             </span>
           </button>
         </li>
-        {sideItems.map((it) => {
+        {left.map((it) => {
           const active = path === it.to;
-          const Icon = it.icon;
           return (
-            <li key={it.label}>
-              <Link to={it.to} className="block w-full h-full">
-                <span className={itemClass(active)}>
-                  <Icon className="size-5" />
-                  <span>{it.label}</span>
+            <li key={it.to}>
+              <Link to={it.to} className="block h-full w-full">
+                <span className={cell(active)}>
+                  {indicator(active)}
+                  <it.icon className="size-5" strokeWidth={1.75} />
+                  {it.label}
                 </span>
               </Link>
             </li>
           );
         })}
-        {/* Depósito centerpiece */}
-        <li className="relative">
-          <button onClick={() => open(user ? "deposit" : "register")} className="block w-full h-full">
-            <span className="flex flex-col items-center justify-center gap-1 h-full">
-              <span className="-mt-7 h-14 w-14 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 text-brand font-extrabold text-[11px] flex flex-col items-center justify-center shadow-lg shadow-yellow-900/50 border-4 border-brand">
-                <Plus className="size-6" />
+        <li>
+          <button onClick={() => open(user ? "deposit" : "register")} className="h-full w-full">
+            <span className="flex h-full flex-col items-center justify-center gap-1">
+              <span className="slick -mt-6 grid size-12 place-items-center rounded-xl border-4 border-background bg-primary text-primary-foreground">
+                <Plus className="size-6" strokeWidth={2.5} />
               </span>
-              <span className="text-[10px] font-black text-primary uppercase tracking-tight -mt-0.5">Depósito</span>
+              <span className="-mt-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
+                Depositar
+              </span>
             </span>
           </button>
         </li>
-        {rightItems.map((it) => {
+        {right.map((it) => {
           const active = path === it.to;
-          const Icon = it.icon;
           return (
-            <li key={it.label}>
-              <Link to={it.to} className="block w-full h-full">
-                <span className={itemClass(active)}>
+            <li key={it.to}>
+              <Link to={it.to} className="block h-full w-full">
+                <span className={cell(active)}>
+                  {indicator(active)}
                   <span className="relative">
-                    <Icon className="size-5" />
-                    {it.dot && <span className="absolute -top-0.5 -right-1 size-1.5 rounded-full bg-destructive" />}
+                    <it.icon className="size-5" strokeWidth={1.75} />
+                    <span className="absolute -right-1 -top-0.5 size-1.5 rounded-full bg-destructive soft-pulse" />
                   </span>
-                  <span>{it.label}</span>
+                  {it.label}
                 </span>
               </Link>
             </li>
           );
         })}
+        <li>
+          {user ? (
+            <Link to="/perfil" className="block h-full w-full">
+              <span className={cell(path === "/perfil")}>
+                {indicator(path === "/perfil")}
+                <User className="size-5" strokeWidth={1.75} />
+                Perfil
+              </span>
+            </Link>
+          ) : (
+            <button onClick={() => open("login")} className="h-full w-full">
+              <span className={cell(false)}>
+                <User className="size-5" strokeWidth={1.75} />
+                Entrar
+              </span>
+            </button>
+          )}
+        </li>
       </ul>
     </nav>
   );
