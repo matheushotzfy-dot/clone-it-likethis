@@ -358,3 +358,98 @@
     .tile:hover, .slick:hover { transform: none !important; }
   }
 }
+
+@layer utilities {
+  /* ---- Dopamine layer ------------------------------------------------- */
+
+  /* animated accent aura behind hero/nav */
+  @keyframes aurora-drift {
+    0%   { transform: translate3d(-4%, 0, 0) scale(1); }
+    50%  { transform: translate3d(4%, -2%, 0) scale(1.06); }
+    100% { transform: translate3d(-4%, 0, 0) scale(1); }
+  }
+  .aurora { position: relative; isolation: isolate; }
+  .aurora::before {
+    content: "";
+    position: absolute;
+    inset: -30% -12% auto -12%;
+    height: 420px;
+    z-index: -1;
+    pointer-events: none;
+    animation: aurora-drift 14s ease-in-out infinite;
+    background:
+      radial-gradient(42% 55% at 15% 0%, color-mix(in srgb, var(--accent-live) 22%, transparent), transparent 70%),
+      radial-gradient(38% 55% at 55% 5%, color-mix(in srgb, var(--accent-gold) 14%, transparent), transparent 70%),
+      radial-gradient(42% 55% at 88% 0%, color-mix(in srgb, var(--primary) 22%, transparent), transparent 70%);
+  }
+
+  /* gold gradient text for headings */
+  .text-grad-gold {
+    background-image: linear-gradient(100deg, var(--accent-gold), #fff5d1 45%, var(--accent-gold));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* category chip: 3d-ish, glows on hover/active */
+  .chip3d {
+    position: relative;
+    overflow: hidden;
+    background-image: linear-gradient(180deg,
+      color-mix(in srgb, var(--surface-2) 92%, transparent),
+      color-mix(in srgb, var(--surface) 96%, transparent));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 6px 16px -14px rgba(0,0,0,.9);
+    transition: transform .2s cubic-bezier(.2,.7,.3,1), box-shadow .25s ease, border-color .25s ease, color .2s ease;
+  }
+  .chip3d:active { transform: scale(.96); }
+  @media (hover: hover) {
+    .chip3d:hover {
+      transform: translateY(-2px);
+      border-color: color-mix(in srgb, var(--cat, var(--primary)) 60%, transparent);
+      box-shadow: 0 10px 24px -16px color-mix(in srgb, var(--cat, var(--primary)) 90%, transparent),
+                  inset 0 1px 0 rgba(255,255,255,.09);
+    }
+  }
+  .chip3d[data-active="true"] {
+    border-color: color-mix(in srgb, var(--cat, var(--primary)) 75%, transparent);
+    background-image: linear-gradient(180deg,
+      color-mix(in srgb, var(--cat, var(--primary)) 26%, transparent),
+      color-mix(in srgb, var(--cat, var(--primary)) 8%, transparent));
+    box-shadow: 0 10px 26px -16px color-mix(in srgb, var(--cat, var(--primary)) 95%, transparent),
+                inset 0 1px 0 rgba(255,255,255,.12);
+  }
+
+  /* icon halo inside chips */
+  .icon-halo {
+    background-image: radial-gradient(65% 65% at 50% 35%,
+      color-mix(in srgb, var(--cat, var(--primary)) 55%, transparent), transparent 72%);
+  }
+
+  /* card hover: coloured halo + gold hairline */
+  @media (hover: hover) {
+    .tile:hover {
+      border-color: color-mix(in srgb, var(--accent-gold) 55%, transparent);
+      box-shadow: 0 16px 32px -20px color-mix(in srgb, var(--accent-gold) 80%, transparent),
+                  0 0 0 1px color-mix(in srgb, var(--accent-gold) 25%, transparent);
+      transform: translateY(-3px);
+    }
+  }
+
+  /* entrance pop for grids */
+  @keyframes pop-in {
+    from { opacity: 0; transform: translateY(10px) scale(.97); }
+    to   { opacity: 1; transform: none; }
+  }
+  .pop-in { animation: pop-in .34s cubic-bezier(.2,.75,.3,1) both; }
+
+  /* live/hot ping */
+  @keyframes ping-soft {
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--cat, var(--primary)) 55%, transparent); }
+    100% { box-shadow: 0 0 0 9px transparent; }
+  }
+  .ping-soft { animation: ping-soft 1.9s ease-out infinite; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .aurora::before, .pop-in, .ping-soft { animation: none !important; }
+  }
+}
