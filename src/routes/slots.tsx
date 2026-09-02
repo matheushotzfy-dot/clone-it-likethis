@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { SiteShell } from "@/components/layout/site-shell";
-import { CategoryPills } from "@/components/casino/category-pills";
+import { CategoryNav } from "@/components/casino/category-nav";
 import { CatalogHeader, ProviderFilter, GameGrid, LoadMore, InlineSpinner } from "@/components/casino/catalog-grid";
 import { usePFGames, usePFProviders, usePFLaunch } from "@/hooks/use-pf-launch";
 import { splitPFGamesByCategory } from "@/lib/pf-game-classification";
@@ -43,14 +43,14 @@ function SlotsPage() {
 
   return (
     <SiteShell>
-      <div className="mx-auto max-w-[1600px] space-y-6 px-3 py-5 md:px-6 md:py-7">
+      <div className="aurora mx-auto max-w-[1600px] space-y-4 px-2.5 py-3 md:space-y-6 md:px-6 md:py-6">
         <CatalogHeader
           title="Slots"
           subtitle={gamesQ.isLoading ? "Carregando catálogo…" : `${slots.length} slots disponíveis`}
           q={q}
           onQ={setQ}
         />
-        <CategoryPills active="Slots" />
+        <CategoryNav active="Slots" />
         <ProviderFilter providers={providersQ.data ?? []} value={providerId} onChange={setProviderId} />
         <GameGrid
           games={visible}

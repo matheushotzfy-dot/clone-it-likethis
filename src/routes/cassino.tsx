@@ -74,25 +74,24 @@ function Page() {
 
   return (
     <SiteShell>
-      <div className="mx-auto max-w-[1600px] space-y-6 px-3 py-5 md:px-6 md:py-7">
+      <div className="aurora mx-auto max-w-[1600px] space-y-4 px-2.5 py-3 md:space-y-6 md:px-6 md:py-6">
         <CatalogHeader
           title="Cassino"
           subtitle={gamesQ.isLoading ? "Carregando catálogo…" : `${filtered.length} jogos disponíveis`}
           q={q}
           onQ={setQ}
         />
-        <div className="no-scrollbar snap-row -mx-3 flex gap-2 overflow-x-auto px-3 md:mx-0 md:px-0">
+        <div className="edge-fade no-scrollbar snap-row flex w-full max-w-full gap-1.5 overflow-x-auto pr-4 md:gap-2">
           {CATS.map((c) => {
             const isActive = cat === c.id;
             return (
               <button
                 key={c.id}
                 onClick={() => setCat(c.id)}
+                data-active={isActive}
                 className={
-                  "slick h-9 shrink-0 rounded-md border px-4 text-[13px] font-semibold " +
-                  (isActive
-                    ? "border-gold bg-gold/15 text-gold"
-                    : "border-border bg-surface/60 text-foreground/70 hover:border-gold/60 hover:text-foreground")
+                  "chip-flat h-9 shrink-0 rounded-[10px] border border-border px-3.5 text-[11.5px] font-extrabold uppercase tracking-[0.1em] " +
+                  (isActive ? "text-gold" : "text-foreground/70")
                 }
               >
                 {c.label}

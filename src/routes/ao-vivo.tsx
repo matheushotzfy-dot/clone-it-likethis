@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { SiteShell } from "@/components/layout/site-shell";
-import { CategoryPills } from "@/components/casino/category-pills";
+import { CategoryNav } from "@/components/casino/category-nav";
 import { CatalogHeader, GameGrid, LoadMore, InlineSpinner } from "@/components/casino/catalog-grid";
 import { usePFGames, usePFLaunch } from "@/hooks/use-pf-launch";
 import { splitPFGamesByCategory } from "@/lib/pf-game-classification";
@@ -40,7 +40,7 @@ function Page() {
 
   return (
     <SiteShell>
-      <div className="mx-auto max-w-[1600px] space-y-6 px-3 py-5 md:px-6 md:py-7">
+      <div className="aurora mx-auto max-w-[1600px] space-y-4 px-2.5 py-3 md:space-y-6 md:px-6 md:py-6">
         <CatalogHeader
           title="Cassino Ao Vivo"
           subtitle={gamesQ.isLoading ? "Carregando mesas…" : `${live.length} mesas com crupiês reais`}
@@ -48,7 +48,7 @@ function Page() {
           onQ={setQ}
           placeholder="Buscar mesa ou provedor…"
         />
-        <CategoryPills active="Ao Vivo" />
+        <CategoryNav active="Ao Vivo" />
         <GameGrid
           games={visible}
           loading={gamesQ.isLoading}
