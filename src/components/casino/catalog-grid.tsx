@@ -19,8 +19,8 @@ export function CatalogHeader({
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] items-end gap-4 md:flex md:justify-between">
       <div className="min-w-0">
-        <h1 className="truncate text-xl font-bold md:text-2xl">{title}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
+        <h1 className="page-title truncate text-[15px] md:text-[18px]">{title}</h1>
+        <p className="mt-1 text-[12px] text-muted-foreground md:text-[13px]">{subtitle}</p>
       </div>
       <div className="relative w-full md:w-80">
         <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.75} />
@@ -29,7 +29,7 @@ export function CatalogHeader({
           onChange={(e) => onQ(e.target.value)}
           placeholder={placeholder}
           aria-label={placeholder}
-          className="h-11 w-full rounded-md border border-border bg-surface/60 pl-10 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+          className="h-10 w-full rounded-[10px] border border-border bg-surface/50 pl-10 pr-3 text-[13px] font-medium text-foreground placeholder:font-normal placeholder:text-muted-foreground focus:border-gold focus:outline-none"
         />
       </div>
     </div>
@@ -45,16 +45,14 @@ export function ProviderFilter({
 }) {
   const chip = (active: boolean) =>
     cn(
-      "slick h-9 shrink-0 rounded-md border px-4 text-[13px] font-semibold",
-      active
-        ? "border-primary bg-primary text-primary-foreground"
-        : "border-border bg-surface/60 text-foreground/70 hover:border-primary/60 hover:text-foreground",
+      "chip-flat h-9 shrink-0 rounded-[10px] border border-border px-3.5 text-[11.5px] font-extrabold uppercase tracking-[0.1em]",
+      active ? "text-gold" : "text-foreground/70",
     );
   return (
-    <div className="no-scrollbar snap-row -mx-3 flex gap-2 overflow-x-auto px-3 pb-1 md:mx-0 md:px-0">
-      <button onClick={() => onChange(null)} className={chip(value === null)}>Todos</button>
+    <div className="edge-fade no-scrollbar snap-row flex w-full max-w-full gap-1.5 overflow-x-auto pb-1 pr-4 md:gap-2">
+      <button onClick={() => onChange(null)} data-active={value === null} className={chip(value === null)}>Todos</button>
       {providers.map((p) => (
-        <button key={p.id} onClick={() => onChange(p.id)} className={chip(value === p.id)}>
+        <button key={p.id} data-active={value === p.id} onClick={() => onChange(p.id)} className={chip(value === p.id)}>
           {p.name}
         </button>
       ))}

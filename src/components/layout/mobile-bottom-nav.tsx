@@ -14,14 +14,14 @@ export function MobileBottomNav() {
   const cell = (active: boolean) =>
     cn(
       "relative flex h-full flex-col items-center justify-center gap-1 text-[10px] font-extrabold uppercase tracking-wide transition-colors",
-      active ? "text-primary" : "text-foreground/55",
+      active ? "text-gold" : "text-foreground/55",
     );
 
   const indicator = (active: boolean) => (
     <span
       className={cn(
-        "absolute top-0 h-[3px] rounded-full bg-primary transition-all duration-300",
-        active ? "w-9 opacity-100 shadow-[0_0_12px_var(--primary)]" : "w-0 opacity-0",
+        "absolute top-0 h-[3px] rounded-full bg-gold transition-all duration-300",
+        active ? "w-9 opacity-100 shadow-[0_0_14px_var(--accent-gold)]" : "w-0 opacity-0",
       )}
     />
   );
@@ -56,7 +56,7 @@ export function MobileBottomNav() {
             aria-label={user ? "Depositar" : "Criar conta"}
           >
             <span className="flex h-full flex-col items-center justify-center gap-1">
-              <span className="slick ring-pulse cat-slots -mt-7 grid size-14 place-items-center rounded-2xl border-4 border-background bg-primary text-primary-foreground cta-glow">
+              <span className="slick ring-pulse cat-slots -mt-7 grid size-14 place-items-center rounded-[16px] border-4 border-background bg-primary text-primary-foreground cta-glow">
                 <Plus className="size-7" strokeWidth={3} />
               </span>
               <span className="-mt-1 text-[10px] font-extrabold uppercase tracking-wide text-primary">

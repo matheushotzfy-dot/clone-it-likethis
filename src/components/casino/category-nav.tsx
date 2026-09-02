@@ -21,11 +21,16 @@ const cats: Cat[] = [
   { label: "Promoções", to: "/promocoes", Icon: Gift, accent: "cat-crash" },
 ];
 
-/** Category chips with haloed icons — compact on mobile, glowing on hover. */
+/**
+ * Category chips — same radius/hairline language as the game tiles so the nav
+ * reads as part of the grid instead of a floating pill row.
+ * Stays inside the parent padding (no negative margins) to avoid page-level
+ * horizontal scroll on small screens.
+ */
 export function CategoryNav({ active }: { active?: string }) {
   return (
-    <nav className="no-scrollbar snap-row -mx-3 overflow-x-auto px-3 md:mx-0 md:px-0">
-      <ul className="flex min-w-max items-center gap-2">
+    <nav className="edge-fade no-scrollbar snap-row w-full max-w-full overflow-x-auto">
+      <ul className="flex w-max items-center gap-1.5 pr-4 md:gap-2">
         {cats.map(({ label, to, Icon, accent, search, live }) => {
           const isActive = active === label;
           return (
@@ -36,17 +41,17 @@ export function CategoryNav({ active }: { active?: string }) {
                 data-active={isActive}
                 className={cn(
                   accent,
-                  "chip3d flex h-10 shrink-0 items-center gap-2 rounded-full border border-border px-3.5 text-[12px] font-extrabold uppercase tracking-[0.08em] md:h-11 md:px-4 md:text-[12.5px]",
+                  "chip3d flex h-9 shrink-0 items-center gap-1.5 rounded-[10px] border border-border px-3 text-[11.5px] font-extrabold uppercase tracking-[0.1em] md:h-10 md:px-3.5 md:text-[12px]",
                   isActive ? "text-cat" : "text-foreground/70 hover:text-foreground",
                 )}
               >
                 <span
                   className={cn(
-                    "icon-halo relative grid size-6 shrink-0 place-items-center rounded-full",
+                    "icon-halo relative grid size-5 shrink-0 place-items-center rounded-[6px]",
                     live && "ping-soft",
                   )}
                 >
-                  <Icon className="size-[15px] text-cat" strokeWidth={2.4} />
+                  <Icon className="size-[14px] text-cat" strokeWidth={2.5} />
                 </span>
                 {label}
               </Link>
