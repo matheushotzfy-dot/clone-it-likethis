@@ -58,8 +58,8 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-t from-background via-background/70 to-transparent" />
 
       {/* centred play affordance */}
-      <div className="pointer-events-none absolute inset-0 grid place-items-center">
-        <span className="grid size-11 scale-90 place-items-center rounded-full bg-gold text-background opacity-0 shadow-[0_6px_18px_-8px_rgba(0,0,0,.9)] transition-[opacity,transform] duration-200 ease-out group-hover:scale-100 group-hover:opacity-100 group-active:scale-100 group-active:opacity-100">
+      <div className="pointer-events-none absolute inset-0 grid place-items-center bg-background/0 transition-colors duration-200 group-hover:bg-background/35 group-active:bg-background/35">
+        <span className="grid size-10 scale-75 place-items-center rounded-full bg-gold text-background opacity-0 shadow-[0_0_0_6px_color-mix(in_srgb,var(--accent-gold)_22%,transparent),0_8px_20px_-8px_rgba(0,0,0,.95)] transition-[opacity,transform] duration-200 ease-out group-hover:scale-100 group-hover:opacity-100 group-active:scale-100 group-active:opacity-100 md:size-11">
           {loading ? (
             <Loader2 className="size-5 animate-spin" />
           ) : (
