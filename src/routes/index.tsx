@@ -72,11 +72,11 @@ function Index() {
 
   return (
     <SiteShell>
-      <div className="mx-auto max-w-[1600px] space-y-6 px-3 py-4 md:space-y-8 md:px-6 md:py-5">
-        <BannerCarousel />
+      <div className="aurora mx-auto max-w-[1600px] space-y-4 px-2.5 py-2.5 md:space-y-7 md:px-6 md:py-5">
+        <BannerCarousel aspectClass="aspect-[16/8] sm:aspect-[2.4/1] md:aspect-[1920/560]" />
 
         {/* nav + search on one line */}
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:gap-6">
+        <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:gap-6">
           <div className="min-w-0 flex-1">
             <CategoryNav active="Populares" />
           </div>
