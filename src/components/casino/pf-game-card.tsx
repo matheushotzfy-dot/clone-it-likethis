@@ -25,7 +25,7 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
       onClick={() => onPlay(game)}
       disabled={loading}
       aria-label={`Jogar ${game.name}`}
-      className="tile sweep group relative block w-full overflow-hidden rounded-[10px] border border-border bg-surface text-left aspect-[3/4]"
+      className="tile sweep group relative block w-full overflow-hidden rounded-[10px] border border-border bg-surface text-left aspect-[3/4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
     >
       {failed ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-surface p-3 text-center">
