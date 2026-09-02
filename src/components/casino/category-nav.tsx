@@ -1,39 +1,54 @@
 import { Link } from "@tanstack/react-router";
+import { Flame, Rocket, Radio, Cherry, LayoutGrid, Trophy, Gift } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const cats = [
-  { label: "Populares", to: "/" },
-  { label: "Slots", to: "/slots" },
-  { label: "Crash", to: "/cassino" },
-  { label: "Ao Vivo", to: "/ao-vivo" },
-  { label: "Todos", to: "/cassino" },
-  { label: "Torneios", to: "/torneios" },
-  { label: "Promoções", to: "/promocoes" },
-] as const;
+type Cat = {
+  label: string;
+  to: string;
+  Icon: typeof Flame;
+  accent: string;
+  search?: Record<string, string>;
+  live?: boolean;
+};
 
-/** Text navigation with an underline indicator — no pills, no icons. */
+const cats: Cat[] = [
+  { label: "Populares", to: "/", Icon: Flame, accent: "cat-hot" },
+  { label: "Slots", to: "/slots", Icon: Cherry, accent: "cat-slots" },
+  { label: "Crash", to: "/cassino", Icon: Rocket, accent: "cat-crash", search: { cat: "crash" } },
+  { label: "Ao Vivo", to: "/ao-vivo", Icon: Radio, accent: "cat-live", live: true },
+  { label: "Todos", to: "/cassino", Icon: LayoutGrid, accent: "cat-neutral" },
+  { label: "Torneios", to: "/torneios", Icon: Trophy, accent: "cat-hot" },
+  { label: "Promoções", to: "/promocoes", Icon: Gift, accent: "cat-crash" },
+];
+
+/** Category chips with haloed icons — compact on mobile, glowing on hover. */
 export function CategoryNav({ active }: { active?: string }) {
   return (
-    <nav className="no-scrollbar -mx-3 overflow-x-auto border-b border-border px-3 md:mx-0 md:px-0">
-      <ul className="flex min-w-max items-center gap-6">
-        {cats.map(({ label, to }) => {
+    <nav className="no-scrollbar snap-row -mx-3 overflow-x-auto px-3 md:mx-0 md:px-0">
+      <ul className="flex min-w-max items-center gap-2">
+        {cats.map(({ label, to, Icon, accent, search, live }) => {
           const isActive = active === label;
           return (
             <li key={label}>
               <Link
                 to={to}
+                search={(search ?? {}) as never}
+                data-active={isActive}
                 className={cn(
-                  "relative block whitespace-nowrap py-3 text-[12.5px] font-bold uppercase tracking-[0.14em] transition-colors",
-                  isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+                  accent,
+                  "chip3d flex h-10 shrink-0 items-center gap-2 rounded-full border border-border px-3.5 text-[12px] font-extrabold uppercase tracking-[0.08em] md:h-11 md:px-4 md:text-[12.5px]",
+                  isActive ? "text-cat" : "text-foreground/70 hover:text-foreground",
                 )}
               >
-                {label}
                 <span
                   className={cn(
-                    "absolute inset-x-0 -bottom-px h-[2px] bg-gold transition-opacity",
-                    isActive ? "opacity-100" : "opacity-0",
+                    "icon-halo relative grid size-6 shrink-0 place-items-center rounded-full",
+                    live && "ping-soft",
                   )}
-                />
+                >
+                  <Icon className="size-[15px] text-cat" strokeWidth={2.4} />
+                </span>
+                {label}
               </Link>
             </li>
           );
