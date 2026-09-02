@@ -143,6 +143,7 @@ function Index() {
               items={top}
               to="/cassino"
               rows={2}
+              accent="cat-hot"
               ranked
               priority
               launchingCode={launchingCode}
@@ -152,6 +153,7 @@ function Index() {
               title="Crash games"
               items={crash}
               to="/cassino"
+              accent="cat-crash"
               launchingCode={launchingCode}
               onPlay={play}
             />
@@ -159,10 +161,11 @@ function Index() {
               title="Cassino ao vivo"
               items={live}
               to="/ao-vivo"
+              accent="cat-live"
               launchingCode={launchingCode}
               onPlay={play}
             />
-            <GameRail title="Slots" items={slots} to="/slots" rows={2} launchingCode={launchingCode} onPlay={play} />
+            <GameRail title="Slots" items={slots} to="/slots" rows={2} accent="cat-slots" launchingCode={launchingCode} onPlay={play} />
             <ProviderStrip />
           </>
         )}
