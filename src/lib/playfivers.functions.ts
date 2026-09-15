@@ -257,6 +257,25 @@ async function loadCompleteCatalog() {
   return catalogCache;
 }
 
+/** Only the fields the UI renders — keeps the JSON payload small and fast. */
+type PFGameLitePayload = {
+  game_code: string;
+  name: string;
+  image_url: string;
+  original: boolean;
+  provider: { name: string };
+};
+
+function toLite(games: PFGame[]): PFGameLitePayload[] {
+  return games.map((g) => ({
+    game_code: g.game_code,
+    name: g.name,
+    image_url: g.image_url,
+    original: g.original,
+    provider: { name: g.provider.name },
+  }));
+}
+
 function applyGameQuery(games: PFGame[], q?: string) {
   const query = q?.toLowerCase();
   return query
