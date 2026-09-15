@@ -81,7 +81,7 @@ export function Footer() {
           <Logo />
         </div>
         <p className="mt-4 text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} SANTOSBET — Jogue com responsabilidade. Proibido para menores de 18 anos.
+          © {new Date().getFullYear()} APOSTAYA.BET — Jogue com responsabilidade. Proibido para menores de 18 anos.
         </p>
       </div>
     </footer>

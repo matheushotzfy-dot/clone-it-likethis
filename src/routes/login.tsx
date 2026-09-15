@@ -16,7 +16,7 @@ const schema = z.object({
 });
 
 export const Route = createFileRoute("/login")({
-  head: () => ({ meta: [{ title: "Entrar — SANTOSBET" }] }),
+  head: () => ({ meta: [{ title: "Entrar — APOSTAYA.BET" }, { property: "og:title", content: "Entrar — APOSTAYA.BET" }, { name: "description", content: "Acesse sua conta na APOSTAYA.BET." }] }),
   component: Page,
 });
 

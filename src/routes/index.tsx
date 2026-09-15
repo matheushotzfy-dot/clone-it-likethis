@@ -13,13 +13,13 @@ import { splitPFGamesByCategory } from "@/lib/pf-game-classification";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "SANTOSBET — Cassino Online com Slots e Mesas Ao Vivo" },
+      { title: "APOSTAYA.BET — Cassino Online com Slots e Mesas Ao Vivo" },
       {
         name: "description",
         content:
           "Jogue slots, crash games e mesas ao vivo dos maiores provedores. Depósito e saque por PIX em segundos.",
       },
-      { property: "og:title", content: "SANTOSBET — Cassino Online" },
+      { property: "og:title", content: "APOSTAYA.BET — Cassino Online" },
       { property: "og:description", content: "Slots, crash games e cassino ao vivo com PIX instantâneo." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

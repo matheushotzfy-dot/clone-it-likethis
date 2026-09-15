@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { SiteShell } from "@/components/layout/site-shell";
 
 export const Route = createFileRoute("/_authenticated/deposito")({
-  head: () => ({ meta: [{ title: "Depósito — SANTOSBET" }] }),
+  head: () => ({ meta: [{ title: "Depósito — APOSTAYA.BET" }, { property: "og:title", content: "Depósito — APOSTAYA.BET" }] }),
   component: Page,
 });
 

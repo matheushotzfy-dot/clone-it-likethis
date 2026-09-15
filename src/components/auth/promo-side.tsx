@@ -1,5 +1,4 @@
 import { Zap, ShieldCheck, Gamepad2 } from "lucide-react";
-import shield from "@/assets/santos-shield.png";
 
 const proofs = [
   { Icon: Zap, label: "PIX em segundos", sub: "Depósito aprovado na hora" },
@@ -15,17 +14,8 @@ export function PromoSide() {
       <div className="pointer-events-none absolute -bottom-24 -left-20 size-64 rounded-full bg-[var(--accent-live)]/18 blur-3xl" />
 
       <div className="relative z-10 flex flex-col items-center px-7 py-9 text-center">
-        <img
-          src={shield}
-          alt="Santos FC"
-          width={160}
-          height={196}
-          className="float-y size-28 object-contain drop-shadow-2xl"
-          decoding="async"
-        />
-
-        <h3 className="font-display mt-5 text-2xl font-extrabold leading-none">
-          SANTOS<span className="text-primary">BET</span>
+        <h3 className="font-display mt-5 text-3xl font-extrabold leading-none tracking-tight">
+          APOSTAYA<span className="text-primary">.BET</span>
         </h3>
 
         <p className="mt-4 font-display text-3xl font-extrabold leading-tight">

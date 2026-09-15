@@ -14,9 +14,9 @@ export const Route = createFileRoute("/cassino")({
   }),
   head: () => ({
     meta: [
-      { title: "Cassino — Catálogo completo | SANTOSBET" },
+      { title: "Cassino — Catálogo completo | APOSTAYA.BET" },
       { name: "description", content: "Explore o catálogo completo de jogos de cassino: slots, crash e mesas ao vivo, filtrados por provedor." },
-      { property: "og:title", content: "Cassino — Catálogo completo | SANTOSBET" },
+      { property: "og:title", content: "Cassino — Catálogo completo | APOSTAYA.BET" },
       { property: "og:description", content: "Milhares de jogos de cassino filtrados por provedor." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { ArrowUpFromLine, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/saque")({
-  head: () => ({ meta: [{ title: "Saque — SANTOSBET" }] }),
+  head: () => ({ meta: [{ title: "Saque — APOSTAYA.BET" }, { property: "og:title", content: "Saque — APOSTAYA.BET" }] }),
   component: Page,
 });
 
