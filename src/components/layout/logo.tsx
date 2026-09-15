@@ -11,8 +11,8 @@ export function Logo({ className = "" }: { className?: string }) {
       <span className="flex items-center gap-2 font-black">
         <img src={mark} alt="" width={1024} height={1024} className="size-8 shrink-0 object-contain md:size-9" fetchPriority="high" decoding="async" />
         <span className="whitespace-nowrap text-[17px] leading-none md:text-[22px]">
-          <span className="text-foreground">apostamaxy</span>
-          <span className="text-primary">.com</span>
+          <span className="text-foreground">aposta</span>
+          <span className="text-primary">maxy</span>
         </span>
       </span>
     </Link>
