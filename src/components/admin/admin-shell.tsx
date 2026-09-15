@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
-import { LayoutDashboard, Users, ArrowDownCircle, ArrowUpCircle, Settings, Receipt, Home, LogOut, Target, Image as ImageIcon, Menu, X, ShieldCheck, LineChart } from "lucide-react";
+import { LayoutDashboard, Users, ArrowDownCircle, ArrowUpCircle, Settings, Receipt, Home, LogOut, Target, Image as ImageIcon, Menu, X, ShieldCheck, LineChart, Gamepad2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 const items = [
@@ -12,6 +12,7 @@ const items = [
   { to: "/admin/transacoes", label: "Transações", icon: Receipt },
   { to: "/admin/kyc", label: "KYC", icon: ShieldCheck },
   { to: "/admin/banners", label: "Banners", icon: ImageIcon },
+  { to: "/admin/catalogo", label: "Catálogo", icon: Gamepad2 },
   { to: "/admin/pixel", label: "Pixel", icon: Target },
   { to: "/admin/configuracoes", label: "Configurações", icon: Settings },
 ];
@@ -59,7 +60,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
         <div className="px-5 h-16 flex items-center border-b border-white/10">
           <div className="size-9 rounded-lg bg-primary/15 flex items-center justify-center mr-3"><ShieldCheck className="size-5 text-primary" /></div>
           <div className="min-w-0">
-            <span className="block text-white font-black text-xl leading-none">SANTOS<span className="text-primary">BET</span></span>
+            <span className="block text-white font-black text-xl leading-none">apostaya<span className="text-primary">.bet</span></span>
             <span className="text-[10px] uppercase font-bold text-white/55 tracking-wide">Admin Center</span>
           </div>
         </div>
@@ -72,7 +73,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <button aria-label="Fechar menu" className="absolute inset-0 bg-black/60" onClick={() => setOpen(false)} />
           <aside className="relative w-72 max-w-[85vw] flex flex-col bg-brand border-r border-white/10 h-full animate-in slide-in-from-left duration-200">
             <div className="px-5 h-16 flex items-center justify-between border-b border-white/10">
-              <span className="text-white font-black text-xl">SANTOS<span className="text-primary">BET</span></span>
+              <span className="text-white font-black text-xl">apostaya<span className="text-primary">.bet</span></span>
               <button onClick={() => setOpen(false)} className="size-9 rounded-md text-white/80 hover:bg-white/10 flex items-center justify-center">
                 <X className="size-5" />
               </button>

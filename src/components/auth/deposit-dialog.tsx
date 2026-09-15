@@ -104,11 +104,11 @@ export function DepositDialog() {
   const showDialog = open && !!user;
   return (
     <Dialog open={showDialog} onOpenChange={(o) => !o && (step !== "pix" || pixCopied) && close()}>
-      <DialogContent className="max-w-[440px] w-[calc(100vw-2.5rem)] sm:w-full bg-brand border-white/10 text-white p-0 overflow-hidden shadow-2xl max-h-[88vh] sm:max-h-[92vh] flex flex-col sm:rounded-2xl rounded-2xl">
+      <DialogContent className="flex max-h-[92vh] w-[calc(100vw-1.5rem)] max-w-[460px] flex-col overflow-hidden rounded-xl border-border bg-background p-0 text-foreground shadow-2xl sm:w-full">
         <DialogTitle className="sr-only">Depósito via PIX</DialogTitle>
         <DialogDescription className="sr-only">Gere um QR Code PIX para depositar na sua conta</DialogDescription>
         <div className="relative flex flex-col min-h-0 flex-1">
-          <div className="p-4 sm:p-6 border-b border-white/5 flex items-center justify-between bg-brand-2/50 shrink-0">
+          <div className="flex shrink-0 items-center justify-between border-b border-border bg-surface/70 p-4 sm:p-6">
             <div className="flex items-center gap-3 sm:gap-4">
               <button
                 onClick={step === "pix" ? () => pixCopied && setStep("form") : close}
@@ -139,8 +139,8 @@ export function DepositDialog() {
                     </p>
                   </div>
                 )}
-                <div className="p-1 bg-brand-2 rounded-xl border border-white/5">
-                  <button className="w-full h-11 rounded-lg bg-primary text-primary-foreground font-black text-xs uppercase tracking-wider shadow-lg">PIX</button>
+                <div className="rounded-lg border border-primary/30 bg-primary/10 p-1">
+                  <div className="flex h-11 w-full items-center justify-center gap-2 rounded-md bg-primary text-xs font-black uppercase text-primary-foreground shadow-lg"><Zap className="size-4" /> PIX instantâneo</div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -158,7 +158,7 @@ export function DepositDialog() {
                   <label className="text-xs font-bold text-white/60 uppercase tracking-widest ml-1">Valor do Depósito</label>
                   <div className="relative group">
                     <div className="absolute inset-0 bg-primary/5 rounded-2xl blur-xl group-focus-within:bg-primary/10 transition-colors" />
-                    <div className="relative flex items-center bg-brand-2 border-2 border-white/5 group-focus-within:border-primary rounded-2xl transition-all h-20 px-6">
+                    <div className="relative flex h-20 items-center rounded-xl border-2 border-border bg-surface/70 px-6 transition-all group-focus-within:border-primary">
                       <span className="text-2xl font-black text-primary mr-3">R$</span>
                       <input
                         type="number"
@@ -181,8 +181,8 @@ export function DepositDialog() {
                       className={cn(
                         "relative h-14 rounded-xl font-black text-sm transition-all border-2 flex items-center justify-center overflow-hidden",
                         amount === v
-                          ? "border-primary bg-primary/10 text-primary shadow-[0_0_20px_-5px_rgba(255,215,0,0.3)]"
-                          : "border-white/5 bg-brand-2/60 text-white/60 hover:border-white/20 hover:text-white",
+                          ? "border-primary bg-primary/10 text-primary shadow-lg shadow-primary/10"
+                          : "border-border bg-surface/60 text-muted-foreground hover:border-primary/50 hover:text-foreground",
                       )}
                     >
                       R$ {v}

@@ -1,23 +1,18 @@
 import { Link } from "@tanstack/react-router";
+import mark from "@/assets/apostaya-mark.png";
 
 export function Logo({ className = "" }: { className?: string }) {
   return (
     <Link
       to="/"
-      aria-label="APOSTAYA.BET"
-      className={`flex h-12 md:h-14 items-center overflow-visible shrink-0 ${className}`}
+      aria-label="apostaya.bet"
+      className={`flex h-12 shrink-0 items-center overflow-visible md:h-14 ${className}`}
     >
-      <span className="flex md:hidden items-center gap-1.5 font-black text-base tracking-tight">
-        <span className="leading-none whitespace-nowrap">
-          <span className="text-white">APOSTAYA</span>
-          <span className="text-primary">.BET</span>
-        </span>
-      </span>
-
-      <span className="hidden md:flex items-center gap-2.5 h-full overflow-visible">
-        <span className="flex items-baseline leading-none whitespace-nowrap font-black text-[25px] tracking-normal">
-          <span className="text-white">APOSTAYA</span>
-          <span className="text-primary">.BET</span>
+      <span className="flex items-center gap-2 font-black">
+        <img src={mark} alt="" width={1024} height={1024} className="size-8 shrink-0 object-contain md:size-9" fetchPriority="high" decoding="async" />
+        <span className="whitespace-nowrap text-[17px] leading-none md:text-[22px]">
+          <span className="text-foreground">apostaya</span>
+          <span className="text-primary">.bet</span>
         </span>
       </span>
     </Link>

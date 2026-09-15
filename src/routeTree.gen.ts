@@ -32,6 +32,7 @@ import { Route as AdminKycRouteImport } from './routes/admin/kyc'
 import { Route as AdminFinanceiroRouteImport } from './routes/admin/financeiro'
 import { Route as AdminDepositosRouteImport } from './routes/admin/depositos'
 import { Route as AdminConfiguracoesRouteImport } from './routes/admin/configuracoes'
+import { Route as AdminCatalogoRouteImport } from './routes/admin/catalogo'
 import { Route as AdminBannersRouteImport } from './routes/admin/banners'
 import { Route as AuthenticatedSaqueRouteImport } from './routes/_authenticated/saque'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
@@ -158,6 +159,11 @@ const AdminConfiguracoesRoute = AdminConfiguracoesRouteImport.update({
   path: '/configuracoes',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCatalogoRoute = AdminCatalogoRouteImport.update({
+  id: '/catalogo',
+  path: '/catalogo',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminBannersRoute = AdminBannersRouteImport.update({
   id: '/banners',
   path: '/banners',
@@ -232,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/perfil': typeof AuthenticatedPerfilRoute
   '/saque': typeof AuthenticatedSaqueRoute
   '/admin/banners': typeof AdminBannersRoute
+  '/admin/catalogo': typeof AdminCatalogoRoute
   '/admin/configuracoes': typeof AdminConfiguracoesRoute
   '/admin/depositos': typeof AdminDepositosRoute
   '/admin/financeiro': typeof AdminFinanceiroRoute
@@ -266,6 +273,7 @@ export interface FileRoutesByTo {
   '/perfil': typeof AuthenticatedPerfilRoute
   '/saque': typeof AuthenticatedSaqueRoute
   '/admin/banners': typeof AdminBannersRoute
+  '/admin/catalogo': typeof AdminCatalogoRoute
   '/admin/configuracoes': typeof AdminConfiguracoesRoute
   '/admin/depositos': typeof AdminDepositosRoute
   '/admin/financeiro': typeof AdminFinanceiroRoute
@@ -303,6 +311,7 @@ export interface FileRoutesById {
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/saque': typeof AuthenticatedSaqueRoute
   '/admin/banners': typeof AdminBannersRoute
+  '/admin/catalogo': typeof AdminCatalogoRoute
   '/admin/configuracoes': typeof AdminConfiguracoesRoute
   '/admin/depositos': typeof AdminDepositosRoute
   '/admin/financeiro': typeof AdminFinanceiroRoute
@@ -340,6 +349,7 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/saque'
     | '/admin/banners'
+    | '/admin/catalogo'
     | '/admin/configuracoes'
     | '/admin/depositos'
     | '/admin/financeiro'
@@ -374,6 +384,7 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/saque'
     | '/admin/banners'
+    | '/admin/catalogo'
     | '/admin/configuracoes'
     | '/admin/depositos'
     | '/admin/financeiro'
@@ -410,6 +421,7 @@ export interface FileRouteTypes {
     | '/_authenticated/perfil'
     | '/_authenticated/saque'
     | '/admin/banners'
+    | '/admin/catalogo'
     | '/admin/configuracoes'
     | '/admin/depositos'
     | '/admin/financeiro'
@@ -615,6 +627,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminConfiguracoesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/catalogo': {
+      id: '/admin/catalogo'
+      path: '/catalogo'
+      fullPath: '/admin/catalogo'
+      preLoaderRoute: typeof AdminCatalogoRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/banners': {
       id: '/admin/banners'
       path: '/banners'
@@ -715,6 +734,7 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 
 interface AdminRouteChildren {
   AdminBannersRoute: typeof AdminBannersRoute
+  AdminCatalogoRoute: typeof AdminCatalogoRoute
   AdminConfiguracoesRoute: typeof AdminConfiguracoesRoute
   AdminDepositosRoute: typeof AdminDepositosRoute
   AdminFinanceiroRoute: typeof AdminFinanceiroRoute
@@ -729,6 +749,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminBannersRoute: AdminBannersRoute,
+  AdminCatalogoRoute: AdminCatalogoRoute,
   AdminConfiguracoesRoute: AdminConfiguracoesRoute,
   AdminDepositosRoute: AdminDepositosRoute,
   AdminFinanceiroRoute: AdminFinanceiroRoute,

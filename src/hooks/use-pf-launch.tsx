@@ -66,7 +66,7 @@ export function usePFLaunch() {
 
 export function usePFGames(providerId?: number, options?: { limit?: number; q?: string }) {
   const fetchGames = useServerFn(getPFGames);
-  const limit = options?.limit ?? 240;
+  const limit = options?.limit ?? 600;
   const q = options?.q?.trim() || undefined;
   return useQuery({
     queryKey: ["pf-games", providerId ?? "all", limit, q ?? ""],

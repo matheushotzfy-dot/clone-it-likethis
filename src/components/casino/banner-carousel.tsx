@@ -3,14 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listBannersPublic } from "@/lib/banners.functions";
 import { cn } from "@/lib/utils";
-import banner1 from "@/assets/banner-welcome.jpg";
-import banner2 from "@/assets/banner-bonus.jpg";
-import bannerSports from "@/assets/banner-sports.jpg";
+import banner1 from "@/assets/apostaya-banner-welcome.jpg";
+import banner2 from "@/assets/apostaya-banner-pix.jpg";
 
 const fallbacks = [
-  { id: "f1", image_url: banner1, desktop_image_url: banner1, link_url: null as string | null, title: "APOSTAYA.BET — cassino online" },
-  { id: "f2", image_url: banner2, desktop_image_url: banner2, link_url: null as string | null, title: "Bônus de 100% no primeiro depósito" },
-  { id: "f3", image_url: bannerSports, desktop_image_url: bannerSports, link_url: null as string | null, title: "Apostas Esportivas em breve" },
+  { id: "f1", image_url: banner1, desktop_image_url: banner1, link_url: null as string | null, title: "apostaya.bet — jogos em alta definição" },
+  { id: "f2", image_url: banner2, desktop_image_url: banner2, link_url: null as string | null, title: "Depósito rápido e seguro via PIX" },
 ];
 
 export function BannerCarousel({
