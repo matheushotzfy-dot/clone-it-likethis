@@ -30,7 +30,7 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const [q, setQ] = useState("");
-  const gamesQ = usePFGames(undefined, { limit: 900 });
+  const gamesQ = usePFGames(undefined, { limit: 420 });
   const { play, launchingCode } = usePFLaunch();
 
   const all = gamesQ.data ?? [];
