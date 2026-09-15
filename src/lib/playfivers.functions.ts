@@ -299,13 +299,13 @@ export const getPFGames = createServerFn({ method: "GET" })
       }
       if (!data.providerId && list.length === 0) list = orderLobbyGames(CURATED_FEATURED_GAMES);
       const filtered = dedupeGames(applyGameQuery(list, data.q), !data.providerId);
-      return filtered.slice(0, data.limit);
+      return toLite(filtered.slice(0, data.limit));
     } catch (error) {
       console.error("PlayFivers games unavailable", error);
       const fallback = data.providerId ? gamesCache.get(String(data.providerId))?.data : [...gamesCache.values()].flatMap((c) => c.data);
       const list = data.providerId ? (fallback ?? []) : orderLobbyGames((fallback?.length ? fallback : CURATED_FEATURED_GAMES));
       const filtered = dedupeGames(applyGameQuery(list, data.q), !data.providerId);
-      return filtered.slice(0, data.limit);
+      return toLite(filtered.slice(0, data.limit));
     }
   });
 
