@@ -29,10 +29,11 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
       className="tile sweep group relative block w-full overflow-hidden rounded-[10px] border border-border bg-surface text-left aspect-[3/4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
     >
       {failed ? (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-surface p-3 text-center">
-          <Gamepad2 className="size-5 text-muted-foreground" strokeWidth={1.75} />
-          <p className="line-clamp-2 text-[11px] font-semibold leading-tight">{game.name}</p>
-          <p className="text-[10px] text-muted-foreground">{game.provider.name}</p>
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-[radial-gradient(120%_90%_at_50%_0%,color-mix(in_srgb,var(--primary)_28%,transparent),transparent_70%)] bg-card p-3 text-center">
+          <span className="font-display grid size-11 place-items-center rounded-full bg-primary/15 text-lg font-black text-primary">
+            {game.name.trim().charAt(0).toUpperCase()}
+          </span>
+          <p className="line-clamp-2 text-[11px] font-bold leading-tight">{game.name}</p>
         </div>
       ) : (
         <>
@@ -45,7 +46,10 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
             decoding="async"
             sizes="(max-width: 640px) 44vw, (max-width: 1024px) 22vw, 240px"
             onLoad={() => setLoaded(true)}
-            onError={() => setFailed(true)}
+            onError={() => {
+              markBrokenArt(game.game_code);
+              setFailed(true);
+            }}
             className={cn(
               "size-full object-cover transition-[transform,opacity] duration-300 ease-out group-hover:scale-[1.05]",
               loaded ? "opacity-100" : "opacity-0",
