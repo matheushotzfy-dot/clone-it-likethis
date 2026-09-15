@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { readCatalogCache, writeCatalogCache } from "@/lib/pf-catalog-cache";
+import { isBrokenArt } from "@/lib/pf-broken-art";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -65,13 +66,14 @@ export function usePFLaunch() {
   return { play, launchingCode };
 }
 
-/** Remove jogos sem arte e títulos repetidos antes de chegar na tela. */
+/** Remove jogos sem arte (inclusive artes quebradas) e títulos repetidos. */
 function cleanGames(games: PFGameLite[]): PFGameLite[] {
   const seen = new Set<string>();
   const out: PFGameLite[] = [];
   for (const g of games) {
     const url = (g.image_url ?? "").trim();
     if (!/^https?:\/\//i.test(url)) continue;
+    if (isBrokenArt(g.game_code)) continue;
     const key = `${g.name.toLowerCase().replace(/[^a-z0-9]/g, "")}`;
     if (!key || seen.has(key)) continue;
     seen.add(key);
