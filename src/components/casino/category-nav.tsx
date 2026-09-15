@@ -29,7 +29,7 @@ const cats: Cat[] = [
  */
 export function CategoryNav({ active }: { active?: string }) {
   return (
-    <nav className="edge-fade no-scrollbar snap-row w-full max-w-full overflow-x-auto">
+    <nav className="edge-fade no-scrollbar snap-row w-full max-w-full min-w-0 overflow-x-auto overscroll-x-contain">
       <ul className="flex w-max items-center gap-1.5 pr-4 md:gap-2">
         {cats.map(({ label, to, Icon, accent, search, live }) => {
           const isActive = active === label;

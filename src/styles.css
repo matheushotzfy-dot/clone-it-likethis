@@ -9,7 +9,7 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --font-display: "Sora", system-ui, sans-serif;
+  --font-display: "Outfit", system-ui, sans-serif;
   --font-sans: "Manrope", system-ui, sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -54,38 +54,38 @@
   --radius: 0.625rem;
 
   /* Royal Blue PIX */
-  --background: #0c1430;
-  --foreground: #eef3ff;
+  --background: #080d19;
+  --foreground: #f2f7ff;
 
-  --surface: #16224a;
-  --surface-2: #1d2c5c;
+  --surface: #111a2b;
+  --surface-2: #17233a;
   --line: rgba(255, 255, 255, 0.08);
 
-  --card: #131e42;
-  --card-foreground: #eef3ff;
-  --popover: #101a3b;
-  --popover-foreground: #eef3ff;
+  --card: #0f1828;
+  --card-foreground: #f2f7ff;
+  --popover: #0d1524;
+  --popover-foreground: #f2f7ff;
 
-  --brand: #3b6fa0;
-  --brand-2: #2b5580;
+  --brand: #0e1728;
+  --brand-2: #142138;
 
   /* Cyan CTA */
-  --primary: #5cbdb9;
-  --primary-foreground: #05121f;
+  --primary: #22d3ee;
+  --primary-foreground: #03141a;
 
-  --secondary: #1d2c5c;
-  --secondary-foreground: #eef3ff;
-  --muted: #18234a;
-  --muted-foreground: #9aa8cc;
-  --accent: #5cbdb9;
-  --accent-foreground: #05121f;
+  --secondary: #17233a;
+  --secondary-foreground: #f2f7ff;
+  --muted: #121d31;
+  --muted-foreground: #94a3bd;
+  --accent: #22d3ee;
+  --accent-foreground: #03141a;
   --destructive: #e5484d;
   --destructive-foreground: #ffffff;
   --success: #43c98a;
 
   --border: rgba(255, 255, 255, 0.08);
   --input: rgba(255, 255, 255, 0.06);
-  --ring: #5cbdb9;
+  --ring: #22d3ee;
 
   --sidebar: #0e1836;
   --sidebar-foreground: #eef3ff;

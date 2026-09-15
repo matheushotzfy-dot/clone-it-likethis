@@ -133,6 +133,16 @@ export const getPFProviders = createServerFn({ method: "GET" }).handler(async ()
 
 // Public — list of games (optionally filtered by provider id)
 const gamesCache = new Map<string, { at: number; data: PFGame[] }>();
+type CatalogDiagnostics = {
+  providers: number;
+  providersLoaded: number;
+  providersFailed: number;
+  rawGames: number;
+  uniqueGames: number;
+  duplicatesRemoved: number;
+  updatedAt: string;
+};
+let catalogCache: { at: number; data: PFGame[]; diagnostics: CatalogDiagnostics } | null = null;
 async function loadProviderGames(providerId: number) {
   const key = String(providerId);
   const cached = gamesCache.get(key);
@@ -218,6 +228,35 @@ function orderLobbyGames(games: PFGame[]) {
   ];
 }
 
+async function loadCompleteCatalog() {
+  if (catalogCache && Date.now() - catalogCache.at < 5 * 60_000) return catalogCache;
+  const providers = await loadProviders();
+  const sorted = [...providers].sort((a, b) => providerPriority(a) - providerPriority(b));
+  const loaded: PFGame[][] = [];
+  let failed = 0;
+  for (let start = 0; start < sorted.length; start += 10) {
+    const batch = sorted.slice(start, start + 10);
+    const settled = await Promise.allSettled(batch.map((provider) => loadProviderGames(provider.id)));
+    for (const result of settled) {
+      if (result.status === "fulfilled") loaded.push(result.value);
+      else failed += 1;
+    }
+  }
+  const raw = loaded.flat();
+  const data = orderLobbyGames(raw);
+  const diagnostics: CatalogDiagnostics = {
+    providers: sorted.length,
+    providersLoaded: sorted.length - failed,
+    providersFailed: failed,
+    rawGames: raw.length,
+    uniqueGames: data.length,
+    duplicatesRemoved: Math.max(0, raw.length - data.length),
+    updatedAt: new Date().toISOString(),
+  };
+  catalogCache = { at: Date.now(), data, diagnostics };
+  return catalogCache;
+}
+
 function applyGameQuery(games: PFGame[], q?: string) {
   const query = q?.toLowerCase();
   return query
@@ -228,7 +267,7 @@ function applyGameQuery(games: PFGame[], q?: string) {
 export const getPFGames = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({
     providerId: z.number().int().optional(),
-    limit: z.number().int().min(24).max(600).default(240),
+    limit: z.number().int().min(24).max(10_000).default(600),
     q: z.string().trim().max(80).optional(),
   }).parse(d ?? {}))
   .handler(async ({ data }) => {
@@ -237,12 +276,7 @@ export const getPFGames = createServerFn({ method: "GET" })
       if (data.providerId) {
         list = await loadProviderGames(data.providerId);
       } else {
-        const providers = await loadProviders();
-        const sorted = [...providers].sort((a, b) => providerPriority(a) - providerPriority(b));
-        const minProviders = 28;
-        const providersToLoad = sorted.slice(0, Math.min(sorted.length, Math.max(minProviders, Math.ceil(data.limit / 18))));
-        const settled = await Promise.allSettled(providersToLoad.map((p) => loadProviderGames(p.id)));
-        list = orderLobbyGames(settled.flatMap((r) => (r.status === "fulfilled" ? r.value : [])));
+        list = (await loadCompleteCatalog()).data;
       }
       if (!data.providerId && list.length === 0) list = orderLobbyGames(CURATED_FEATURED_GAMES);
       const filtered = dedupeGames(applyGameQuery(list, data.q), !data.providerId);
@@ -254,6 +288,19 @@ export const getPFGames = createServerFn({ method: "GET" })
       const filtered = dedupeGames(applyGameQuery(list, data.q), !data.providerId);
       return filtered.slice(0, data.limit);
     }
+  });
+
+export const getPFCatalogDiagnostics = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: role } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (!role) throw new Error("Acesso negado");
+    return (await loadCompleteCatalog()).diagnostics;
   });
 
 // Authenticated — launch a game for the current user

@@ -13,13 +13,13 @@ import { splitPFGamesByCategory } from "@/lib/pf-game-classification";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "APOSTAYA.BET — Cassino Online com Slots e Mesas Ao Vivo" },
+      { title: "apostaya.bet — Cassino Online" },
       {
         name: "description",
         content:
           "Jogue slots, crash games e mesas ao vivo dos maiores provedores. Depósito e saque por PIX em segundos.",
       },
-      { property: "og:title", content: "APOSTAYA.BET — Cassino Online" },
+      { property: "og:title", content: "apostaya.bet — Cassino Online" },
       { property: "og:description", content: "Slots, crash games e cassino ao vivo com PIX instantâneo." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -30,7 +30,7 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const [q, setQ] = useState("");
-  const gamesQ = usePFGames();
+  const gamesQ = usePFGames(undefined, { limit: 10_000 });
   const { play, launchingCode } = usePFLaunch();
 
   const all = gamesQ.data ?? [];
@@ -72,7 +72,7 @@ function Index() {
 
   return (
     <SiteShell>
-      <div className="aurora mx-auto max-w-[1600px] space-y-4 px-2.5 py-2.5 md:space-y-7 md:px-6 md:py-5">
+      <div className="aurora mx-auto max-w-[1600px] overflow-x-hidden space-y-4 px-2.5 py-2.5 md:space-y-7 md:px-6 md:py-5">
         <BannerCarousel aspectClass="aspect-[16/8] sm:aspect-[2.4/1] md:aspect-[1920/560]" />
 
         {/* nav + search on one line */}
