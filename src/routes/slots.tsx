@@ -28,6 +28,7 @@ function SlotsPage() {
   const providersQ = usePFProviders();
   const gamesQ = usePFGames(providerId ?? undefined, {
     limit: providerId ? 600 : 1_200,
+    complete: !providerId,
     q,
   });
   const { play, launchingCode } = usePFLaunch();
