@@ -232,7 +232,7 @@ function orderLobbyGames(games: PFGame[]) {
 /** Providers loaded first: they cover the games the lobby actually shows. */
 const FAST_PROVIDER_COUNT = 16;
 
-let completeInFlight: Promise<typeof catalogCache> | null = null;
+let completeInFlight: Promise<CatalogSnapshot> | null = null;
 
 /**
  * Fast path: only the priority studios, fully in parallel. Answers in ~1s so
