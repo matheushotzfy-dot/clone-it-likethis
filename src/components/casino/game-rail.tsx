@@ -31,7 +31,7 @@ export function GameRail({
 }: RailProps) {
   if (items.length === 0) return null;
   const count = total ?? items.length;
-  const shown = items.slice(0, rows * 8);
+  const shown = items.slice(0, rows * GAME_ROW);
 
   return (
     <section className={cn(accent, "space-y-2.5 md:space-y-3")}>
@@ -46,7 +46,7 @@ export function GameRail({
             <PFGameCard
               game={g}
               rank={ranked ? i + 1 : undefined}
-              priority={priority && i < 8}
+              priority={priority && i < GAME_ROW}
               loading={launchingCode === g.game_code}
               onPlay={onPlay}
             />
