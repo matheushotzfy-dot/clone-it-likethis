@@ -281,8 +281,9 @@ async function buildCompleteCatalog() {
     duplicatesRemoved: Math.max(0, raw.length - data.length),
     updatedAt: new Date().toISOString(),
   };
-  catalogCache = { at: Date.now(), data, diagnostics };
-  return catalogCache;
+  const snapshot: CatalogSnapshot = { at: Date.now(), data, diagnostics };
+  catalogCache = snapshot;
+  return snapshot;
 }
 
 /** Only the fields the UI renders — keeps the JSON payload small and fast. */
