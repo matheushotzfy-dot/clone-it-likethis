@@ -111,21 +111,21 @@ export function Header() {
         <div className="ml-auto flex min-w-0 shrink items-center gap-1.5 md:gap-2 xl:ml-3">
           {user ? (
             <>
-              <div className="flex h-9 min-w-0 items-center gap-1.5 rounded-[10px] border border-border bg-surface/70 pl-2.5 pr-1 md:h-10 md:gap-2 md:pl-3">
-                <span className="flex min-w-0 flex-col leading-none">
-                  <span className="hidden text-[9px] font-bold uppercase tracking-[0.14em] text-muted-foreground md:block">
+              <div className="flex h-9 shrink-0 items-center gap-2 rounded-[10px] border border-border bg-surface/70 pl-2.5 pr-1 md:h-10 md:pl-3">
+                <span className="flex flex-col leading-none">
+                  <span className="hidden text-[8.5px] font-bold uppercase tracking-[0.16em] text-muted-foreground md:block">
                     Saldo
                   </span>
-                  <span className="truncate text-[13px] font-extrabold tabular-nums md:text-sm">
-                    R$ {brl(balance)}
+                  <span className="whitespace-nowrap text-[13px] font-extrabold tabular-nums text-foreground md:text-[15px]">
+                    <span className="text-primary">R$</span> {brl(balance)}
                   </span>
                 </span>
                 <button
                   onClick={() => { qc.invalidateQueries({ queryKey: ["my-profile"] }); refetch(); }}
-                  className="slick grid size-7 shrink-0 place-items-center rounded-[7px] bg-primary text-primary-foreground hover:brightness-110"
+                  className="slick grid size-7 shrink-0 place-items-center rounded-[7px] border border-primary/40 bg-primary/12 text-primary hover:bg-primary hover:text-primary-foreground"
                   aria-label="Atualizar saldo"
                 >
-                  <RefreshCw className={cn("size-3.5", isFetching && "animate-spin")} strokeWidth={2} />
+                  <RefreshCw className={cn("size-3.5", isFetching && "animate-spin")} strokeWidth={2.2} />
                 </button>
               </div>
 
