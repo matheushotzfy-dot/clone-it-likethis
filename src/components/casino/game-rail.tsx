@@ -3,8 +3,12 @@ import { PFGameCard } from "./pf-game-card";
 import type { PFGameLite } from "@/hooks/use-pf-launch";
 import { cn } from "@/lib/utils";
 
+/** High-density tile grid: more titles per screen, tighter gutters. */
 export const GAME_GRID =
-  "grid grid-cols-3 gap-1.5 sm:grid-cols-4 sm:gap-2 md:grid-cols-6 md:gap-2.5 xl:grid-cols-8";
+  "grid grid-cols-3 gap-1.5 sm:grid-cols-5 sm:gap-2 md:grid-cols-7 lg:grid-cols-8 xl:grid-cols-9 2xl:grid-cols-10";
+
+/** Tiles per row at the widest breakpoint — used to size each rail. */
+export const GAME_ROW = 9;
 
 interface RailProps {
   title: string;
