@@ -144,12 +144,18 @@ type CatalogDiagnostics = {
 };
 type CatalogSnapshot = { at: number; data: PFGame[]; diagnostics: CatalogDiagnostics };
 let catalogCache: CatalogSnapshot | null = null;
+/** Só entram no catálogo jogos ativos e com arte remota válida. */
+function hasArtwork(game: PFGame) {
+  const url = (game.image_url ?? "").trim();
+  return /^https?:\/\/\S+\.(webp|png|jpe?g|avif|gif)(\?\S*)?$/i.test(url);
+}
+
 async function loadProviderGames(providerId: number) {
   const key = String(providerId);
   const cached = gamesCache.get(key);
   if (cached && Date.now() - cached.at < 5 * 60_000) return cached.data;
   const json = await pfFetch(`/api/v2/games?provider=${providerId}`);
-  const list: PFGame[] = (json?.data ?? []).filter((g: PFGame) => g.status);
+  const list: PFGame[] = (json?.data ?? []).filter((g: PFGame) => g.status && hasArtwork(g));
   gamesCache.set(key, { at: Date.now(), data: list });
   return list;
 }
