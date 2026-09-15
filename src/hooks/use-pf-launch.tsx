@@ -91,7 +91,11 @@ export function usePFGames(
   const q = options?.q?.trim() || undefined;
   const complete = options?.complete ?? false;
   const cacheKey = `${providerId ?? "all"}|${limit}|${q ?? ""}|${complete}`;
-  const cached = useMemo(() => readCatalogCache(cacheKey), [cacheKey]);
+  const cached = useMemo(() => {
+    const entry = readCatalogCache(cacheKey);
+    /** Reaplica a limpeza: artes que quebraram depois não voltam pelo cache. */
+    return entry ? { at: entry.at, games: cleanGames(entry.games) } : null;
+  }, [cacheKey]);
 
   const query = useQuery({
     queryKey: ["pf-games", providerId ?? "all", limit, q ?? "", complete],
