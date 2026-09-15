@@ -1,6 +1,7 @@
-import { Play, Loader2, Gamepad2 } from "lucide-react";
+import { Play, Loader2 } from "lucide-react";
 import { useState } from "react";
 import type { PFGameLite } from "@/hooks/use-pf-launch";
+import { markBrokenArt } from "@/lib/pf-broken-art";
 import { cn } from "@/lib/utils";
 
 interface Props {
