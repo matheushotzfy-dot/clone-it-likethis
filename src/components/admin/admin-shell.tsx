@@ -60,7 +60,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
         <div className="px-5 h-16 flex items-center border-b border-white/10">
           <div className="size-9 rounded-lg bg-primary/15 flex items-center justify-center mr-3"><ShieldCheck className="size-5 text-primary" /></div>
           <div className="min-w-0">
-            <span className="block text-white font-black text-xl leading-none">apostaya<span className="text-primary">.bet</span></span>
+            <span className="block text-white font-black text-xl leading-none">apostamaxy<span className="text-primary">maxy</span></span>
             <span className="text-[10px] uppercase font-bold text-white/55 tracking-wide">Admin Center</span>
           </div>
         </div>
