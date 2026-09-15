@@ -15,7 +15,7 @@ export function PromoSide() {
 
       <div className="relative z-10 flex flex-col items-center px-7 py-9 text-center">
         <h3 className="font-display mt-5 text-3xl font-extrabold leading-none tracking-tight">
-          APOSTAYA<span className="text-primary">.BET</span>
+          aposta<span className="text-primary">maxy</span>
         </h3>
 
         <p className="mt-4 font-display text-3xl font-extrabold leading-tight">
