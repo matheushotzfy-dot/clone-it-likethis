@@ -60,7 +60,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
         <div className="px-5 h-16 flex items-center border-b border-white/10">
           <div className="size-9 rounded-lg bg-primary/15 flex items-center justify-center mr-3"><ShieldCheck className="size-5 text-primary" /></div>
           <div className="min-w-0">
-            <span className="block text-white font-black text-xl leading-none">apostamaxy<span className="text-primary">maxy</span></span>
+            <span className="block text-white font-black text-xl leading-none">aposta<span className="text-primary">maxy</span></span>
             <span className="text-[10px] uppercase font-bold text-white/55 tracking-wide">Admin Center</span>
           </div>
         </div>
@@ -73,7 +73,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <button aria-label="Fechar menu" className="absolute inset-0 bg-black/60" onClick={() => setOpen(false)} />
           <aside className="relative w-72 max-w-[85vw] flex flex-col bg-brand border-r border-white/10 h-full animate-in slide-in-from-left duration-200">
             <div className="px-5 h-16 flex items-center justify-between border-b border-white/10">
-              <span className="text-white font-black text-xl">apostaya<span className="text-primary">.bet</span></span>
+              <span className="text-white font-black text-xl">aposta<span className="text-primary">maxy</span></span>
               <button onClick={() => setOpen(false)} className="size-9 rounded-md text-white/80 hover:bg-white/10 flex items-center justify-center">
                 <X className="size-5" />
               </button>

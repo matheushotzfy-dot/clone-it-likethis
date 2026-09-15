@@ -7,7 +7,7 @@ import banner1 from "@/assets/apostaya-banner-welcome.jpg";
 import banner2 from "@/assets/apostaya-banner-pix.jpg";
 
 const fallbacks = [
-  { id: "f1", image_url: banner1, desktop_image_url: banner1, link_url: null as string | null, title: "apostaya.bet — jogos em alta definição" },
+  { id: "f1", image_url: banner1, desktop_image_url: banner1, link_url: null as string | null, title: "apostamaxy — jogos em alta definição" },
   { id: "f2", image_url: banner2, desktop_image_url: banner2, link_url: null as string | null, title: "Depósito rápido e seguro via PIX" },
 ];
 

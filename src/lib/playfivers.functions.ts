@@ -142,7 +142,8 @@ type CatalogDiagnostics = {
   duplicatesRemoved: number;
   updatedAt: string;
 };
-let catalogCache: { at: number; data: PFGame[]; diagnostics: CatalogDiagnostics } | null = null;
+type CatalogSnapshot = { at: number; data: PFGame[]; diagnostics: CatalogDiagnostics };
+let catalogCache: CatalogSnapshot | null = null;
 async function loadProviderGames(providerId: number) {
   const key = String(providerId);
   const cached = gamesCache.get(key);
@@ -228,14 +229,41 @@ function orderLobbyGames(games: PFGame[]) {
   ];
 }
 
+/** Providers loaded first: they cover the games the lobby actually shows. */
+const FAST_PROVIDER_COUNT = 16;
+
+let completeInFlight: Promise<CatalogSnapshot> | null = null;
+
+/**
+ * Fast path: only the priority studios, fully in parallel. Answers in ~1s so
+ * the lobby paints immediately while the full catalog warms up in background.
+ */
+async function loadFastCatalog() {
+  const providers = await loadProviders();
+  const sorted = [...providers].sort((a, b) => providerPriority(a) - providerPriority(b));
+  const settled = await Promise.allSettled(
+    sorted.slice(0, FAST_PROVIDER_COUNT).map((provider) => loadProviderGames(provider.id)),
+  );
+  const raw = settled.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
+  return orderLobbyGames(raw);
+}
+
 async function loadCompleteCatalog() {
   if (catalogCache && Date.now() - catalogCache.at < 5 * 60_000) return catalogCache;
+  if (completeInFlight) return completeInFlight;
+  completeInFlight = buildCompleteCatalog().finally(() => {
+    completeInFlight = null;
+  });
+  return completeInFlight;
+}
+
+async function buildCompleteCatalog() {
   const providers = await loadProviders();
   const sorted = [...providers].sort((a, b) => providerPriority(a) - providerPriority(b));
   const loaded: PFGame[][] = [];
   let failed = 0;
-  for (let start = 0; start < sorted.length; start += 10) {
-    const batch = sorted.slice(start, start + 10);
+  for (let start = 0; start < sorted.length; start += 24) {
+    const batch = sorted.slice(start, start + 24);
     const settled = await Promise.allSettled(batch.map((provider) => loadProviderGames(provider.id)));
     for (const result of settled) {
       if (result.status === "fulfilled") loaded.push(result.value);
@@ -253,8 +281,28 @@ async function loadCompleteCatalog() {
     duplicatesRemoved: Math.max(0, raw.length - data.length),
     updatedAt: new Date().toISOString(),
   };
-  catalogCache = { at: Date.now(), data, diagnostics };
-  return catalogCache;
+  const snapshot: CatalogSnapshot = { at: Date.now(), data, diagnostics };
+  catalogCache = snapshot;
+  return snapshot;
+}
+
+/** Only the fields the UI renders — keeps the JSON payload small and fast. */
+type PFGameLitePayload = {
+  game_code: string;
+  name: string;
+  image_url: string;
+  original: boolean;
+  provider: { name: string };
+};
+
+function toLite(games: PFGame[]): PFGameLitePayload[] {
+  return games.map((g) => ({
+    game_code: g.game_code,
+    name: g.name,
+    image_url: g.image_url,
+    original: g.original,
+    provider: { name: g.provider.name },
+  }));
 }
 
 function applyGameQuery(games: PFGame[], q?: string) {
@@ -269,6 +317,8 @@ export const getPFGames = createServerFn({ method: "GET" })
     providerId: z.number().int().optional(),
     limit: z.number().int().min(24).max(10_000).default(600),
     q: z.string().trim().max(80).optional(),
+    /** true = wait for every provider (browse-all pages); false = fast lobby. */
+    complete: z.boolean().default(false),
   }).parse(d ?? {}))
   .handler(async ({ data }) => {
     try {
@@ -276,17 +326,26 @@ export const getPFGames = createServerFn({ method: "GET" })
       if (data.providerId) {
         list = await loadProviderGames(data.providerId);
       } else {
-        list = (await loadCompleteCatalog()).data;
+        const fresh = catalogCache && Date.now() - catalogCache.at < 5 * 60_000 ? catalogCache : null;
+        if (fresh) {
+          list = fresh.data;
+        } else if (data.complete) {
+          list = (await loadCompleteCatalog()).data;
+        } else {
+          // Warm the full catalog without blocking this response.
+          void loadCompleteCatalog().catch(() => undefined);
+          list = await loadFastCatalog();
+        }
       }
       if (!data.providerId && list.length === 0) list = orderLobbyGames(CURATED_FEATURED_GAMES);
       const filtered = dedupeGames(applyGameQuery(list, data.q), !data.providerId);
-      return filtered.slice(0, data.limit);
+      return toLite(filtered.slice(0, data.limit));
     } catch (error) {
       console.error("PlayFivers games unavailable", error);
       const fallback = data.providerId ? gamesCache.get(String(data.providerId))?.data : [...gamesCache.values()].flatMap((c) => c.data);
       const list = data.providerId ? (fallback ?? []) : orderLobbyGames((fallback?.length ? fallback : CURATED_FEATURED_GAMES));
       const filtered = dedupeGames(applyGameQuery(list, data.q), !data.providerId);
-      return filtered.slice(0, data.limit);
+      return toLite(filtered.slice(0, data.limit));
     }
   });
 

@@ -58,8 +58,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "apostaya.bet — Cassino Online" },
-      { property: "og:title", content: "apostaya.bet — Cassino Online" },
+      { title: "apostamaxy — Cassino Online" },
+      { property: "og:title", content: "apostamaxy — Cassino Online" },
       { name: "description", content: "Cassino online com slots, crash games e mesas ao vivo dos melhores provedores." },
     ],
     links: [

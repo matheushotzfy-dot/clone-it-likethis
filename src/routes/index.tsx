@@ -13,13 +13,13 @@ import { splitPFGamesByCategory } from "@/lib/pf-game-classification";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "apostaya.bet — Cassino Online" },
+      { title: "apostamaxy — Cassino Online" },
       {
         name: "description",
         content:
           "Jogue slots, crash games e mesas ao vivo dos maiores provedores. Depósito e saque por PIX em segundos.",
       },
-      { property: "og:title", content: "apostaya.bet — Cassino Online" },
+      { property: "og:title", content: "apostamaxy — Cassino Online" },
       { property: "og:description", content: "Slots, crash games e cassino ao vivo com PIX instantâneo." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -30,7 +30,7 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const [q, setQ] = useState("");
-  const gamesQ = usePFGames(undefined, { limit: 10_000 });
+  const gamesQ = usePFGames(undefined, { limit: 900 });
   const { play, launchingCode } = usePFLaunch();
 
   const all = gamesQ.data ?? [];
@@ -51,7 +51,7 @@ function Index() {
     const slots = dedupe(grouped.slots);
     const crash = dedupe(grouped.crash);
     const live = dedupe(grouped.live);
-    const top = dedupe([...slots, ...crash, ...live]).slice(0, 16);
+    const top = dedupe([...slots, ...crash, ...live]).slice(0, 18);
 
     /** Rails shouldn't repeat what the "most played" block already shows. */
     const inTop = new Set(top.map((g) => g.game_code));
@@ -106,7 +106,7 @@ function Index() {
 
         {gamesQ.isLoading ? (
           <div className={GAME_GRID}>
-            {Array.from({ length: 24 }).map((_, i) => (
+            {Array.from({ length: 27 }).map((_, i) => (
               <div key={i} className="skeleton aspect-[3/4] rounded-[10px]" />
             ))}
           </div>
@@ -124,7 +124,7 @@ function Index() {
               </p>
             ) : (
               <div className={GAME_GRID}>
-                {filtered.slice(0, 48).map((g, i) => (
+                {filtered.slice(0, 54).map((g, i) => (
                   <PFGameCard
                     key={`s-${g.game_code}-${i}`}
                     game={g}

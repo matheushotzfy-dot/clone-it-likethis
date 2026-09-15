@@ -23,7 +23,7 @@ export const Route = createFileRoute("/ao-vivo")({
 function Page() {
   const [q, setQ] = useState("");
   const [visibleCount, setVisibleCount] = useState(60);
-  const gamesQ = usePFGames(undefined, { limit: 10_000 });
+  const gamesQ = usePFGames(undefined, { limit: 1_200 });
   const { play, launchingCode } = usePFLaunch();
 
   const live = useMemo(() => {
