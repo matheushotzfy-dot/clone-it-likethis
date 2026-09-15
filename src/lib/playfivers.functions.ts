@@ -317,6 +317,8 @@ export const getPFGames = createServerFn({ method: "GET" })
     providerId: z.number().int().optional(),
     limit: z.number().int().min(24).max(10_000).default(600),
     q: z.string().trim().max(80).optional(),
+    /** true = wait for every provider (browse-all pages); false = fast lobby. */
+    complete: z.boolean().default(false),
   }).parse(d ?? {}))
   .handler(async ({ data }) => {
     try {
@@ -324,7 +326,16 @@ export const getPFGames = createServerFn({ method: "GET" })
       if (data.providerId) {
         list = await loadProviderGames(data.providerId);
       } else {
-        list = (await loadCompleteCatalog()).data;
+        const fresh = catalogCache && Date.now() - catalogCache.at < 5 * 60_000 ? catalogCache : null;
+        if (fresh) {
+          list = fresh.data;
+        } else if (data.complete) {
+          list = (await loadCompleteCatalog()).data;
+        } else {
+          // Warm the full catalog without blocking this response.
+          void loadCompleteCatalog().catch(() => undefined);
+          list = await loadFastCatalog();
+        }
       }
       if (!data.providerId && list.length === 0) list = orderLobbyGames(CURATED_FEATURED_GAMES);
       const filtered = dedupeGames(applyGameQuery(list, data.q), !data.providerId);
