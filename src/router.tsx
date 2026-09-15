@@ -3,13 +3,30 @@ import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 
 export const getRouter = () => {
-  const queryClient = new QueryClient();
+  /**
+   * Defaults tuned for perceived speed: data stays fresh for a minute, is kept
+   * in memory for ten, and tab focus never triggers a silent refetch storm.
+   */
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 60_000,
+        gcTime: 10 * 60_000,
+        refetchOnWindowFocus: false,
+        refetchOnMount: false,
+        retry: 1,
+      },
+    },
+  });
 
   const router = createRouter({
     routeTree,
     context: { queryClient },
     scrollRestoration: true,
-    defaultPreloadStaleTime: 0,
+    /** Prefetch on hover/touch so a click renders from cache. */
+    defaultPreload: "intent",
+    defaultPreloadStaleTime: 60_000,
+    defaultStaleTime: 60_000,
   });
 
   return router;

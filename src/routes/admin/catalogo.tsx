@@ -7,9 +7,9 @@ import { getPFCatalogDiagnostics } from "@/lib/playfivers.functions";
 
 export const Route = createFileRoute("/admin/catalogo")({
   head: () => ({ meta: [
-    { title: "Catálogo de jogos — apostaya.bet" },
-    { name: "description", content: "Diagnóstico administrativo do catálogo de jogos da apostaya.bet." },
-    { property: "og:title", content: "Catálogo de jogos — apostaya.bet" },
+    { title: "Catálogo de jogos — apostamaxy" },
+    { name: "description", content: "Diagnóstico administrativo do catálogo de jogos da apostamaxy." },
+    { property: "og:title", content: "Catálogo de jogos — apostamaxy" },
     { property: "og:description", content: "Diagnóstico do catálogo de jogos." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },
