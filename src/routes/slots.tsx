@@ -44,7 +44,7 @@ function SlotsPage() {
 
   return (
     <SiteShell>
-      <div className="aurora mx-auto max-w-[1600px] space-y-4 px-2.5 py-3 md:space-y-6 md:px-6 md:py-6">
+      <div className="aurora mx-auto max-w-[1600px] overflow-x-hidden space-y-4 px-2.5 py-3 md:space-y-6 md:px-6 md:py-6">
         <CatalogHeader
           title="Slots"
           subtitle={gamesQ.isLoading ? "Carregando catálogo…" : `${slots.length} slots disponíveis`}
