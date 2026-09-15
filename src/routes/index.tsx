@@ -72,7 +72,7 @@ function Index() {
 
   return (
     <SiteShell>
-      <div className="aurora mx-auto max-w-[1600px] space-y-4 px-2.5 py-2.5 md:space-y-7 md:px-6 md:py-5">
+      <div className="aurora mx-auto max-w-[1600px] overflow-x-hidden space-y-4 px-2.5 py-2.5 md:space-y-7 md:px-6 md:py-5">
         <BannerCarousel aspectClass="aspect-[16/8] sm:aspect-[2.4/1] md:aspect-[1920/560]" />
 
         {/* nav + search on one line */}
