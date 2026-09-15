@@ -59,7 +59,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/85 backdrop-blur-xl">
-      <div className="flex h-14 items-center gap-2 px-2 md:h-16 md:gap-3 md:px-5">
+      <div className="flex h-14 w-full items-center gap-2 overflow-hidden px-2 md:h-16 md:gap-3 md:px-5">
         <button
           onClick={toggleSidebar}
           className="slick -ml-1 grid size-9 place-items-center rounded-md text-foreground/80 hover:bg-surface hover:text-foreground lg:hidden"
@@ -70,7 +70,7 @@ export function Header() {
 
         <Logo />
 
-        <nav className="ml-3 hidden items-center gap-0.5 lg:flex">
+        <nav className="no-scrollbar ml-2 hidden min-w-0 shrink items-center gap-0.5 overflow-x-auto rounded-[10px] border border-border bg-surface/45 p-0.5 lg:flex xl:ml-4">
           {nav.map((n) => {
             const active = path === n.to;
             return (
@@ -78,20 +78,19 @@ export function Header() {
                 key={n.to}
                 to={n.to}
                 className={cn(
-                  "slick relative whitespace-nowrap rounded-md px-3 py-2 text-[13px] font-semibold tracking-tight",
-                  active ? "text-primary" : "text-foreground/70 hover:bg-surface hover:text-foreground",
+                  "slick relative whitespace-nowrap rounded-[8px] px-3 py-1.5 text-[12.5px] font-bold tracking-tight",
+                  active
+                    ? "bg-primary/12 text-primary shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--primary)_35%,transparent)]"
+                    : "text-foreground/70 hover:bg-surface hover:text-foreground",
                 )}
               >
                 {n.label}
-                {active && (
-                  <span className="absolute inset-x-3 -bottom-[9px] h-[2px] rounded-full bg-primary" />
-                )}
               </Link>
             );
           })}
         </nav>
 
-        <form onSubmit={submitSearch} className="relative ml-auto hidden shrink-0 2xl:block 2xl:w-64">
+        <form onSubmit={submitSearch} className="relative ml-auto hidden shrink-0 xl:block xl:w-56 2xl:w-64">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.75} />
           <input
             value={term}
@@ -102,14 +101,21 @@ export function Header() {
           />
         </form>
 
-        <div className="ml-auto flex shrink-0 items-center gap-1.5 md:gap-2 2xl:ml-3">
+        <div className="ml-auto flex min-w-0 shrink items-center gap-1.5 md:gap-2 xl:ml-3">
           {user ? (
             <>
-              <div className="hidden h-9 items-center gap-2 rounded-md border border-border bg-surface pl-3 pr-1 text-sm font-bold md:flex">
-                <span className="tabular-nums">R$ {brl(balance)}</span>
+              <div className="flex h-9 min-w-0 items-center gap-1.5 rounded-[10px] border border-border bg-surface/70 pl-2.5 pr-1 md:h-10 md:gap-2 md:pl-3">
+                <span className="flex min-w-0 flex-col leading-none">
+                  <span className="hidden text-[9px] font-bold uppercase tracking-[0.14em] text-muted-foreground md:block">
+                    Saldo
+                  </span>
+                  <span className="truncate text-[13px] font-extrabold tabular-nums md:text-sm">
+                    R$ {brl(balance)}
+                  </span>
+                </span>
                 <button
                   onClick={() => { qc.invalidateQueries({ queryKey: ["my-profile"] }); refetch(); }}
-                  className="slick grid size-7 place-items-center rounded bg-primary text-primary-foreground hover:brightness-110"
+                  className="slick grid size-7 shrink-0 place-items-center rounded-[7px] bg-primary text-primary-foreground hover:brightness-110"
                   aria-label="Atualizar saldo"
                 >
                   <RefreshCw className={cn("size-3.5", isFetching && "animate-spin")} strokeWidth={2} />

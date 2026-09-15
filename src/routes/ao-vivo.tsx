@@ -23,7 +23,7 @@ export const Route = createFileRoute("/ao-vivo")({
 function Page() {
   const [q, setQ] = useState("");
   const [visibleCount, setVisibleCount] = useState(60);
-  const gamesQ = usePFGames(undefined, { limit: 1_200 });
+  const gamesQ = usePFGames(undefined, { limit: 900 });
   const { play, launchingCode } = usePFLaunch();
 
   const live = useMemo(() => {
@@ -40,7 +40,7 @@ function Page() {
 
   return (
     <SiteShell>
-      <div className="aurora mx-auto max-w-[1600px] space-y-4 px-2.5 py-3 md:space-y-6 md:px-6 md:py-6">
+      <div className="aurora mx-auto max-w-[1600px] overflow-x-hidden space-y-4 px-2.5 py-3 md:space-y-6 md:px-6 md:py-6">
         <CatalogHeader
           title="Cassino Ao Vivo"
           subtitle={gamesQ.isLoading ? "Carregando mesas…" : `${live.length} mesas com crupiês reais`}

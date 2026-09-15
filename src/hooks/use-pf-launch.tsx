@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { readCatalogCache, writeCatalogCache } from "@/lib/pf-catalog-cache";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -64,6 +65,21 @@ export function usePFLaunch() {
   return { play, launchingCode };
 }
 
+/** Remove jogos sem arte e títulos repetidos antes de chegar na tela. */
+function cleanGames(games: PFGameLite[]): PFGameLite[] {
+  const seen = new Set<string>();
+  const out: PFGameLite[] = [];
+  for (const g of games) {
+    const url = (g.image_url ?? "").trim();
+    if (!/^https?:\/\//i.test(url)) continue;
+    const key = `${g.name.toLowerCase().replace(/[^a-z0-9]/g, "")}`;
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(g);
+  }
+  return out;
+}
+
 export function usePFGames(
   providerId?: number,
   options?: { limit?: number; q?: string; complete?: boolean },
@@ -72,11 +88,21 @@ export function usePFGames(
   const limit = options?.limit ?? 600;
   const q = options?.q?.trim() || undefined;
   const complete = options?.complete ?? false;
-  return useQuery({
+  const cacheKey = `${providerId ?? "all"}|${limit}|${q ?? ""}|${complete}`;
+  const cached = useMemo(() => readCatalogCache(cacheKey), [cacheKey]);
+
+  const query = useQuery({
     queryKey: ["pf-games", providerId ?? "all", limit, q ?? "", complete],
-    queryFn: () => fetchGames({ data: { providerId, limit, q, complete } }),
+    queryFn: async () => {
+      const games = cleanGames(await fetchGames({ data: { providerId, limit, q, complete } }));
+      writeCatalogCache(cacheKey, games);
+      return games;
+    },
     staleTime: 5 * 60_000,
+    ...(cached ? { initialData: cached.games, initialDataUpdatedAt: cached.at } : {}),
   });
+
+  return query;
 }
 
 export function usePFProviders() {
