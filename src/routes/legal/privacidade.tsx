@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { SiteShell } from "@/components/layout/site-shell";
 
 export const Route = createFileRoute("/legal/privacidade")({
-  head: () => ({ meta: [{ title: "Privacidade — SANTOSBET" }] }),
+  head: () => ({ meta: [{ title: "Privacidade — APOSTAYA.BET" }, { property: "og:title", content: "Privacidade — APOSTAYA.BET" }] }),
   component: () => (
     <SiteShell>
       <div className="max-w-3xl mx-auto px-4 py-10">

@@ -6,7 +6,6 @@ import { resolveEmailFromCpf } from "@/lib/auth.functions";
 import { useAuthDialog } from "./auth-dialog-context";
 import { User, Lock, Eye, EyeOff, ShieldCheck, Loader2, LogIn } from "lucide-react";
 import { toast } from "sonner";
-import shield from "@/assets/santos-shield.png";
 import { maskCPF } from "@/lib/validations";
 import { cn } from "@/lib/utils";
 
@@ -72,16 +71,8 @@ export function LoginDialog() {
           <div className="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-primary/18 blur-3xl" />
 
           <div className="relative mb-6 flex flex-col items-center text-center">
-            <img
-              src={shield}
-              alt="Santos FC"
-              width={80}
-              height={98}
-              className="float-y mb-3 size-16 object-contain drop-shadow-2xl sm:size-20"
-              decoding="async"
-            />
-            <span className="font-display text-2xl font-extrabold leading-none">
-              SANTOS<span className="text-primary">BET</span>
+            <span className="font-display text-3xl font-extrabold leading-none tracking-tight">
+              APOSTAYA<span className="text-primary">.BET</span>
             </span>
           </div>
 

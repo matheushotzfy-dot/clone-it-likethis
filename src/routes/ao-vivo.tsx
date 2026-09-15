@@ -9,9 +9,9 @@ import { splitPFGamesByCategory } from "@/lib/pf-game-classification";
 export const Route = createFileRoute("/ao-vivo")({
   head: () => ({
     meta: [
-      { title: "Cassino Ao Vivo — Mesas com crupiês reais | SANTOSBET" },
+      { title: "Cassino Ao Vivo — Mesas com crupiês reais | APOSTAYA.BET" },
       { name: "description", content: "Roleta, blackjack, bacará e game shows ao vivo com crupiês reais transmitidos em alta definição." },
-      { property: "og:title", content: "Cassino Ao Vivo | SANTOSBET" },
+      { property: "og:title", content: "Cassino Ao Vivo | APOSTAYA.BET" },
       { property: "og:description", content: "Mesas ao vivo com crupiês reais em alta definição." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

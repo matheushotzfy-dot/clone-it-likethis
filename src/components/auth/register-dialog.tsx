@@ -142,7 +142,7 @@ export function RegisterDialog() {
         <div className="flex-1 overflow-y-auto px-5 pb-8 pt-6 md:px-8 md:py-8">
           <div className="mb-5 flex items-start justify-between gap-3 pr-8">
             <span className="font-display shrink-0 text-xl font-extrabold md:text-2xl">
-              SANTOS<span className="text-primary">BET</span>
+              APOSTAYA<span className="text-primary">.BET</span>
             </span>
             <div className="min-w-0 text-right text-xs">
               <p className="text-muted-foreground">Já tem conta?</p>
