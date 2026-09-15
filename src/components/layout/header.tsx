@@ -70,7 +70,7 @@ export function Header() {
 
         <Logo />
 
-        <nav className="no-scrollbar ml-2 hidden min-w-0 shrink items-center gap-0.5 overflow-x-auto rounded-[10px] border border-border bg-surface/45 p-0.5 lg:flex xl:ml-4">
+        <nav className="no-scrollbar ml-1 hidden min-w-0 shrink items-center gap-0.5 overflow-x-auto lg:flex xl:ml-3">
           {nav.map((n) => {
             const active = path === n.to;
             return (
@@ -78,13 +78,20 @@ export function Header() {
                 key={n.to}
                 to={n.to}
                 className={cn(
-                  "slick relative whitespace-nowrap rounded-[8px] px-3 py-1.5 text-[12.5px] font-bold tracking-tight",
-                  active
-                    ? "bg-primary/12 text-primary shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--primary)_35%,transparent)]"
-                    : "text-foreground/70 hover:bg-surface hover:text-foreground",
+                  "slick group relative flex h-10 items-center whitespace-nowrap px-2.5 text-[12.5px] font-extrabold tracking-tight xl:px-3",
+                  active ? "text-primary" : "text-foreground/65 hover:text-foreground",
                 )}
               >
                 {n.label}
+                <span
+                  aria-hidden
+                  className={cn(
+                    "pointer-events-none absolute inset-x-1.5 bottom-1 h-[2px] origin-left rounded-full bg-primary transition-transform duration-200 ease-out",
+                    active
+                      ? "scale-x-100 shadow-[0_0_10px_1px_color-mix(in_srgb,var(--primary)_60%,transparent)]"
+                      : "scale-x-0 group-hover:scale-x-100",
+                  )}
+                />
               </Link>
             );
           })}
