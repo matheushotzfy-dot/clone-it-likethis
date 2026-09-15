@@ -1,11 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import mark from "@/assets/apostaya-mark.png";
+import mark from "@/assets/apostamaxy-mark.png";
 
 export function Logo({ className = "" }: { className?: string }) {
   return (
     <Link
       to="/"
-      aria-label="apostamaxy.com"
+      aria-label="apostamaxy"
       className={`flex h-12 shrink-0 items-center overflow-visible md:h-14 ${className}`}
     >
       <span className="flex items-center gap-2 font-black">
