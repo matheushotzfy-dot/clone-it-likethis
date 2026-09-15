@@ -228,14 +228,41 @@ function orderLobbyGames(games: PFGame[]) {
   ];
 }
 
+/** Providers loaded first: they cover the games the lobby actually shows. */
+const FAST_PROVIDER_COUNT = 16;
+
+let completeInFlight: Promise<typeof catalogCache> | null = null;
+
+/**
+ * Fast path: only the priority studios, fully in parallel. Answers in ~1s so
+ * the lobby paints immediately while the full catalog warms up in background.
+ */
+async function loadFastCatalog() {
+  const providers = await loadProviders();
+  const sorted = [...providers].sort((a, b) => providerPriority(a) - providerPriority(b));
+  const settled = await Promise.allSettled(
+    sorted.slice(0, FAST_PROVIDER_COUNT).map((provider) => loadProviderGames(provider.id)),
+  );
+  const raw = settled.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
+  return orderLobbyGames(raw);
+}
+
 async function loadCompleteCatalog() {
   if (catalogCache && Date.now() - catalogCache.at < 5 * 60_000) return catalogCache;
+  if (completeInFlight) return completeInFlight;
+  completeInFlight = buildCompleteCatalog().finally(() => {
+    completeInFlight = null;
+  });
+  return completeInFlight;
+}
+
+async function buildCompleteCatalog() {
   const providers = await loadProviders();
   const sorted = [...providers].sort((a, b) => providerPriority(a) - providerPriority(b));
   const loaded: PFGame[][] = [];
   let failed = 0;
-  for (let start = 0; start < sorted.length; start += 10) {
-    const batch = sorted.slice(start, start + 10);
+  for (let start = 0; start < sorted.length; start += 24) {
+    const batch = sorted.slice(start, start + 24);
     const settled = await Promise.allSettled(batch.map((provider) => loadProviderGames(provider.id)));
     for (const result of settled) {
       if (result.status === "fulfilled") loaded.push(result.value);
