@@ -59,7 +59,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/85 backdrop-blur-xl">
-      <div className="flex h-14 items-center gap-2 px-2 md:h-16 md:gap-3 md:px-5">
+      <div className="flex h-14 w-full items-center gap-2 overflow-hidden px-2 md:h-16 md:gap-3 md:px-5">
         <button
           onClick={toggleSidebar}
           className="slick -ml-1 grid size-9 place-items-center rounded-md text-foreground/80 hover:bg-surface hover:text-foreground lg:hidden"
@@ -70,7 +70,7 @@ export function Header() {
 
         <Logo />
 
-        <nav className="ml-2 hidden items-center gap-0.5 rounded-[10px] border border-border bg-surface/45 p-0.5 lg:flex xl:ml-4">
+        <nav className="no-scrollbar ml-2 hidden min-w-0 shrink items-center gap-0.5 overflow-x-auto rounded-[10px] border border-border bg-surface/45 p-0.5 lg:flex xl:ml-4">
           {nav.map((n) => {
             const active = path === n.to;
             return (
