@@ -22,7 +22,7 @@ export function ProviderStrip() {
           Ver todos
         </Link>
       </div>
-      <div className="no-scrollbar snap-row -mx-3 flex gap-2 overflow-x-auto px-3 pb-1 md:mx-0 md:px-0">
+      <div className="no-scrollbar snap-row flex w-full max-w-full min-w-0 gap-2 overflow-x-auto overscroll-x-contain pb-1">
         {list.map((name) => (
           <Link
             key={name}

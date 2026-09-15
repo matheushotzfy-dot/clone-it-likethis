@@ -47,7 +47,7 @@ function Page() {
 
   const providersQ = usePFProviders();
   const gamesQ = usePFGames(providerId ?? undefined, {
-    limit: Math.max(visibleCount + 90, 180),
+    limit: providerId ? 600 : 10_000,
     q,
   });
   const { play, launchingCode } = usePFLaunch();
