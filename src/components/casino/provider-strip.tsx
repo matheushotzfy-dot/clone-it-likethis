@@ -13,7 +13,7 @@ export function ProviderStrip() {
   const list = names.length > 0 ? names.slice(0, 24) : fallback;
 
   return (
-    <section className="space-y-2.5">
+    <section className="min-w-0 max-w-full space-y-2.5 overflow-hidden">
       <div className="flex items-baseline justify-between border-b border-border pb-2">
         <h2 className="font-display text-[12px] font-extrabold uppercase tracking-[0.16em] text-muted-foreground">
           Provedores oficiais
