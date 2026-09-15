@@ -142,7 +142,8 @@ type CatalogDiagnostics = {
   duplicatesRemoved: number;
   updatedAt: string;
 };
-let catalogCache: { at: number; data: PFGame[]; diagnostics: CatalogDiagnostics } | null = null;
+type CatalogSnapshot = { at: number; data: PFGame[]; diagnostics: CatalogDiagnostics };
+let catalogCache: CatalogSnapshot | null = null;
 async function loadProviderGames(providerId: number) {
   const key = String(providerId);
   const cached = gamesCache.get(key);
