@@ -29,36 +29,38 @@ const cats: Cat[] = [
  */
 export function CategoryNav({ active }: { active?: string }) {
   return (
-    <nav className="edge-fade no-scrollbar snap-row w-full max-w-full min-w-0 overflow-x-auto overscroll-x-contain rounded-[10px] border border-border bg-surface/45">
-      <ul className="flex w-max items-stretch">
-        {cats.map(({ label, to, Icon, accent, search, live }, i) => {
+    <nav className="edge-fade no-scrollbar snap-row w-full max-w-full min-w-0 overflow-x-auto overscroll-x-contain">
+      <ul className="flex w-max items-stretch gap-1.5">
+        {cats.map(({ label, to, Icon, accent, search, live }) => {
           const isActive = active === label;
           return (
-            <li key={label} className={cn("flex", i > 0 && "border-l border-border/70")}>
+            <li key={label} className="flex">
               <Link
                 to={to}
                 search={(search ?? {}) as never}
                 data-active={isActive}
                 className={cn(
                   accent,
-                  "slick group relative flex h-[34px] shrink-0 items-center gap-1.5 px-3 text-[11px] font-extrabold uppercase tracking-[0.12em] md:h-[38px] md:px-4 md:text-[11.5px]",
+                  "slick group relative flex h-9 shrink-0 items-center gap-2 rounded-full border px-3.5 text-[11px] font-extrabold uppercase tracking-[0.1em] md:h-10 md:px-4 md:text-[11.5px]",
                   isActive
-                    ? "bg-[color-mix(in_srgb,var(--cat,var(--primary))_14%,transparent)] text-cat"
-                    : "text-foreground/60 hover:bg-foreground/[0.05] hover:text-foreground",
+                    ? "border-[color-mix(in_srgb,var(--cat,var(--primary))_55%,transparent)] bg-[color-mix(in_srgb,var(--cat,var(--primary))_16%,transparent)] text-cat shadow-[0_0_18px_-6px_var(--cat,var(--primary))]"
+                    : "border-border bg-surface/55 text-foreground/65 hover:border-[color-mix(in_srgb,var(--cat,var(--primary))_40%,transparent)] hover:bg-surface hover:text-foreground",
                 )}
               >
-                <Icon
-                  className={cn("size-[13px] shrink-0 text-cat", live && "ping-soft")}
-                  strokeWidth={2.6}
-                />
-                {label}
                 <span
-                  aria-hidden
                   className={cn(
-                    "pointer-events-none absolute inset-x-0 bottom-0 h-[2px] origin-left bg-[var(--cat,var(--primary))] transition-transform duration-200 ease-out",
-                    isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100",
+                    "grid size-6 shrink-0 place-items-center rounded-full transition-colors",
+                    isActive
+                      ? "bg-[color-mix(in_srgb,var(--cat,var(--primary))_22%,transparent)]"
+                      : "bg-foreground/[0.06] group-hover:bg-[color-mix(in_srgb,var(--cat,var(--primary))_18%,transparent)]",
                   )}
-                />
+                >
+                  <Icon
+                    className={cn("size-[13px] text-cat", live && "ping-soft")}
+                    strokeWidth={2.6}
+                  />
+                </span>
+                {label}
               </Link>
             </li>
           );
