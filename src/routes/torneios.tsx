@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/torneios")({
   head: () => ({
     meta: [
-      { title: "Torneios — APOSTAYA.BET" },
-      { property: "og:title", content: "Torneios — APOSTAYA.BET" },
+      { title: "Torneios — apostamaxy" },
+      { property: "og:title", content: "Torneios — apostamaxy" },
       { name: "description", content: "Participe dos nossos torneios exclusivos e ganhe prêmios incríveis." }
     ]
   }),

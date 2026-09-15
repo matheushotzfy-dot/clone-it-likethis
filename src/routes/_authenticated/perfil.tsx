@@ -12,7 +12,7 @@ import { User, Wallet, History, Bell, Gift, Trophy, FileText, LogOut, ShieldChec
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/perfil")({
-  head: () => ({ meta: [{ title: "Meu Perfil — APOSTAYA.BET" }, { property: "og:title", content: "Meu Perfil — APOSTAYA.BET" }] }),
+  head: () => ({ meta: [{ title: "Meu Perfil — apostamaxy" }, { property: "og:title", content: "Meu Perfil — apostamaxy" }] }),
   component: Page,
 });
 

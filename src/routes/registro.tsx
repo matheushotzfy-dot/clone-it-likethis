@@ -21,7 +21,7 @@ const schema = z.object({
 });
 
 export const Route = createFileRoute("/registro")({
-  head: () => ({ meta: [{ title: "Cadastro — APOSTAYA.BET" }, { property: "og:title", content: "Cadastro — APOSTAYA.BET" }, { name: "description", content: "Crie sua conta na APOSTAYA.BET e comece a ganhar." }] }),
+  head: () => ({ meta: [{ title: "Cadastro — apostamaxy" }, { property: "og:title", content: "Cadastro — apostamaxy" }, { name: "description", content: "Crie sua conta na apostamaxy e comece a ganhar." }] }),
   component: Page,
 });
 

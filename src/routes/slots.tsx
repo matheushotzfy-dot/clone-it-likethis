@@ -9,9 +9,9 @@ import { splitPFGamesByCategory } from "@/lib/pf-game-classification";
 export const Route = createFileRoute("/slots")({
   head: () => ({
     meta: [
-      { title: "Slots — Milhares de jogos | APOSTAYA.BET" },
+      { title: "Slots — Milhares de jogos | apostamaxy" },
       { name: "description", content: "Slots dos melhores provedores: PG Soft, Pragmatic, Hacksaw e mais. Gire com PIX instantâneo." },
-      { property: "og:title", content: "Slots — Milhares de jogos | APOSTAYA.BET" },
+      { property: "og:title", content: "Slots — Milhares de jogos | apostamaxy" },
       { property: "og:description", content: "Slots dos melhores provedores com PIX instantâneo." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

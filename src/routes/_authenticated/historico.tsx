@@ -9,7 +9,7 @@ import { ArrowDownToLine, ArrowUpFromLine, Dices, ShieldAlert } from "lucide-rea
 import { KycDialog } from "@/components/auth/kyc-dialog";
 
 export const Route = createFileRoute("/_authenticated/historico")({
-  head: () => ({ meta: [{ title: "Histórico — APOSTAYA.BET" }, { property: "og:title", content: "Histórico — APOSTAYA.BET" }] }),
+  head: () => ({ meta: [{ title: "Histórico — apostamaxy" }, { property: "og:title", content: "Histórico — apostamaxy" }] }),
   component: Page,
 });
 

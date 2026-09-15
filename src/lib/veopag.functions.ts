@@ -228,7 +228,7 @@ export const createVeoPagPixDeposit = createServerFn({ method: "POST" })
             document: cpf,
             ...(phone ? { phone } : {}),
           },
-          platform: "APOSTAYA.BET",
+          platform: "apostamaxy",
         }),
       });
 

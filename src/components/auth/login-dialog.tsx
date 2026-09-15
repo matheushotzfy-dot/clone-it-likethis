@@ -72,7 +72,7 @@ export function LoginDialog() {
 
           <div className="relative mb-6 flex flex-col items-center text-center">
             <span className="font-display text-3xl font-extrabold leading-none tracking-tight">
-              APOSTAYA<span className="text-primary">.BET</span>
+              aposta<span className="text-primary">maxy</span>
             </span>
           </div>
 
