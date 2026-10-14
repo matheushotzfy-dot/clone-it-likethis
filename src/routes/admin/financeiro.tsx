@@ -1,3 +1,4 @@
+import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -14,7 +15,8 @@ import { toast } from "sonner";
 import { Trash2, TrendingUp, TrendingDown, DollarSign, Megaphone, Receipt, Percent } from "lucide-react";
 import { listAdSpend, createAdSpend, deleteAdSpend, listGatewayRecon, createGatewayRecon, deleteGatewayRecon, getFinanceSummary } from "@/lib/finance.functions";
 
-export const Route = createFileRoute("/admin/financeiro")({ component: FinanceiroPage });
+export const Route = createFileRoute("/admin/financeiro")({
+  head: () => ({ meta: pageMeta('Financeiro administrativo — apostamaxy', 'Financeiro administrativo da apostamaxy. Área de gestão autorizada.') }), component: FinanceiroPage });
 
 const brl = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const today = () => new Date().toISOString().slice(0, 10);

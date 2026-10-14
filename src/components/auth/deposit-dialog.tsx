@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useAuthDialog } from "./auth-dialog-context";
@@ -104,23 +105,23 @@ export function DepositDialog() {
   const showDialog = open && !!user;
   return (
     <Dialog open={showDialog} onOpenChange={(o) => !o && (step !== "pix" || pixCopied) && close()}>
-      <DialogContent className="flex max-h-[92vh] w-[calc(100vw-1.5rem)] max-w-[460px] flex-col overflow-hidden rounded-xl border-border bg-background p-0 text-foreground shadow-2xl sm:w-full">
+      <DialogContent className="flex max-h-[92vh] w-[calc(100vw-1.5rem)] max-w-[460px] flex-col overflow-hidden rounded-lg border-border bg-background p-0 text-foreground shadow-2xl sm:w-full">
         <DialogTitle className="sr-only">Depósito via PIX</DialogTitle>
         <DialogDescription className="sr-only">Gere um QR Code PIX para depositar na sua conta</DialogDescription>
         <div className="relative flex flex-col min-h-0 flex-1">
           <div className="flex shrink-0 items-center justify-between border-b border-border bg-surface/70 p-4 sm:p-6">
             <div className="flex items-center gap-3 sm:gap-4">
-              <button
+              <Button variant="ghost"
                 onClick={step === "pix" ? () => pixCopied && setStep("form") : close}
                 disabled={step === "pix" && !pixCopied}
-                className="size-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors border border-white/5 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="size-10 rounded-lg bg-surface hover:bg-surface-2 flex items-center justify-center transition-colors border border-border shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
                 aria-label={step === "pix" && !pixCopied ? "Copie o PIX antes de voltar" : "Voltar"}
               >
                 <ArrowLeft className="size-5" />
-              </button>
+              </Button>
               <div>
-                <h2 className="text-lg sm:text-xl font-black uppercase tracking-tight">Depositar</h2>
-                <div className="flex items-center gap-1.5 text-[10px] text-primary font-bold uppercase tracking-wider">
+                <h2 className="text-lg sm:text-xl font-black uppercase tracking-normal">Depositar</h2>
+                <div className="flex items-center gap-1.5 text-[10px] text-primary font-bold uppercase tracking-normal">
                   <Zap className="size-3 fill-primary" />
                   Processamento Instantâneo
                 </div>
@@ -132,9 +133,9 @@ export function DepositDialog() {
             {step === "form" ? (
               <div className="space-y-5">
                 {profile?.is_frozen && (
-                  <div className="rounded-xl border-2 border-red-500/60 bg-red-500/15 p-4 text-left">
-                    <div className="font-black text-red-300 uppercase text-xs tracking-widest">⚠️ Conta congelada</div>
-                    <p className="mt-1 text-sm text-red-100 leading-snug">
+                  <div className="rounded-lg border-2 border-destructive/60 bg-destructive/15 p-4 text-left">
+                    <div className="font-black text-destructive uppercase text-xs tracking-normal">⚠️ Conta congelada</div>
+                    <p className="mt-1 text-sm text-destructive leading-snug">
                       {profile.freeze_reason ? `Motivo: ${profile.freeze_reason}` : "Sua conta está bloqueada. Entre em contato com o suporte."}
                     </p>
                   </div>
@@ -144,30 +145,30 @@ export function DepositDialog() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 bg-brand-2/40 rounded-xl border border-white/5">
-                    <div className="text-[10px] font-bold text-white/40 uppercase mb-1">Mínimo</div>
-                    <div className="text-sm font-black text-white">R$ {min.toLocaleString("pt-BR")}</div>
+                  <div className="p-3 bg-brand-2/40 rounded-lg border border-border">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Mínimo</div>
+                    <div className="text-sm font-black text-foreground">R$ {min.toLocaleString("pt-BR")}</div>
                   </div>
-                  <div className="p-3 bg-brand-2/40 rounded-xl border border-white/5">
-                    <div className="text-[10px] font-bold text-white/40 uppercase mb-1">Máximo</div>
-                    <div className="text-sm font-black text-white">R$ {max.toLocaleString("pt-BR")}</div>
+                  <div className="p-3 bg-brand-2/40 rounded-lg border border-border">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Máximo</div>
+                    <div className="text-sm font-black text-foreground">R$ {max.toLocaleString("pt-BR")}</div>
                   </div>
                 </div>
 
                 <div className="space-y-3">
-                  <label className="text-xs font-bold text-white/60 uppercase tracking-widest ml-1">Valor do Depósito</label>
+                  <label htmlFor="deposit-amount" className="text-xs font-bold text-muted-foreground uppercase tracking-normal ml-1">Valor do Depósito</label>
                   <div className="relative group">
-                    <div className="absolute inset-0 bg-primary/5 rounded-2xl blur-xl group-focus-within:bg-primary/10 transition-colors" />
-                    <div className="relative flex h-20 items-center rounded-xl border-2 border-border bg-surface/70 px-6 transition-all group-focus-within:border-primary">
+                    <div className="relative flex h-20 items-center rounded-lg border-2 border-border bg-surface/70 px-6 transition-all group-focus-within:border-primary">
                       <span className="text-2xl font-black text-primary mr-3">R$</span>
                       <input
+                        id="deposit-amount"
                         type="number"
                         inputMode="decimal"
                         value={amount || ""}
                         onFocus={(e) => e.target.select()}
                         onChange={(e) => setAmount(Number(e.target.value))}
                         placeholder="0,00"
-                        className="w-full bg-transparent text-4xl font-black text-white focus:outline-none placeholder:text-white/10"
+                        className="w-full bg-transparent text-4xl font-black text-foreground focus:outline-none placeholder:text-muted-foreground"
                       />
                     </div>
                   </div>
@@ -175,11 +176,12 @@ export function DepositDialog() {
 
                 <div className="grid grid-cols-3 gap-3">
                   {presets.map((v) => (
-                    <button
+                    <Button variant="ghost"
                       key={v}
+                      aria-label={`R$ ${v}`}
                       onClick={() => setAmount(v)}
                       className={cn(
-                        "relative h-14 rounded-xl font-black text-sm transition-all border-2 flex items-center justify-center overflow-hidden",
+                        "relative h-14 rounded-lg font-black text-sm transition-all border-2 flex items-center justify-center overflow-hidden",
                         amount === v
                           ? "border-primary bg-primary/10 text-primary shadow-lg shadow-primary/10"
                           : "border-border bg-surface/60 text-muted-foreground hover:border-primary/50 hover:text-foreground",
@@ -188,64 +190,63 @@ export function DepositDialog() {
                       R$ {v}
                       {hots.has(v) && (
                         <div className="absolute top-0 right-0">
-                          <div className="bg-yellow-400 text-black text-[8px] font-black px-2 py-0.5 rounded-bl-lg uppercase tracking-tighter">
-                            Hot
+                          <div aria-hidden="true" className="bg-primary text-primary-foreground text-[8px] font-black px-2 py-0.5 rounded-bl-lg uppercase">
+                            PIX
                           </div>
                         </div>
                       )}
-                    </button>
+                    </Button>
                   ))}
                 </div>
 
-                <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10 space-y-3">
-                  <div className="flex items-center gap-3 text-xs text-white/80">
+                <div className="bg-primary/5 rounded-lg p-4 border border-primary/10 space-y-3">
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
                     <CheckCircle2 className="size-4 text-primary shrink-0" />
-                    <span>Pagamento processado via <span className="font-bold text-white">PIX Seguro</span></span>
+                    <span>Pagamento processado via <span className="font-bold text-foreground">PIX Seguro</span></span>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-white/80">
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
                     <ShieldCheck className="size-4 text-primary shrink-0" />
-                    <span>Seus fundos estão protegidos pela <span className="font-bold text-white">apostamaxy</span></span>
+                    <span>Seus fundos estão protegidos pela <span className="font-bold text-foreground">apostamaxy</span></span>
                   </div>
                 </div>
 
-                <button
+                <Button variant="ghost"
                   onClick={() => mut.mutate()}
                   disabled={mut.isPending || amount < min || amount > max || !!profile?.is_frozen}
-                  className="w-full h-16 rounded-2xl bg-primary text-primary-foreground font-black uppercase text-base tracking-widest hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 shadow-xl shadow-primary/20"
+                  className="w-full h-12 rounded-lg bg-primary text-primary-foreground font-black uppercase text-base tracking-normal hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 shadow-xl shadow-primary/20"
                 >
                   {profile?.is_frozen ? "Conta congelada" : mut.isPending ? "Processando..." : `Gerar PIX de R$ ${amount.toLocaleString("pt-BR")}`}
-                </button>
+                </Button>
               </div>
             ) : (
               <div className="text-center space-y-5 py-2 sm:py-4">
                 <div className="space-y-2">
-                  <h3 className="text-2xl font-black text-white uppercase tracking-tight">Pagamento Pendente</h3>
-                  <p className="text-sm text-white/60">Copie o PIX copia e cola para liberar a conclusão.</p>
+                  <h3 className="text-2xl font-black text-foreground uppercase tracking-normal">Pagamento Pendente</h3>
+                  <p className="text-sm text-muted-foreground">Copie o PIX copia e cola para liberar a conclusão.</p>
                 </div>
 
                 <div className="relative inline-block group">
-                  <div className="absolute inset-0 bg-primary/20 rounded-[2.5rem] blur-3xl" />
-                  <div className="relative bg-white rounded-[2rem] p-4 sm:p-6 shadow-2xl">
+                  <div className="relative bg-qr-paper rounded-lg p-4 sm:p-6 shadow-2xl">
                     {pix?.qrCodeImage ? (
                       <img src={pix.qrCodeImage} alt="QR Code PIX" className="size-48 sm:size-56" />
                     ) : pix?.copyPaste ? (
                       <QRCodeSVG value={pix.copyPaste} size={224} level="M" className="size-48 sm:size-56" />
                     ) : (
-                      <QrCode className="size-48 sm:size-56 text-black" strokeWidth={1.5} />
+                      <QrCode className="size-48 sm:size-56 text-primary-foreground" strokeWidth={1.5} />
                     )}
-                    <div className="absolute -top-8 -right-8 bg-primary text-primary-foreground size-12 rounded-full flex items-center justify-center shadow-lg border-4 border-brand">
+                    <div className="absolute -top-3 -right-3 bg-primary text-primary-foreground size-12 rounded-full flex items-center justify-center shadow-lg border-4 border-brand">
                       <Zap className="size-6 fill-current" />
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-3">
-                  <div className="text-[10px] uppercase font-black text-white/40 tracking-widest">Pix Copia e Cola</div>
+                  <div className="text-[10px] uppercase font-black text-muted-foreground tracking-normal">Pix Copia e Cola</div>
                   <div className="relative group">
-                    <div className="bg-brand-2 rounded-2xl p-5 text-[11px] font-mono break-all text-left text-white/80 border border-white/10 max-h-24 overflow-y-auto custom-scrollbar leading-relaxed">
+                    <div className="bg-brand-2 rounded-lg p-5 text-[11px] font-mono break-all text-left text-muted-foreground border border-border max-h-24 overflow-y-auto custom-scrollbar leading-relaxed">
                       {pix?.copyPaste || "Gerando..."}
                     </div>
-                    <button
+                    <Button variant="ghost"
                       onClick={async () => {
                         if (!pix?.copyPaste) return;
                         const text = pix.copyPaste;
@@ -285,22 +286,22 @@ export function DepositDialog() {
                           toast.warning("Não consegui copiar automaticamente. Segure o código acima e copie manualmente.");
                         }
                       }}
-                      className="mt-3 w-full min-h-12 rounded-xl bg-primary text-primary-foreground flex items-center justify-center gap-2 px-3 text-sm font-black uppercase tracking-wide hover:brightness-110 transition-all shadow-lg active:scale-[0.98]"
+                      className="mt-3 w-full min-h-12 rounded-lg bg-primary text-primary-foreground flex items-center justify-center gap-2 px-3 text-sm font-black tracking-normal hover:brightness-110 transition-all shadow-lg active:scale-[0.98]"
                     >
                       {pixCopied ? <CheckCircle2 className="size-5" /> : <Copy className="size-5" />}
                       {pixCopied ? "PIX copiado" : "Copiar PIX copia e cola"}
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
-                <p className="text-xs text-white/50">Depois de copiar, pague no seu banco. A confirmação é automática.</p>
-                <button
+                <p className="text-xs text-muted-foreground">Depois de copiar, pague no seu banco. A confirmação é automática.</p>
+                <Button variant="ghost"
                   onClick={close}
                   disabled={!pixCopied}
-                  className="w-full h-14 rounded-2xl bg-white/5 text-white/60 hover:text-white font-bold uppercase text-sm tracking-wider disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="w-full h-14 rounded-lg bg-surface text-muted-foreground hover:text-foreground font-bold uppercase text-sm tracking-normal disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {pixCopied ? "Concluir e Voltar" : "Copie o PIX para concluir"}
-                </button>
+                </Button>
               </div>
             )}
           </div>

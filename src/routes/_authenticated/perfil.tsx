@@ -1,3 +1,4 @@
+import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -12,7 +13,7 @@ import { User, Wallet, History, Bell, Gift, Trophy, FileText, LogOut, ShieldChec
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/perfil")({
-  head: () => ({ meta: [{ title: "Meu Perfil — apostamaxy" }, { property: "og:title", content: "Meu Perfil — apostamaxy" }] }),
+  head: () => ({ meta: pageMeta('Meu Perfil — apostamaxy', 'Meu perfil na apostamaxy. Informações e serviços da sua conta.') }),
   component: Page,
 });
 

@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,7 +16,7 @@ function isLikelyCpf(input: string) {
 }
 
 const inputBase =
-  "h-12 w-full rounded-xl border border-border bg-background/50 pl-11 pr-3 text-base font-semibold text-foreground placeholder:font-normal placeholder:text-muted-foreground focus:border-primary focus:outline-none";
+  "h-12 w-full rounded-lg border border-border bg-background/50 pl-11 pr-3 text-base font-semibold text-foreground placeholder:font-normal placeholder:text-muted-foreground focus:border-primary focus:outline-none";
 
 export function LoginDialog() {
   const { current, close, open } = useAuthDialog();
@@ -66,12 +67,11 @@ export function LoginDialog() {
 
   return (
     <Dialog open={current === "login"} onOpenChange={(o) => !o && close()}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] max-w-[420px] gap-0 overflow-hidden border-border bg-background p-0 sm:rounded-2xl">
+      <DialogContent className="w-[calc(100vw-1.5rem)] max-w-[420px] gap-0 overflow-hidden border-border bg-background p-0 sm:rounded-lg">
         <div className="surface-grad relative overflow-hidden px-6 pb-7 pt-7 sm:px-8">
-          <div className="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-primary/18 blur-3xl" />
 
           <div className="relative mb-6 flex flex-col items-center text-center">
-            <span className="font-display text-3xl font-extrabold leading-none tracking-tight">
+            <span className="font-display text-3xl font-extrabold leading-none tracking-normal">
               aposta<span className="text-primary">maxy</span>
             </span>
           </div>
@@ -107,38 +107,38 @@ export function LoginDialog() {
                 required
                 className={cn(inputBase, "pr-11")}
               />
-              <button
+              <Button variant="ghost"
                 type="button"
                 onClick={() => setShow(!show)}
                 aria-label={show ? "Ocultar senha" : "Mostrar senha"}
                 className="absolute right-3 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-lg text-muted-foreground hover:text-foreground"
               >
                 {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-              </button>
+              </Button>
             </div>
 
-            <button
+            <Button variant="ghost"
               type="submit"
               disabled={loading}
-              className="cta-glow slick flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-extrabold uppercase tracking-wide text-primary-foreground disabled:opacity-60"
+              className="cta-glow slick flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-extrabold tracking-normal text-primary-foreground disabled:opacity-60"
             >
               {loading ? <Loader2 className="size-4 animate-spin" /> : <LogIn className="size-4" strokeWidth={2.5} />}
               {loading ? "Entrando…" : "Entrar"}
-            </button>
+            </Button>
           </form>
 
-          <button
+          <Button variant="ghost"
             type="button"
             className="mx-auto mt-4 block text-sm font-bold text-primary hover:underline"
           >
             Esqueci minha senha
-          </button>
+          </Button>
 
           <p className="mt-4 text-center text-sm text-muted-foreground">
             Não tem uma conta?{" "}
-            <button onClick={() => open("register")} className="font-bold text-primary hover:underline">
+            <Button variant="ghost" onClick={() => open("register")} className="font-bold text-primary hover:underline">
               Cadastre-se
-            </button>
+            </Button>
           </p>
 
           <div className="mt-5 flex items-center justify-center gap-2 text-[10px] font-semibold text-muted-foreground">

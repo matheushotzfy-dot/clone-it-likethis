@@ -1,10 +1,11 @@
+import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useAuthDialog } from "@/components/auth/auth-dialog-context";
 import { useEffect } from "react";
 import { SiteShell } from "@/components/layout/site-shell";
 
 export const Route = createFileRoute("/_authenticated/deposito")({
-  head: () => ({ meta: [{ title: "Depósito — apostamaxy" }, { property: "og:title", content: "Depósito — apostamaxy" }] }),
+  head: () => ({ meta: pageMeta('Depósito — apostamaxy', 'Depósito na apostamaxy. Informações e serviços da sua conta.') }),
   component: Page,
 });
 

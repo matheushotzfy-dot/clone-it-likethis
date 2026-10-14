@@ -1,3 +1,4 @@
+import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect, useRef } from "react";
 import { z } from "zod";
@@ -21,7 +22,7 @@ const schema = z.object({
 });
 
 export const Route = createFileRoute("/registro")({
-  head: () => ({ meta: [{ title: "Cadastro — apostamaxy" }, { property: "og:title", content: "Cadastro — apostamaxy" }, { name: "description", content: "Crie sua conta na apostamaxy e comece a ganhar." }] }),
+  head: () => ({ meta: pageMeta('Cadastro — apostamaxy', 'Crie sua conta na apostamaxy e comece a ganhar.') }),
   component: Page,
 });
 
@@ -100,23 +101,23 @@ function Page() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-brand px-4 py-10 overflow-x-hidden">
-      <div className="w-full max-w-md bg-brand-2 border border-white/10 rounded-2xl p-6 md:p-8 space-y-6 shadow-2xl">
+      <div className="w-full max-w-md bg-brand-2 border border-border rounded-lg p-6 md:p-8 space-y-6 shadow-2xl">
         <div className="text-center">
           <Logo className="justify-center" />
-          <h1 className="text-2xl font-black mt-4 text-white uppercase tracking-tight">Criar sua conta</h1>
-          <p className="text-sm text-white/60 mt-1">Ganhe bônus de boas-vindas de 100%</p>
+          <h1 className="text-2xl font-black mt-4 text-foreground uppercase tracking-normal">Criar sua conta</h1>
+          <p className="text-sm text-muted-foreground mt-1">Ganhe bônus de boas-vindas de 100%</p>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
-            <Label htmlFor="name" className="text-[11px] font-bold text-white/50 uppercase ml-1">Nome completo</Label>
+            <Label htmlFor="name" className="text-[11px] font-bold text-muted-foreground uppercase ml-1">Nome completo</Label>
             <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-white/40" />
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input 
                 id="name" 
                 value={fullName} 
                 onChange={(e) => setFullName(e.target.value)} 
-                className="h-12 pl-10 bg-brand border-white/10 text-white placeholder:text-white/30 focus:border-primary text-base" 
+                className="h-12 pl-10 bg-brand border-border text-foreground placeholder:text-muted-foreground focus:border-primary text-base" 
                 placeholder="Seu nome aqui"
                 required 
               />
@@ -124,15 +125,15 @@ function Page() {
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="cpf" className="text-[11px] font-bold text-white/50 uppercase ml-1">CPF</Label>
+            <Label htmlFor="cpf" className="text-[11px] font-bold text-muted-foreground uppercase ml-1">CPF</Label>
             <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-white/40" />
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input 
                 id="cpf" 
                 value={cpf} 
                 onChange={(e) => setCpf(maskCPF(e.target.value))} 
                 inputMode="numeric"
-                className="h-12 pl-10 bg-brand border-white/10 text-white placeholder:text-white/30 focus:border-primary text-base" 
+                className="h-12 pl-10 bg-brand border-border text-foreground placeholder:text-muted-foreground focus:border-primary text-base" 
                 placeholder="000.000.000-00"
                 required 
               />
@@ -140,29 +141,29 @@ function Page() {
           </div>
 
           <div className="space-y-1" ref={emailRef}>
-            <Label htmlFor="email" className="text-[11px] font-bold text-white/50 uppercase ml-1">Email</Label>
+            <Label htmlFor="email" className="text-[11px] font-bold text-muted-foreground uppercase ml-1">Email</Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-white/40" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input 
                 id="email" 
                 type="email" 
                 value={email} 
                 onChange={(e) => handleEmailChange(e.target.value)} 
-                className="h-12 pl-10 bg-brand border-white/10 text-white placeholder:text-white/30 focus:border-primary text-base" 
+                className="h-12 pl-10 bg-brand border-border text-foreground placeholder:text-muted-foreground focus:border-primary text-base" 
                 placeholder="exemplo@email.com"
                 required 
               />
               {showEmailHints && (
-                <div className="absolute top-[calc(100%+4px)] left-0 w-full bg-brand border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden">
+                <div className="absolute top-[calc(100%+4px)] left-0 w-full bg-brand border border-border rounded-lg shadow-xl z-50 overflow-hidden">
                   {EMAIL_DOMAINS.map((domain) => (
-                    <button
+                    <Button variant="ghost"
                       key={domain}
                       type="button"
                       onClick={() => selectHint(domain)}
-                      className="w-full text-left px-4 py-2 text-sm hover:bg-white/5 text-white/80 transition-colors border-b border-white/5 last:border-0"
+                      className="w-full text-left px-4 py-2 text-sm hover:bg-surface text-muted-foreground transition-colors border-b border-border last:border-0"
                     >
                       @{domain}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               )}
@@ -170,15 +171,15 @@ function Page() {
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="phone" className="text-[11px] font-bold text-white/50 uppercase ml-1">Celular</Label>
+            <Label htmlFor="phone" className="text-[11px] font-bold text-muted-foreground uppercase ml-1">Celular</Label>
             <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-white/40" />
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input 
                 id="phone" 
                 value={phone} 
                 onChange={(e) => setPhone(maskPhone(e.target.value))} 
                 inputMode="numeric"
-                className="h-12 pl-10 bg-brand border-white/10 text-white placeholder:text-white/30 focus:border-primary text-base" 
+                className="h-12 pl-10 bg-brand border-border text-foreground placeholder:text-muted-foreground focus:border-primary text-base" 
                 placeholder="(00) 00000-0000"
                 required 
               />
@@ -186,44 +187,44 @@ function Page() {
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="password" className="text-[11px] font-bold text-white/50 uppercase ml-1">Senha</Label>
+            <Label htmlFor="password" className="text-[11px] font-bold text-muted-foreground uppercase ml-1">Senha</Label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-white/40" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input 
                 id="password" 
                 type={showPass ? "text" : "password"} 
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)} 
-                className="h-12 pl-10 pr-10 bg-brand border-white/10 text-white placeholder:text-white/30 focus:border-primary text-base" 
+                className="h-12 pl-10 pr-10 bg-brand border-border text-foreground placeholder:text-muted-foreground focus:border-primary text-base" 
                 placeholder="Mínimo 6 caracteres"
                 required 
               />
-              <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40">
+              <Button variant="ghost" type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                 {showPass ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-              </button>
+              </Button>
             </div>
           </div>
 
-          <label className="flex items-start gap-3 text-[11px] text-white/60 cursor-pointer group pt-2">
+          <label className="flex items-start gap-3 text-[11px] text-muted-foreground cursor-pointer group pt-2">
             <div className="relative mt-0.5">
               <input 
                 type="checkbox" 
                 checked={acceptTerms} 
                 onChange={(e) => setAcceptTerms(e.target.checked)} 
-                className="appearance-none size-4 rounded bg-brand border border-white/20 checked:bg-primary checked:border-primary cursor-pointer transition-all" 
+                className="appearance-none size-4 rounded bg-brand border border-border checked:bg-primary checked:border-primary cursor-pointer transition-all" 
               />
               {acceptTerms && <Check className="absolute inset-0 size-3 m-auto text-primary-foreground pointer-events-none" strokeWidth={4} />}
             </div>
             <span>Tenho mais de 18 anos e aceito os <Link to="/legal/termos" className="text-primary font-bold hover:underline">termos</Link></span>
           </label>
 
-          <Button type="submit" className="w-full h-12 font-black uppercase tracking-wider bg-primary text-primary-foreground hover:brightness-110 transition-all" disabled={loading}>
+          <Button type="submit" className="w-full h-12 font-black uppercase tracking-normal bg-primary text-primary-foreground hover:brightness-110 transition-all" disabled={loading}>
             {loading ? "Criando..." : "CRIAR MINHA CONTA"}
           </Button>
         </form>
 
-        <div className="text-center text-sm border-t border-white/5 pt-6">
-          <p className="text-white/60">
+        <div className="text-center text-sm border-t border-border pt-6">
+          <p className="text-muted-foreground">
             Já tem conta? <Link to="/login" className="text-primary font-bold hover:underline">Entrar agora</Link>
           </p>
         </div>

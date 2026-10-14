@@ -1,4 +1,5 @@
-import { Search, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, Loader2, ChevronDown } from "lucide-react";
 import { PFGameCard } from "@/components/casino/pf-game-card";
 import type { PFGameLite } from "@/hooks/use-pf-launch";
 import { cn } from "@/lib/utils";
@@ -29,7 +30,7 @@ export function CatalogHeader({
           onChange={(e) => onQ(e.target.value)}
           placeholder={placeholder}
           aria-label={placeholder}
-          className="h-10 w-full rounded-[10px] border border-border bg-surface/50 pl-10 pr-3 text-[13px] font-medium text-foreground placeholder:font-normal placeholder:text-muted-foreground focus:border-gold focus:outline-none"
+          className="h-10 w-full rounded-lg border border-border bg-surface/50 pl-10 pr-3 text-[13px] font-medium text-foreground placeholder:font-normal placeholder:text-muted-foreground focus:border-primary focus:outline-none"
         />
       </div>
     </div>
@@ -45,16 +46,16 @@ export function ProviderFilter({
 }) {
   const chip = (active: boolean) =>
     cn(
-      "chip-flat h-9 shrink-0 rounded-[10px] border border-border px-3.5 text-[11.5px] font-extrabold uppercase tracking-[0.1em]",
-      active ? "text-gold" : "text-foreground/70",
+      "chip-flat h-9 shrink-0 rounded-lg border border-border px-3.5 text-[11.5px] font-semibold",
+      active ? "text-primary" : "text-foreground/70",
     );
   return (
     <div className="edge-fade no-scrollbar snap-row flex w-full max-w-full gap-1.5 overflow-x-auto pb-1 pr-4 md:gap-2">
-      <button onClick={() => onChange(null)} data-active={value === null} className={chip(value === null)}>Todos</button>
+      <Button variant="ghost" onClick={() => onChange(null)} data-active={value === null} className={chip(value === null)}>Todos</Button>
       {providers.map((p) => (
-        <button key={p.id} data-active={value === p.id} onClick={() => onChange(p.id)} className={chip(value === p.id)}>
+        <Button variant="ghost" key={p.id} data-active={value === p.id} onClick={() => onChange(p.id)} className={chip(value === p.id)}>
           {p.name}
-        </button>
+        </Button>
       ))}
     </div>
   );
@@ -73,7 +74,7 @@ export function GameGrid({
     return (
       <div className={CATALOG_GRID}>
         {Array.from({ length: 27 }).map((_, i) => (
-          <div key={i} className="skeleton aspect-[3/4] rounded-[10px]" />
+          <div key={i} className="skeleton aspect-[3/4] rounded-lg" />
         ))}
       </div>
     );
@@ -99,12 +100,12 @@ export function GameGrid({
 export function LoadMore({ remaining, onClick }: { remaining: number; onClick: () => void }) {
   return (
     <div className="flex justify-center pt-2">
-      <button
+      <Button variant="ghost"
         onClick={onClick}
         className="slick min-w-[220px] rounded-md border border-border px-6 py-3 text-[13px] font-bold uppercase tracking-wide text-foreground/80 hover:border-primary hover:text-primary"
       >
-        Carregar mais ({remaining})
-      </button>
+        <ChevronDown className="size-4" /> Carregar mais ({remaining})
+      </Button>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -9,7 +10,8 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { FileText, ShieldAlert, ShieldCheck, Snowflake, Trash2 } from "lucide-react";
 
-export const Route = createFileRoute("/admin/usuarios_/$id")({ component: Page });
+export const Route = createFileRoute("/admin/usuarios_/$id")({
+  head: () => ({ meta: pageMeta('Detalhes do usuário — apostamaxy', 'Detalhes do usuário da apostamaxy. Área de gestão autorizada.') }), component: Page });
 
 function Page() {
   const { id } = Route.useParams();

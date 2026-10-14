@@ -1,15 +1,10 @@
+import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute } from "@tanstack/react-router";
 import { Trophy, Calendar, Users, ArrowRight, Gift, Timer } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/torneios")({
-  head: () => ({
-    meta: [
-      { title: "Torneios — apostamaxy" },
-      { property: "og:title", content: "Torneios — apostamaxy" },
-      { name: "description", content: "Participe dos nossos torneios exclusivos e ganhe prêmios incríveis." }
-    ]
-  }),
+  head: () => ({ meta: pageMeta('Torneios — apostamaxy', 'Participe dos nossos torneios exclusivos e ganhe prêmios incríveis.') }),
   component: TorneiosPage,
 });
 

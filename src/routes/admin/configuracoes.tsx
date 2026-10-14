@@ -1,3 +1,4 @@
+import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -12,7 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/admin/configuracoes")({ component: Page });
+export const Route = createFileRoute("/admin/configuracoes")({
+  head: () => ({ meta: pageMeta('Configurações administrativas — apostamaxy', 'Configurações administrativas da apostamaxy. Área de gestão autorizada.') }), component: Page });
 
 type Gateway = "podpay" | "bspay" | "veopag";
 

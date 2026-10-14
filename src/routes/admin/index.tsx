@@ -1,3 +1,4 @@
+import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -6,6 +7,7 @@ import { ArrowDownCircle, ArrowUpCircle, Users, Wallet, Clock, ShieldCheck, Acti
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, PieChart, Pie, Cell, Legend } from "recharts";
 
 export const Route = createFileRoute("/admin/")({
+  head: () => ({ meta: pageMeta('Visão geral administrativa — apostamaxy', 'Visão geral administrativa da apostamaxy. Área de gestão autorizada.') }),
   component: Dashboard,
 });
 

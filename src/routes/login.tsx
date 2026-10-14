@@ -1,3 +1,4 @@
+import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { z } from "zod";
@@ -16,7 +17,7 @@ const schema = z.object({
 });
 
 export const Route = createFileRoute("/login")({
-  head: () => ({ meta: [{ title: "Entrar — apostamaxy" }, { property: "og:title", content: "Entrar — apostamaxy" }, { name: "description", content: "Acesse sua conta na apostamaxy." }] }),
+  head: () => ({ meta: pageMeta('Entrar — apostamaxy', 'Acesse sua conta na apostamaxy.') }),
   component: Page,
 });
 
@@ -51,58 +52,58 @@ function Page() {
 
   return (
     <div className="min-h-screen flex items-start sm:items-center justify-center bg-brand px-4 pt-8 pb-10 sm:py-10 overflow-x-hidden">
-      <div className="w-full max-w-md bg-brand-2 border border-white/10 rounded-2xl p-6 md:p-8 space-y-6 shadow-2xl">
+      <div className="w-full max-w-md bg-brand-2 border border-border rounded-lg p-6 md:p-8 space-y-6 shadow-2xl">
         <div className="text-center">
           <Logo className="justify-center" />
-          <h1 className="text-2xl font-black mt-4 text-white uppercase tracking-tight">Entrar na sua conta</h1>
-          <p className="text-sm text-white/60 mt-1">Bem-vindo de volta!</p>
+          <h1 className="text-2xl font-black mt-4 text-foreground uppercase tracking-normal">Entrar na sua conta</h1>
+          <p className="text-sm text-muted-foreground mt-1">Bem-vindo de volta!</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
-            <Label htmlFor="email" className="text-[11px] font-bold text-white/50 uppercase ml-1">Email</Label>
+            <Label htmlFor="email" className="text-[11px] font-bold text-muted-foreground uppercase ml-1">Email</Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-white/40" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input
                 id="email"
                 type="email"
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-12 pl-10 bg-brand border-white/10 text-white placeholder:text-white/30 focus:border-primary text-base"
+                className="h-12 pl-10 bg-brand border-border text-foreground placeholder:text-muted-foreground focus:border-primary text-base"
                 placeholder="exemplo@email.com"
                 required
               />
             </div>
           </div>
           <div className="space-y-1">
-            <Label htmlFor="password" className="text-[11px] font-bold text-white/50 uppercase ml-1">Senha</Label>
+            <Label htmlFor="password" className="text-[11px] font-bold text-muted-foreground uppercase ml-1">Senha</Label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-white/40" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input
                 id="password"
                 type={showPass ? "text" : "password"}
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-12 pl-10 pr-10 bg-brand border-white/10 text-white placeholder:text-white/30 focus:border-primary text-base"
+                className="h-12 pl-10 pr-10 bg-brand border-border text-foreground placeholder:text-muted-foreground focus:border-primary text-base"
                 placeholder="Sua senha"
                 required
               />
-              <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40">
+              <Button variant="ghost" type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                 {showPass ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-              </button>
+              </Button>
             </div>
           </div>
-          <Button type="submit" className="w-full h-12 font-black uppercase tracking-wider bg-primary text-primary-foreground hover:brightness-110 transition-all" disabled={loading}>
+          <Button type="submit" className="w-full h-12 font-black uppercase tracking-normal bg-primary text-primary-foreground hover:brightness-110 transition-all" disabled={loading}>
             {loading ? "Entrando..." : "ENTRAR"}
           </Button>
         </form>
-        <div className="text-center text-sm space-y-3 border-t border-white/5 pt-6">
-          <p className="text-white/60">
+        <div className="text-center text-sm space-y-3 border-t border-border pt-6">
+          <p className="text-muted-foreground">
             Não tem conta?{" "}
             <Link to="/registro" className="text-primary font-bold hover:underline">Criar agora</Link>
           </p>
-          <Link to="/" className="text-xs text-white/40 hover:text-white inline-block">← Voltar ao início</Link>
+          <Link to="/" className="text-xs text-muted-foreground hover:text-foreground inline-block">← Voltar ao início</Link>
         </div>
       </div>
     </div>

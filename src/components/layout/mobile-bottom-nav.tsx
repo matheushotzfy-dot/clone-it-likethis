@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Menu, LayoutGrid, MonitorPlay, Plus, User } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
@@ -13,34 +14,34 @@ export function MobileBottomNav() {
 
   const cell = (active: boolean) =>
     cn(
-      "relative flex h-full flex-col items-center justify-center gap-1 text-[10px] font-extrabold uppercase tracking-wide transition-colors",
-      active ? "text-gold" : "text-foreground/55",
+      "relative flex h-full flex-col items-center justify-center gap-1 text-[10px] font-semibold transition-colors",
+      active ? "text-primary" : "text-foreground/55",
     );
 
   const indicator = (active: boolean) => (
     <span
       className={cn(
-        "absolute top-0 h-[3px] rounded-full bg-gold transition-all duration-300",
-        active ? "w-9 opacity-100 shadow-[0_0_14px_var(--accent-gold)]" : "w-0 opacity-0",
+        "absolute top-0 h-[3px] rounded-full bg-primary transition-all duration-300",
+        active ? "w-9 opacity-100 " : "w-0 opacity-0",
       )}
     />
   );
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/92 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-sidebar/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
       <div className="pointer-events-none absolute inset-x-0 -top-6 h-6 bg-gradient-to-t from-background/80 to-transparent" />
       <ul className="grid h-16 grid-cols-5">
         <li>
-          <button onClick={toggleSidebar} className="h-full w-full" aria-label="Abrir menu">
+          <Button variant="ghost" onClick={toggleSidebar} className="h-full w-full rounded-none p-0" aria-label="Abrir menu">
             <span className={cell(false)}>
               <Menu className="size-[22px]" strokeWidth={2} />
               Menu
             </span>
-          </button>
+          </Button>
         </li>
 
         <li>
-          <Link to="/cassino" className="block h-full w-full">
+          <Link to="/cassino" className="block h-full w-full rounded-none p-0">
             <span className={cell(path === "/cassino")}>
               {indicator(path === "/cassino")}
               <LayoutGrid className="size-[22px]" strokeWidth={2} />
@@ -50,24 +51,24 @@ export function MobileBottomNav() {
         </li>
 
         <li>
-          <button
+          <Button variant="ghost"
             onClick={() => open(user ? "deposit" : "register")}
-            className="h-full w-full"
+            className="h-full w-full rounded-none p-0"
             aria-label={user ? "Depositar" : "Criar conta"}
           >
-            <span className="flex h-full flex-col items-center justify-center gap-1">
-              <span className="slick ring-pulse cat-slots -mt-7 grid size-14 place-items-center rounded-[16px] border-4 border-background bg-primary text-primary-foreground cta-glow">
-                <Plus className="size-7" strokeWidth={3} />
+            <span className="flex h-full flex-col items-center justify-center gap-0.5">
+              <span className="grid size-9 place-items-center rounded-lg bg-primary text-primary-foreground cta-glow">
+                <Plus className="size-5" strokeWidth={3} />
               </span>
-              <span className="-mt-1 text-[10px] font-extrabold uppercase tracking-wide text-primary">
+              <span className="text-[10px] font-semibold text-primary">
                 Depositar
               </span>
             </span>
-          </button>
+          </Button>
         </li>
 
         <li>
-          <Link to="/ao-vivo" className="block h-full w-full">
+          <Link to="/ao-vivo" className="block h-full w-full rounded-none p-0">
             <span className={cell(path === "/ao-vivo")}>
               {indicator(path === "/ao-vivo")}
               <span className="relative">
@@ -81,7 +82,7 @@ export function MobileBottomNav() {
 
         <li>
           {user ? (
-            <Link to="/perfil" className="block h-full w-full">
+            <Link to="/perfil" className="block h-full w-full rounded-none p-0">
               <span className={cell(path === "/perfil")}>
                 {indicator(path === "/perfil")}
                 <User className="size-[22px]" strokeWidth={2} />
@@ -89,12 +90,12 @@ export function MobileBottomNav() {
               </span>
             </Link>
           ) : (
-            <button onClick={() => open("login")} className="h-full w-full">
+            <Button variant="ghost" onClick={() => open("login")} className="h-full w-full rounded-none p-0">
               <span className={cell(false)}>
                 <User className="size-[22px]" strokeWidth={2} />
                 Entrar
               </span>
-            </button>
+            </Button>
           )}
         </li>
       </ul>

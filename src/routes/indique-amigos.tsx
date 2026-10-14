@@ -1,3 +1,4 @@
+import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteShell } from "@/components/layout/site-shell";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/indique-amigos")({
-  head: () => ({ meta: [{ title: "Indique Amigos — apostamaxy" }, { property: "og:title", content: "Indique Amigos — apostamaxy" }] }),
+  head: () => ({ meta: pageMeta('Indique Amigos — apostamaxy', 'Indique amigos na apostamaxy. Informações e serviços da sua conta.') }),
   component: Page,
 });
 

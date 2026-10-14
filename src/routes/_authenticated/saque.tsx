@@ -1,3 +1,4 @@
+import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -11,7 +12,7 @@ import { toast } from "sonner";
 import { ArrowUpFromLine, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/saque")({
-  head: () => ({ meta: [{ title: "Saque — apostamaxy" }, { property: "og:title", content: "Saque — apostamaxy" }] }),
+  head: () => ({ meta: pageMeta('Saque — apostamaxy', 'Saque na apostamaxy. Informações e serviços da sua conta.') }),
   component: Page,
 });
 

@@ -21,50 +21,20 @@ const cats: Cat[] = [
   { label: "Promoções", to: "/promocoes", Icon: Gift, accent: "cat-crash" },
 ];
 
-/**
- * High-density segmented category bar.
- * One continuous rail with hairline dividers instead of floating pills — the
- * active tab is marked by a tinted cell plus a 2px accent underline, so the
- * whole nav occupies a single compact 34/38px band.
- */
 export function CategoryNav({ active }: { active?: string }) {
   return (
-    <nav className="edge-fade no-scrollbar snap-row w-full max-w-full min-w-0 overflow-x-auto overscroll-x-contain">
-      <ul className="flex w-max items-stretch gap-1.5">
-        {cats.map(({ label, to, Icon, accent, search, live }) => {
-          const isActive = active === label;
-          return (
-            <li key={label} className="flex">
-              <Link
-                to={to}
-                search={(search ?? {}) as never}
-                data-active={isActive}
-                className={cn(
-                  accent,
-                  "slick group relative flex h-9 shrink-0 items-center gap-2 rounded-full border px-3.5 text-[11px] font-extrabold uppercase tracking-[0.1em] md:h-10 md:px-4 md:text-[11.5px]",
-                  isActive
-                    ? "border-[color-mix(in_srgb,var(--cat,var(--primary))_55%,transparent)] bg-[color-mix(in_srgb,var(--cat,var(--primary))_16%,transparent)] text-cat shadow-[0_0_18px_-6px_var(--cat,var(--primary))]"
-                    : "border-border bg-surface/55 text-foreground/65 hover:border-[color-mix(in_srgb,var(--cat,var(--primary))_40%,transparent)] hover:bg-surface hover:text-foreground",
-                )}
-              >
-                <span
-                  className={cn(
-                    "grid size-6 shrink-0 place-items-center rounded-full transition-colors",
-                    isActive
-                      ? "bg-[color-mix(in_srgb,var(--cat,var(--primary))_22%,transparent)]"
-                      : "bg-foreground/[0.06] group-hover:bg-[color-mix(in_srgb,var(--cat,var(--primary))_18%,transparent)]",
-                  )}
-                >
-                  <Icon
-                    className={cn("size-[13px] text-cat", live && "ping-soft")}
-                    strokeWidth={2.6}
-                  />
-                </span>
-                {label}
-              </Link>
-            </li>
-          );
-        })}
+    <nav aria-label="Categorias de jogos" className="no-scrollbar w-full min-w-0 overflow-x-auto rounded-md bg-surface">
+      <ul className="flex w-max min-w-full items-stretch">
+        {cats.map(({ label, to, Icon, search }) => (
+          <li key={label} className="flex flex-1">
+            <Link to={to} search={(search ?? {}) as never} aria-current={active === label ? "page" : undefined}
+              data-active={active === label}
+              className={cn("category-tab flex h-12 shrink-0 items-center justify-center gap-2 px-4 text-xs font-bold text-muted-foreground hover:bg-surface-2 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:px-5")}>
+              <Icon className="size-[18px] shrink-0" strokeWidth={1.8} />
+              {label}
+            </Link>
+          </li>
+        ))}
       </ul>
     </nav>
   );

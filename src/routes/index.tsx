@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
 import { Search, Loader2, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { SiteShell } from "@/components/layout/site-shell";
@@ -72,15 +73,15 @@ function Index() {
 
   return (
     <SiteShell>
-      <div className="aurora mx-auto max-w-[1600px] overflow-x-hidden space-y-4 px-2.5 py-2.5 md:space-y-7 md:px-6 md:py-5">
-        <BannerCarousel aspectClass="aspect-[16/8] sm:aspect-[2.4/1] md:aspect-[1920/560]" />
+      <div className="aurora mx-auto max-w-[1600px] overflow-x-hidden space-y-5 px-3 py-3 md:space-y-6 md:px-6 md:py-4">
+        <BannerCarousel aspectClass="aspect-[1.8/1] sm:aspect-[3/1] md:aspect-[3.8/1]" />
 
         {/* nav + search on one line */}
-        <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:gap-6">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:gap-3">
           <div className="min-w-0 flex-1">
             <CategoryNav active="Populares" />
           </div>
-          <div className="relative w-full lg:w-72">
+          <div className="relative w-full xl:w-56">
             <Search
               className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
               strokeWidth={1.75}
@@ -90,16 +91,16 @@ function Index() {
               onChange={(e) => setQ(e.target.value)}
               placeholder="Buscar jogo ou provedor"
               aria-label="Buscar jogo"
-              className="h-10 w-full rounded-[8px] border border-border bg-surface/50 pl-9 pr-9 text-[13px] font-medium text-foreground placeholder:font-normal placeholder:text-muted-foreground focus:border-gold focus:outline-none"
+              className="h-10 w-full rounded-[8px] border border-border bg-surface/50 pl-9 pr-9 text-[13px] font-medium text-foreground placeholder:font-normal placeholder:text-muted-foreground focus:border-primary focus:outline-none"
             />
             {q && (
-              <button
+              <Button variant="ghost" size="icon"
                 onClick={() => setQ("")}
                 aria-label="Limpar busca"
                 className="absolute right-2 top-1/2 grid size-7 -translate-y-1/2 place-items-center rounded-[6px] text-muted-foreground hover:text-foreground"
               >
                 <X className="size-4" strokeWidth={2} />
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -172,7 +173,7 @@ function Index() {
 
         {gamesQ.isFetching && !gamesQ.isLoading && (
           <div className="flex justify-center py-2">
-            <Loader2 className="size-4 animate-spin text-gold" />
+            <Loader2 className="size-4 animate-spin text-primary" />
           </div>
         )}
       </div>
