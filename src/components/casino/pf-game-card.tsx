@@ -2,7 +2,6 @@ import { Play, Loader2 } from "lucide-react";
 import { useState } from "react";
 import type { PFGameLite } from "@/hooks/use-pf-launch";
 import { Button } from "@/components/ui/button";
-import { markBrokenArt } from "@/lib/pf-broken-art";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -21,6 +20,8 @@ interface Props {
 export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  // Use the existing local artwork for this known provider-image failure.
+  const localArtwork = game.name.trim().toLowerCase() === "spaceman" ? "/games/spaceman.webp" : undefined;
 
   return (
     <Button variant="ghost"
@@ -40,7 +41,7 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
         <>
           {!loaded && <div className="skeleton absolute inset-0" />}
           <img
-            src={game.image_url}
+            src={localArtwork ?? game.image_url}
             alt={game.name}
             loading={priority ? "eager" : "lazy"}
             fetchPriority={priority ? "high" : "auto"}
@@ -50,7 +51,6 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
             sizes="(max-width: 640px) 31vw, (max-width: 1024px) 16vw, 160px"
             onLoad={() => setLoaded(true)}
             onError={() => {
-              markBrokenArt(game.game_code);
               setFailed(true);
             }}
             className={cn(

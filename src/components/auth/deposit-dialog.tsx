@@ -178,6 +178,7 @@ export function DepositDialog() {
                   {presets.map((v) => (
                     <Button variant="ghost"
                       key={v}
+                      aria-label={`R$ ${v}`}
                       onClick={() => setAmount(v)}
                       className={cn(
                         "relative h-14 rounded-lg font-black text-sm transition-all border-2 flex items-center justify-center overflow-hidden",
@@ -189,7 +190,7 @@ export function DepositDialog() {
                       R$ {v}
                       {hots.has(v) && (
                         <div className="absolute top-0 right-0">
-                          <div className="bg-primary text-primary-foreground text-[8px] font-black px-2 py-0.5 rounded-bl-lg uppercase tracking-normaler">
+                          <div aria-hidden="true" className="bg-primary text-primary-foreground text-[8px] font-black px-2 py-0.5 rounded-bl-lg uppercase">
                             PIX
                           </div>
                         </div>

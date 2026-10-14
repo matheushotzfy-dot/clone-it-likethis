@@ -32,7 +32,7 @@ export function HeaderAccount() {
                 </span>
                 <Button variant="ghost" size="icon"
                   onClick={() => { qc.invalidateQueries({ queryKey: ["my-profile"] }); refetch(); }}
-                  className="slick grid hidden size-7 shrink-0 sm:grid place-items-center rounded-md border border-primary/40 bg-primary/12 text-primary hover:bg-primary hover:text-primary-foreground"
+                  className="slick hidden size-7 shrink-0 sm:grid place-items-center rounded-md border border-primary/40 bg-primary/12 text-primary hover:bg-primary hover:text-primary-foreground"
                   aria-label="Atualizar saldo"
                 >
                   <RefreshCw className={cn("size-3.5", isFetching && "animate-spin")} strokeWidth={2.2} />
@@ -48,14 +48,15 @@ export function HeaderAccount() {
 
               <Button
                 onClick={() => open("deposit")}
-                className="slick shine relative h-9 overflow-hidden rounded-md bg-primary px-3 text-xs font-bold text-primary-foreground hover:brightness-110 md:h-10 md:px-4"
+                aria-label="Depositar"
+                className="slick shine relative h-9 w-9 overflow-hidden rounded-md bg-primary p-0 text-xs font-bold text-primary-foreground hover:brightness-110 sm:w-auto sm:px-3 md:h-10 md:px-4"
               >
-                Depositar
+                <Wallet className="size-4 sm:hidden" /><span className="hidden sm:inline">Depositar</span>
               </Button>
 
               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="secondary" aria-label="Menu da conta" className="slick grid size-9 place-items-center rounded-md border border-border bg-surface text-sm font-bold hover:border-primary md:size-10">
+                  <Button variant="secondary" aria-label="Menu da conta" className="slick grid size-9 p-0 place-items-center rounded-md border border-border bg-surface text-sm font-bold hover:border-primary md:size-10">
                     {(profile?.username?.[0] ?? user.email?.[0] ?? "U").toUpperCase()}
                   </Button>
                 </DropdownMenuTrigger>
