@@ -1,8 +1,9 @@
+import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteShell } from "@/components/layout/site-shell";
 
 export const Route = createFileRoute("/legal/privacidade")({
-  head: () => ({ meta: [{ title: "Privacidade — apostamaxy" }, { property: "og:title", content: "Privacidade — apostamaxy" }] }),
+  head: () => ({ meta: pageMeta('Privacidade — apostamaxy', 'Privacidade na apostamaxy. Informações e serviços da sua conta.') }),
   component: () => (
     <SiteShell>
       <div className="max-w-3xl mx-auto px-4 py-10">

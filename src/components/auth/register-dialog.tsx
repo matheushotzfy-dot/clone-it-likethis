@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,12 +24,12 @@ function scorePassword(pw: string) {
 const strengthMeta = [
   { label: "Muito curta", color: "bg-destructive" },
   { label: "Fraca", color: "bg-destructive" },
-  { label: "Boa", color: "bg-[var(--accent-hot)]" },
+  { label: "Boa", color: "bg-hot" },
   { label: "Forte", color: "bg-success" },
 ] as const;
 
 const inputBase =
-  "h-12 w-full rounded-xl border bg-background/50 pl-11 pr-3 text-base font-semibold text-foreground placeholder:font-normal placeholder:text-muted-foreground focus:outline-none";
+  "h-12 w-full rounded-lg border bg-background/50 pl-11 pr-3 text-base font-semibold text-foreground placeholder:font-normal placeholder:text-muted-foreground focus:outline-none";
 
 export function RegisterDialog() {
   const { current, close, open } = useAuthDialog();
@@ -136,7 +137,7 @@ export function RegisterDialog() {
 
   return (
     <Dialog open={current === "register"} onOpenChange={(o) => !o && close()}>
-      <DialogContent className="flex max-h-[100dvh] w-screen max-w-none flex-col gap-0 overflow-hidden border-border bg-background p-0 sm:max-h-[94vh] sm:w-[calc(100vw-2rem)] sm:max-w-[880px] sm:rounded-2xl md:flex-row">
+      <DialogContent className="flex max-h-[100dvh] w-screen max-w-none flex-col gap-0 overflow-hidden border-border bg-background p-0 sm:max-h-[94vh] sm:w-[calc(100vw-2rem)] sm:max-w-[880px] sm:rounded-lg md:flex-row">
         <PromoSide />
 
         <div className="flex-1 overflow-y-auto px-5 pb-8 pt-6 md:px-8 md:py-8">
@@ -146,9 +147,9 @@ export function RegisterDialog() {
             </span>
             <div className="min-w-0 text-right text-xs">
               <p className="text-muted-foreground">Já tem conta?</p>
-              <button onClick={() => open("login")} className="font-bold text-primary hover:underline">
+              <Button variant="ghost" onClick={() => open("login")} className="font-bold text-primary hover:underline">
                 Entrar
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -162,7 +163,7 @@ export function RegisterDialog() {
           </div>
 
           {/* bonus highlight */}
-          <div className="mb-5 flex items-center gap-3 rounded-xl border border-primary/35 bg-primary/10 px-3.5 py-3">
+          <div className="mb-5 flex items-center gap-3 rounded-lg border border-primary/35 bg-primary/10 px-3.5 py-3">
             <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground">
               <Gift className="size-[18px]" strokeWidth={2.25} />
             </span>
@@ -177,12 +178,9 @@ export function RegisterDialog() {
           {/* progress */}
           <div className="mb-5 flex items-center gap-2">
             <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface">
-              <div
-                className="h-full rounded-full bg-primary transition-all duration-300"
-                style={{ width: `${(filled / 4) * 100}%` }}
-              />
+              <progress value={filled} max={4} aria-label="Progresso do cadastro" className="registration-progress block h-full w-full" />
             </div>
-            <span className="text-[10px] font-extrabold uppercase tracking-wide text-muted-foreground">
+            <span className="text-[10px] font-extrabold tracking-normal text-muted-foreground">
               {filled}/4
             </span>
           </div>
@@ -215,16 +213,16 @@ export function RegisterDialog() {
                   className={fieldClass(errors.email)}
                 />
                 {showEmailHints && (
-                  <div className="absolute left-0 top-[calc(100%+4px)] z-50 w-full overflow-hidden rounded-xl border border-border bg-popover shadow-xl">
+                  <div className="absolute left-0 top-[calc(100%+4px)] z-50 w-full overflow-hidden rounded-lg border border-border bg-popover shadow-xl">
                     {EMAIL_DOMAINS.map((domain) => (
-                      <button
+                      <Button variant="ghost"
                         key={domain}
                         type="button"
                         onClick={() => selectHint(domain)}
                         className="w-full border-b border-border/60 px-4 py-2.5 text-left text-sm font-semibold last:border-0 hover:bg-surface"
                       >
                         @{domain}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 )}
@@ -255,14 +253,14 @@ export function RegisterDialog() {
                 aria-invalid={!!errors.password}
                 className={cn(fieldClass(errors.password), "pr-11")}
               />
-              <button
+              <Button variant="ghost"
                 type="button"
                 onClick={() => setShow(!show)}
                 aria-label={show ? "Ocultar senha" : "Mostrar senha"}
                 className="absolute right-3 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-lg text-muted-foreground hover:text-foreground"
               >
                 {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-              </button>
+              </Button>
             </Field>
 
             {password.length > 0 && (
@@ -278,7 +276,7 @@ export function RegisterDialog() {
                     />
                   ))}
                 </div>
-                <span className="text-[10px] font-extrabold uppercase tracking-wide text-muted-foreground">
+                <span className="text-[10px] font-extrabold tracking-normal text-muted-foreground">
                   {strengthMeta[strength].label}
                 </span>
               </div>
@@ -304,14 +302,14 @@ export function RegisterDialog() {
             </label>
             {errors.accept && <p className="text-[11px] font-semibold text-destructive">{errors.accept}</p>}
 
-            <button
+            <Button variant="ghost"
               type="submit"
               disabled={loading}
-              className="cta-glow slick mt-2 flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-extrabold uppercase tracking-wide text-primary-foreground disabled:opacity-60"
+              className="cta-glow slick mt-2 flex h-13 w-full items-center justify-center gap-2 rounded-lg bg-primary py-3.5 text-sm font-extrabold tracking-normal text-primary-foreground disabled:opacity-60"
             >
               {loading ? <Loader2 className="size-4 animate-spin" /> : <Gift className="size-4" strokeWidth={2.5} />}
               {loading ? "Criando conta…" : "Criar conta e receber bônus"}
-            </button>
+            </Button>
           </form>
 
           <div className="mt-5 flex items-center justify-center gap-2 text-[10px] font-semibold text-muted-foreground">
@@ -333,7 +331,7 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="ml-0.5 text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
+      <label className="ml-0.5 text-[11px] font-extrabold tracking-normal text-muted-foreground">
         {label}
       </label>
       <div className="relative">{children}</div>

@@ -1,10 +1,11 @@
+import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteShell } from "@/components/layout/site-shell";
 import { Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/promocoes")({
-  head: () => ({ meta: [{ title: "Promoções — apostamaxy" }, { property: "og:title", content: "Promoções — apostamaxy" }, { name: "description", content: "Confira as melhores promoções de cassino e apostas." }] }),
+  head: () => ({ meta: pageMeta('Promoções — apostamaxy', 'Confira as melhores promoções de cassino e apostas.') }),
   component: () => (
     <SiteShell>
       <div className="max-w-7xl mx-auto px-3 md:px-6 py-6 space-y-6">

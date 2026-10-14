@@ -509,3 +509,8 @@
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
+
+.registration-progress { appearance: none; }
+.registration-progress::-webkit-progress-bar { background: var(--surface); }
+.registration-progress::-webkit-progress-value { background: var(--primary); }
+.registration-progress::-moz-progress-bar { background: var(--primary); }

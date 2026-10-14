@@ -1,3 +1,4 @@
+import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -10,7 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ImagePlus, Trash2, Upload } from "lucide-react";
 
-export const Route = createFileRoute("/admin/banners")({ component: Page });
+export const Route = createFileRoute("/admin/banners")({
+  head: () => ({ meta: pageMeta('Banners administrativos — apostamaxy', 'Banners administrativos da apostamaxy. Área de gestão autorizada.') }), component: Page });
 
 function Page() {
   const listFn = useServerFn(listBannersAdmin);

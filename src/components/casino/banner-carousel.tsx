@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { useAuthDialog } from "@/components/auth/auth-dialog-context";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
-import casinoCover from "@/assets/maxy-casino-cover.jpg";
-import pixCover from "@/assets/maxy-pix-cover.jpg";
+import casinoCover from "@/assets/maxy-casino-cover.webp";
+import pixCover from "@/assets/maxy-pix-cover.webp";
 
 const fallbacks = [
   { id: "maxy-casino", image_url: casinoCover, desktop_image_url: casinoCover, link_url: null, title: "apostamaxy", subtitle: "Slots, crash e cassino ao vivo.", own: true },

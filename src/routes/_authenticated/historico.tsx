@@ -1,3 +1,4 @@
+import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -9,7 +10,7 @@ import { ArrowDownToLine, ArrowUpFromLine, Dices, ShieldAlert } from "lucide-rea
 import { KycDialog } from "@/components/auth/kyc-dialog";
 
 export const Route = createFileRoute("/_authenticated/historico")({
-  head: () => ({ meta: [{ title: "Histórico — apostamaxy" }, { property: "og:title", content: "Histórico — apostamaxy" }] }),
+  head: () => ({ meta: pageMeta('Histórico — apostamaxy', 'Histórico na apostamaxy. Informações e serviços da sua conta.') }),
   component: Page,
 });
 

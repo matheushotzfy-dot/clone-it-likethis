@@ -1,3 +1,4 @@
+import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -6,6 +7,7 @@ import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/admin/pixel")({
+  head: () => ({ meta: pageMeta('Pixel e depositantes — apostamaxy', 'Pixel e depositantes da apostamaxy. Área de gestão autorizada.') }),
   component: PixelPage,
 });
 

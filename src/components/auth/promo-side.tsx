@@ -1,4 +1,4 @@
-import cover from "@/assets/maxy-casino-cover.jpg";
+import cover from "@/assets/maxy-casino-cover.webp";
 import { Zap, ShieldCheck, Gamepad2 } from "lucide-react";
 
 const proofs = [

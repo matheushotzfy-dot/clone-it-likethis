@@ -1,8 +1,9 @@
+import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteShell } from "@/components/layout/site-shell";
 
 export const Route = createFileRoute("/legal/jogo-responsavel")({
-  head: () => ({ meta: [{ title: "Jogo Responsável — apostamaxy" }, { property: "og:title", content: "Jogo Responsável — apostamaxy" }] }),
+  head: () => ({ meta: pageMeta('Jogo Responsável — apostamaxy', 'Jogo responsável na apostamaxy. Informações e serviços da sua conta.') }),
   component: () => (
     <SiteShell>
       <div className="max-w-3xl mx-auto px-4 py-10 space-y-4">

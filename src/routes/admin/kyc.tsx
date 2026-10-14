@@ -1,3 +1,4 @@
+import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -6,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { CheckCircle2, FileText, Home, IdCard, ShieldCheck, UserRound, XCircle } from "lucide-react";
 
-export const Route = createFileRoute("/admin/kyc")({ component: Page });
+export const Route = createFileRoute("/admin/kyc")({
+  head: () => ({ meta: pageMeta('Verificação de documentos — apostamaxy', 'Verificação de documentos da apostamaxy. Área de gestão autorizada.') }), component: Page });
 
 function Page() {
   const listFn = useServerFn(listPendingKyc);
