@@ -1,5 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { SiteShell } from "@/components/layout/site-shell";
 import { CatalogHeader, ProviderFilter, GameGrid, LoadMore, InlineSpinner } from "@/components/casino/catalog-grid";
 import { usePFGames, usePFProviders, usePFLaunch } from "@/hooks/use-pf-launch";
@@ -86,17 +88,14 @@ function Page() {
           {CATS.map((c) => {
             const isActive = cat === c.id;
             return (
-              <button
+              <Button variant="ghost"
                 key={c.id}
                 onClick={() => setCat(c.id)}
                 data-active={isActive}
-                className={
-                  "chip-flat h-9 shrink-0 rounded-[10px] border border-border px-3.5 text-[11.5px] font-extrabold uppercase tracking-[0.1em] " +
-                  (isActive ? "text-gold" : "text-foreground/70")
-                }
+                className={cn("chip-flat h-10 shrink-0 rounded-md border border-border px-4 text-xs font-semibold", isActive ? "text-primary" : "text-muted-foreground")}
               >
                 {c.label}
-              </button>
+              </Button>
             );
           })}
         </div>

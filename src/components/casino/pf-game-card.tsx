@@ -1,6 +1,7 @@
 import { Play, Loader2 } from "lucide-react";
 import { useState } from "react";
 import type { PFGameLite } from "@/hooks/use-pf-launch";
+import { Button } from "@/components/ui/button";
 import { markBrokenArt } from "@/lib/pf-broken-art";
 import { cn } from "@/lib/utils";
 
@@ -22,14 +23,14 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
   const [loaded, setLoaded] = useState(false);
 
   return (
-    <button
+    <Button variant="ghost"
       onClick={() => onPlay(game)}
       disabled={loading}
       aria-label={`Jogar ${game.name}`}
-      className="tile sweep group relative block w-full overflow-hidden rounded-[10px] border border-border bg-surface text-left aspect-[3/4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+      className="tile sweep group relative block h-auto w-full p-0 overflow-hidden rounded-lg border border-border bg-surface text-left aspect-[3/4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
     >
       {failed ? (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-[radial-gradient(120%_90%_at_50%_0%,color-mix(in_srgb,var(--primary)_28%,transparent),transparent_70%)] bg-card p-3 text-center">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-card p-3 text-center">
           <span className="font-display grid size-11 place-items-center rounded-full bg-primary/15 text-lg font-black text-primary">
             {game.name.trim().charAt(0).toUpperCase()}
           </span>
@@ -44,7 +45,9 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
             loading={priority ? "eager" : "lazy"}
             fetchPriority={priority ? "high" : "auto"}
             decoding="async"
-            sizes="(max-width: 640px) 44vw, (max-width: 1024px) 22vw, 240px"
+            width={300}
+            height={400}
+            sizes="(max-width: 640px) 31vw, (max-width: 1024px) 16vw, 160px"
             onLoad={() => setLoaded(true)}
             onError={() => {
               markBrokenArt(game.game_code);
@@ -64,7 +67,7 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
 
       {/* centred play affordance */}
       <div className="pointer-events-none absolute inset-0 grid place-items-center bg-background/0 transition-colors duration-200 group-hover:bg-background/35 group-active:bg-background/35">
-        <span className="grid size-10 scale-75 place-items-center rounded-full bg-gold text-background opacity-0 shadow-[0_0_0_6px_color-mix(in_srgb,var(--accent-gold)_22%,transparent),0_8px_20px_-8px_rgba(0,0,0,.95)] transition-[opacity,transform] duration-200 ease-out group-hover:scale-100 group-hover:opacity-100 group-active:scale-100 group-active:opacity-100 md:size-11">
+        <span className={cn("grid size-10 scale-75 place-items-center rounded-full bg-primary text-background opacity-0 play-halo transition-[opacity,transform] duration-200 ease-out group-hover:scale-100 group-hover:opacity-100 group-active:scale-100 group-active:opacity-100 md:size-11", loading && "scale-100 opacity-100")}>
           {loading ? (
             <Loader2 className="size-5 animate-spin" />
           ) : (
@@ -77,7 +80,7 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
         <span
           className={cn(
             "font-display pointer-events-none absolute left-0 top-0 grid h-6 min-w-6 place-items-center rounded-br-[8px] px-1.5 text-[11px] font-bold tabular-nums",
-            rank <= 3 ? "bg-gold text-background" : "bg-background/75 text-foreground/80",
+            rank <= 3 ? "bg-primary text-background" : "bg-background/75 text-foreground/80",
           )}
         >
           {rank}
@@ -92,6 +95,6 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
           </p>
         </div>
       )}
-    </button>
+    </Button>
   );
 }

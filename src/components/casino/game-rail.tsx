@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 /** High-density tile grid: more titles per screen, tighter gutters. */
 export const GAME_GRID =
-  "grid grid-cols-3 gap-1.5 sm:grid-cols-5 sm:gap-2 md:grid-cols-7 lg:grid-cols-8 xl:grid-cols-9 2xl:grid-cols-10";
+  "grid grid-cols-3 gap-2 sm:grid-cols-5 sm:gap-2.5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-9 2xl:grid-cols-10";
 
 /** Tiles per row at the widest breakpoint — used to size each rail. */
 export const GAME_ROW = 9;
@@ -39,9 +39,9 @@ export function GameRail({
       <div className={cn(GAME_GRID)}>
         {shown.map((g, i) => (
           <div
-            key={`${title}-${g.game_code}-${i}`}
+            key={`${g.provider.name}-${g.game_code}`}
             className="pop-in"
-            style={{ animationDelay: `${Math.min(i, 12) * 22}ms` }}
+            
           >
             <PFGameCard
               game={g}

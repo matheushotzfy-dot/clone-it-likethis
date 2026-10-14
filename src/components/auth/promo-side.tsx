@@ -1,3 +1,4 @@
+import cover from "@/assets/maxy-casino-cover.jpg";
 import { Zap, ShieldCheck, Gamepad2 } from "lucide-react";
 
 const proofs = [
@@ -9,12 +10,10 @@ const proofs = [
 export function PromoSide() {
   return (
     <div className="relative hidden w-full shrink-0 overflow-hidden md:flex md:w-[320px] md:flex-col md:justify-center">
-      <div className="absolute inset-0 bg-gradient-to-br from-surface-2 via-surface to-background" />
-      <div className="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-primary/18 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-24 -left-20 size-64 rounded-full bg-[var(--accent-live)]/18 blur-3xl" />
+      <img src={cover} alt="" width={1920} height={768} loading="lazy" className="absolute inset-0 size-full object-cover object-right opacity-20" />
 
       <div className="relative z-10 flex flex-col items-center px-7 py-9 text-center">
-        <h3 className="font-display mt-5 text-3xl font-extrabold leading-none tracking-tight">
+        <h3 className="font-display mt-5 text-3xl font-extrabold leading-none tracking-normal">
           aposta<span className="text-primary">maxy</span>
         </h3>
 
@@ -29,7 +28,7 @@ export function PromoSide() {
           {proofs.map(({ Icon, label, sub }) => (
             <li
               key={label}
-              className="flex items-center gap-3 rounded-xl border border-border bg-background/40 px-3 py-2.5"
+              className="flex items-center gap-3 rounded-lg border border-border bg-background/40 px-3 py-2.5"
             >
               <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-primary/40 bg-primary/12 text-primary">
                 <Icon className="size-[15px]" strokeWidth={2.25} />
