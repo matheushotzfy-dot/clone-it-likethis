@@ -48,6 +48,7 @@
   --color-crash: var(--accent-crash);
   --color-live: var(--accent-live);
   --color-gold: var(--accent-gold);
+  --color-qr-paper: var(--qr-paper);
 }
 
 :root {
@@ -92,6 +93,7 @@
   --accent-slots: var(--primary);
   --accent-gold: var(--primary);
   --shadow-tile: 0 8px 18px -12px oklch(0 0 0 / 0.7);
+  --qr-paper: oklch(1 0 0);
 }
 
 .dark { color-scheme: dark; }
