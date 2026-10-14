@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useHydrated } from "@tanstack/react-router";
 import { readCatalogCache, writeCatalogCache } from "@/lib/pf-catalog-cache";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -84,16 +85,18 @@ export function usePFGames(
   providerId?: number,
   options?: { limit?: number; q?: string; complete?: boolean },
 ) {
+  const hydrated = useHydrated();
   const fetchGames = useServerFn(getPFGames);
   const limit = options?.limit ?? 600;
   const q = options?.q?.trim() || undefined;
   const complete = options?.complete ?? false;
   const cacheKey = `${providerId ?? "all"}|${limit}|${q ?? ""}|${complete}`;
   const cached = useMemo(() => {
+    if (!hydrated) return null;
     const entry = readCatalogCache(cacheKey);
     /** Reaplica a limpeza: artes que quebraram depois não voltam pelo cache. */
     return entry ? { at: entry.at, games: cleanGames(entry.games) } : null;
-  }, [cacheKey]);
+  }, [cacheKey, hydrated]);
 
   const query = useQuery({
     queryKey: ["pf-games", providerId ?? "all", limit, q ?? "", complete],
@@ -106,7 +109,9 @@ export function usePFGames(
     ...(cached ? { initialData: cached.games, initialDataUpdatedAt: cached.at } : {}),
   });
 
-  return query;
+  // SSR and the first client render must show the same loading shell.
+  // Browser-only cached rows become visible immediately after hydration.
+  return hydrated ? query : { ...query, data: undefined, isLoading: true, isFetching: true };
 }
 
 export function usePFProviders() {
