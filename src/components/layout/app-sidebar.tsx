@@ -2,8 +2,9 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Sidebar, SidebarContent, useSidebar } from "@/components/ui/sidebar";
 import {
   Flame, Gamepad2, Rocket, MonitorPlay, LayoutGrid, Trophy, Gift,
-  Users, ChevronDown, ChevronsLeft, Wallet, LifeBuoy,
+  Users, ChevronDown, ChevronsLeft, Wallet, ShieldCheck,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuthDialog } from "@/components/auth/auth-dialog-context";
@@ -32,10 +33,10 @@ function Row({ item, active, collapsed }: { item: Item; active: boolean; collaps
       search={item.cat ? ({ cat: item.cat } as never) : undefined}
       title={item.label}
       className={cn(
-        "slick group relative flex h-10 items-center gap-3 rounded-md px-3 text-sm font-semibold",
+        "slick group relative flex h-10 items-center gap-3 rounded-md px-3 text-[13px] font-semibold",
         collapsed && "justify-center px-0",
         active
-          ? "bg-surface text-primary"
+          ? "bg-primary/10 text-primary"
           : "text-foreground/70 hover:bg-surface/70 hover:text-foreground",
       )}
     >
@@ -66,13 +67,13 @@ function Group({
   }
   return (
     <div className="border-t border-border px-2 py-2 first:border-t-0">
-      <button
+      <Button variant="ghost"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between px-1 py-2 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground"
+        className="flex w-full items-center justify-between px-1 py-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
       >
         <span>{title}</span>
         <ChevronDown className={cn("size-3.5 transition-transform", !open && "-rotate-90")} strokeWidth={2} />
-      </button>
+      </Button>
       {open && (
         <div className="space-y-1 pb-1">
           {items.map((it) => (
@@ -95,21 +96,21 @@ export function AppSidebar() {
       <SidebarContent className="bg-sidebar text-sidebar-foreground custom-scrollbar">
         {!collapsed && (
           <div className="flex items-center justify-between px-3 pb-1 pt-3">
-            <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-              Navegar
+            <span className="text-[11px] font-semibold text-muted-foreground">
+              Explorar
             </span>
-            <button
+            <Button variant="ghost"
               onClick={toggleSidebar}
               className="slick grid size-7 place-items-center rounded-md border border-border text-foreground/70 hover:border-primary hover:text-primary"
               aria-label="Recolher menu"
             >
               <ChevronsLeft className="size-4" strokeWidth={1.75} />
-            </button>
+            </Button>
           </div>
         )}
 
         <div className="px-2 pt-2">
-          <button
+          <Button variant="ghost"
             onClick={() => open("deposit")}
             title="Depositar"
             className={cn(
@@ -119,7 +120,7 @@ export function AppSidebar() {
           >
             <Wallet className="size-[18px] shrink-0" strokeWidth={2} />
             {!collapsed && <span>Depositar</span>}
-          </button>
+          </Button>
         </div>
 
         <div className="mt-2">
@@ -129,15 +130,7 @@ export function AppSidebar() {
 
         {!collapsed && (
           <div className="mt-auto border-t border-border p-3">
-            <div className="panel-flat flex items-start gap-2.5 rounded-md p-3">
-              <LifeBuoy className="mt-0.5 size-4 shrink-0 text-primary" strokeWidth={1.75} />
-              <div className="min-w-0">
-                <p className="text-xs font-bold">Suporte 24h</p>
-                <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-                  Atendimento por chat todos os dias.
-                </p>
-              </div>
-            </div>
+            <Link to="/legal/jogo-responsavel" className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary"><ShieldCheck className="size-4" /> Jogo responsável · 18+</Link>
           </div>
         )}
       </SidebarContent>

@@ -32,12 +32,12 @@ const cols = [
 
 export function Footer() {
   return (
-    <footer className="mt-12 border-t border-border bg-sidebar">
+    <footer className="mt-8 border-t border-border bg-sidebar">
       <div className="mx-auto max-w-[1600px] px-4 py-10 md:px-6">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
           {cols.map((c) => (
             <div key={c.title}>
-              <h4 className="mb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+              <h4 className="mb-3 text-[11px] font-semibold text-muted-foreground">
                 {c.title}
               </h4>
               <ul className="space-y-2 text-sm">
@@ -52,13 +52,13 @@ export function Footer() {
             </div>
           ))}
           <div>
-            <h4 className="mb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+            <h4 className="mb-3 text-[11px] font-semibold text-muted-foreground">
               Suporte
             </h4>
             <ul className="space-y-2 text-sm text-foreground/70">
-              <li>Chat 24 horas</li>
+              <li>Jogo responsável</li>
               <li>Depósitos via PIX</li>
-              <li>Saques instantâneos</li>
+              <li>Valores em reais</li>
             </ul>
           </div>
         </div>
