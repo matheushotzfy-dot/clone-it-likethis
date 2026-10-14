@@ -9,84 +9,45 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
-import { Route as AdminRouteImport } from './routes/admin'
-import { Route as AoVivoRouteImport } from './routes/ao-vivo'
-import { Route as CassinoRouteImport } from './routes/cassino'
-import { Route as IndiqueAmigosRouteImport } from './routes/indique-amigos'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as PromocoesRouteImport } from './routes/promocoes'
-import { Route as RegistroRouteImport } from './routes/registro'
-import { Route as SlotsRouteImport } from './routes/slots'
 import { Route as TorneiosRouteImport } from './routes/torneios'
-import { Route as AuthenticatedDepositoRouteImport } from './routes/_authenticated/deposito'
-import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
-import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
-import { Route as AuthenticatedSaqueRouteImport } from './routes/_authenticated/saque'
+import { Route as SlotsRouteImport } from './routes/slots'
+import { Route as RegistroRouteImport } from './routes/registro'
+import { Route as PromocoesRouteImport } from './routes/promocoes'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as IndiqueAmigosRouteImport } from './routes/indique-amigos'
+import { Route as CassinoRouteImport } from './routes/cassino'
+import { Route as AoVivoRouteImport } from './routes/ao-vivo'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
-import { Route as AdminBannersRouteImport } from './routes/admin/banners'
-import { Route as AdminCatalogoRouteImport } from './routes/admin/catalogo'
-import { Route as AdminConfiguracoesRouteImport } from './routes/admin/configuracoes'
-import { Route as AdminDepositosRouteImport } from './routes/admin/depositos'
-import { Route as AdminFinanceiroRouteImport } from './routes/admin/financeiro'
-import { Route as AdminKycRouteImport } from './routes/admin/kyc'
-import { Route as AdminPixelRouteImport } from './routes/admin/pixel'
-import { Route as AdminSaquesRouteImport } from './routes/admin/saques'
-import { Route as AdminTransacoesRouteImport } from './routes/admin/transacoes'
-import { Route as AdminUsuariosRouteImport } from './routes/admin/usuarios'
-import { Route as LegalJogoResponsavelRouteImport } from './routes/legal/jogo-responsavel'
-import { Route as LegalPrivacidadeRouteImport } from './routes/legal/privacidade'
 import { Route as LegalTermosRouteImport } from './routes/legal/termos'
-import { Route as AdminUsuariosIdRouteImport } from './routes/admin/usuarios_.$id'
-import { Route as ApiPublicBspayWebhookRouteImport } from './routes/api/public/bspay-webhook'
-import { Route as ApiPublicPlayfiversBalanceRouteImport } from './routes/api/public/playfivers-balance'
-import { Route as ApiPublicPlayfiversTransactionRouteImport } from './routes/api/public/playfivers-transaction'
-import { Route as ApiPublicPodpayWebhookRouteImport } from './routes/api/public/podpay-webhook'
+import { Route as LegalPrivacidadeRouteImport } from './routes/legal/privacidade'
+import { Route as LegalJogoResponsavelRouteImport } from './routes/legal/jogo-responsavel'
+import { Route as AdminUsuariosRouteImport } from './routes/admin/usuarios'
+import { Route as AdminTransacoesRouteImport } from './routes/admin/transacoes'
+import { Route as AdminSaquesRouteImport } from './routes/admin/saques'
+import { Route as AdminPixelRouteImport } from './routes/admin/pixel'
+import { Route as AdminKycRouteImport } from './routes/admin/kyc'
+import { Route as AdminFinanceiroRouteImport } from './routes/admin/financeiro'
+import { Route as AdminDepositosRouteImport } from './routes/admin/depositos'
+import { Route as AdminConfiguracoesRouteImport } from './routes/admin/configuracoes'
+import { Route as AdminCatalogoRouteImport } from './routes/admin/catalogo'
+import { Route as AdminBannersRouteImport } from './routes/admin/banners'
+import { Route as AuthenticatedSaqueRouteImport } from './routes/_authenticated/saque'
+import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
+import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
+import { Route as AuthenticatedDepositoRouteImport } from './routes/_authenticated/deposito'
 import { Route as ApiPublicVeopagWebhookRouteImport } from './routes/api/public/veopag-webhook'
+import { Route as ApiPublicPodpayWebhookRouteImport } from './routes/api/public/podpay-webhook'
+import { Route as ApiPublicPlayfiversTransactionRouteImport } from './routes/api/public/playfivers-transaction'
+import { Route as ApiPublicPlayfiversBalanceRouteImport } from './routes/api/public/playfivers-balance'
+import { Route as ApiPublicBspayWebhookRouteImport } from './routes/api/public/bspay-webhook'
+import { Route as AdminUsuariosIdRouteImport } from './routes/admin/usuarios_.$id'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedRoute = AuthenticatedRouteImport.update({
-  id: '/_authenticated',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AoVivoRoute = AoVivoRouteImport.update({
-  id: '/ao-vivo',
-  path: '/ao-vivo',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CassinoRoute = CassinoRouteImport.update({
-  id: '/cassino',
-  path: '/cassino',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IndiqueAmigosRoute = IndiqueAmigosRouteImport.update({
-  id: '/indique-amigos',
-  path: '/indique-amigos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PromocoesRoute = PromocoesRouteImport.update({
-  id: '/promocoes',
-  path: '/promocoes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RegistroRoute = RegistroRouteImport.update({
-  id: '/registro',
-  path: '/registro',
+const TorneiosRoute = TorneiosRouteImport.update({
+  id: '/torneios',
+  path: '/torneios',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SlotsRoute = SlotsRouteImport.update({
@@ -94,89 +55,58 @@ const SlotsRoute = SlotsRouteImport.update({
   path: '/slots',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TorneiosRoute = TorneiosRouteImport.update({
-  id: '/torneios',
-  path: '/torneios',
+const RegistroRoute = RegistroRouteImport.update({
+  id: '/registro',
+  path: '/registro',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedDepositoRoute = AuthenticatedDepositoRouteImport.update({
-  id: '/deposito',
-  path: '/deposito',
-  getParentRoute: () => AuthenticatedRoute,
+const PromocoesRoute = PromocoesRouteImport.update({
+  id: '/promocoes',
+  path: '/promocoes',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedHistoricoRoute = AuthenticatedHistoricoRouteImport.update({
-  id: '/historico',
-  path: '/historico',
-  getParentRoute: () => AuthenticatedRoute,
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
-  id: '/perfil',
-  path: '/perfil',
-  getParentRoute: () => AuthenticatedRoute,
+const IndiqueAmigosRoute = IndiqueAmigosRouteImport.update({
+  id: '/indique-amigos',
+  path: '/indique-amigos',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedSaqueRoute = AuthenticatedSaqueRouteImport.update({
-  id: '/saque',
-  path: '/saque',
-  getParentRoute: () => AuthenticatedRoute,
+const CassinoRoute = CassinoRouteImport.update({
+  id: '/cassino',
+  path: '/cassino',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AoVivoRoute = AoVivoRouteImport.update({
+  id: '/ao-vivo',
+  path: '/ao-vivo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminBannersRoute = AdminBannersRouteImport.update({
-  id: '/banners',
-  path: '/banners',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminCatalogoRoute = AdminCatalogoRouteImport.update({
-  id: '/catalogo',
-  path: '/catalogo',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminConfiguracoesRoute = AdminConfiguracoesRouteImport.update({
-  id: '/configuracoes',
-  path: '/configuracoes',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminDepositosRoute = AdminDepositosRouteImport.update({
-  id: '/depositos',
-  path: '/depositos',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminFinanceiroRoute = AdminFinanceiroRouteImport.update({
-  id: '/financeiro',
-  path: '/financeiro',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminKycRoute = AdminKycRouteImport.update({
-  id: '/kyc',
-  path: '/kyc',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminPixelRoute = AdminPixelRouteImport.update({
-  id: '/pixel',
-  path: '/pixel',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminSaquesRoute = AdminSaquesRouteImport.update({
-  id: '/saques',
-  path: '/saques',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminTransacoesRoute = AdminTransacoesRouteImport.update({
-  id: '/transacoes',
-  path: '/transacoes',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminUsuariosRoute = AdminUsuariosRouteImport.update({
-  id: '/usuarios',
-  path: '/usuarios',
-  getParentRoute: () => AdminRoute,
-} as any)
-const LegalJogoResponsavelRoute = LegalJogoResponsavelRouteImport.update({
-  id: '/legal/jogo-responsavel',
-  path: '/legal/jogo-responsavel',
+const LegalTermosRoute = LegalTermosRouteImport.update({
+  id: '/legal/termos',
+  path: '/legal/termos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LegalPrivacidadeRoute = LegalPrivacidadeRouteImport.update({
@@ -184,42 +114,112 @@ const LegalPrivacidadeRoute = LegalPrivacidadeRouteImport.update({
   path: '/legal/privacidade',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LegalTermosRoute = LegalTermosRouteImport.update({
-  id: '/legal/termos',
-  path: '/legal/termos',
+const LegalJogoResponsavelRoute = LegalJogoResponsavelRouteImport.update({
+  id: '/legal/jogo-responsavel',
+  path: '/legal/jogo-responsavel',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminUsuariosIdRoute = AdminUsuariosIdRouteImport.update({
-  id: '/usuarios_/$id',
-  path: '/usuarios/$id',
+const AdminUsuariosRoute = AdminUsuariosRouteImport.update({
+  id: '/usuarios',
+  path: '/usuarios',
   getParentRoute: () => AdminRoute,
 } as any)
-const ApiPublicBspayWebhookRoute = ApiPublicBspayWebhookRouteImport.update({
-  id: '/api/public/bspay-webhook',
-  path: '/api/public/bspay-webhook',
+const AdminTransacoesRoute = AdminTransacoesRouteImport.update({
+  id: '/transacoes',
+  path: '/transacoes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSaquesRoute = AdminSaquesRouteImport.update({
+  id: '/saques',
+  path: '/saques',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPixelRoute = AdminPixelRouteImport.update({
+  id: '/pixel',
+  path: '/pixel',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminKycRoute = AdminKycRouteImport.update({
+  id: '/kyc',
+  path: '/kyc',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFinanceiroRoute = AdminFinanceiroRouteImport.update({
+  id: '/financeiro',
+  path: '/financeiro',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminDepositosRoute = AdminDepositosRouteImport.update({
+  id: '/depositos',
+  path: '/depositos',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminConfiguracoesRoute = AdminConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCatalogoRoute = AdminCatalogoRouteImport.update({
+  id: '/catalogo',
+  path: '/catalogo',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminBannersRoute = AdminBannersRouteImport.update({
+  id: '/banners',
+  path: '/banners',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AuthenticatedSaqueRoute = AuthenticatedSaqueRouteImport.update({
+  id: '/saque',
+  path: '/saque',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedHistoricoRoute = AuthenticatedHistoricoRouteImport.update({
+  id: '/historico',
+  path: '/historico',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedDepositoRoute = AuthenticatedDepositoRouteImport.update({
+  id: '/deposito',
+  path: '/deposito',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const ApiPublicVeopagWebhookRoute = ApiPublicVeopagWebhookRouteImport.update({
+  id: '/api/public/veopag-webhook',
+  path: '/api/public/veopag-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicPlayfiversBalanceRoute =
-  ApiPublicPlayfiversBalanceRouteImport.update({
-    id: '/api/public/playfivers-balance',
-    path: '/api/public/playfivers-balance',
-    getParentRoute: () => rootRouteImport,
-  } as any)
+const ApiPublicPodpayWebhookRoute = ApiPublicPodpayWebhookRouteImport.update({
+  id: '/api/public/podpay-webhook',
+  path: '/api/public/podpay-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPlayfiversTransactionRoute =
   ApiPublicPlayfiversTransactionRouteImport.update({
     id: '/api/public/playfivers-transaction',
     path: '/api/public/playfivers-transaction',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicPodpayWebhookRoute = ApiPublicPodpayWebhookRouteImport.update({
-  id: '/api/public/podpay-webhook',
-  path: '/api/public/podpay-webhook',
+const ApiPublicPlayfiversBalanceRoute =
+  ApiPublicPlayfiversBalanceRouteImport.update({
+    id: '/api/public/playfivers-balance',
+    path: '/api/public/playfivers-balance',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicBspayWebhookRoute = ApiPublicBspayWebhookRouteImport.update({
+  id: '/api/public/bspay-webhook',
+  path: '/api/public/bspay-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicVeopagWebhookRoute = ApiPublicVeopagWebhookRouteImport.update({
-  id: '/api/public/veopag-webhook',
-  path: '/api/public/veopag-webhook',
-  getParentRoute: () => rootRouteImport,
+const AdminUsuariosIdRoute = AdminUsuariosIdRouteImport.update({
+  id: '/usuarios_/$id',
+  path: '/usuarios/$id',
+  getParentRoute: () => AdminRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -466,67 +466,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ao-vivo': {
-      id: '/ao-vivo'
-      path: '/ao-vivo'
-      fullPath: '/ao-vivo'
-      preLoaderRoute: typeof AoVivoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/cassino': {
-      id: '/cassino'
-      path: '/cassino'
-      fullPath: '/cassino'
-      preLoaderRoute: typeof CassinoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/indique-amigos': {
-      id: '/indique-amigos'
-      path: '/indique-amigos'
-      fullPath: '/indique-amigos'
-      preLoaderRoute: typeof IndiqueAmigosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/promocoes': {
-      id: '/promocoes'
-      path: '/promocoes'
-      fullPath: '/promocoes'
-      preLoaderRoute: typeof PromocoesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/registro': {
-      id: '/registro'
-      path: '/registro'
-      fullPath: '/registro'
-      preLoaderRoute: typeof RegistroRouteImport
+    '/torneios': {
+      id: '/torneios'
+      path: '/torneios'
+      fullPath: '/torneios'
+      preLoaderRoute: typeof TorneiosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/slots': {
@@ -536,40 +480,68 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SlotsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/torneios': {
-      id: '/torneios'
-      path: '/torneios'
-      fullPath: '/torneios'
-      preLoaderRoute: typeof TorneiosRouteImport
+    '/registro': {
+      id: '/registro'
+      path: '/registro'
+      fullPath: '/registro'
+      preLoaderRoute: typeof RegistroRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/deposito': {
-      id: '/_authenticated/deposito'
-      path: '/deposito'
-      fullPath: '/deposito'
-      preLoaderRoute: typeof AuthenticatedDepositoRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/promocoes': {
+      id: '/promocoes'
+      path: '/promocoes'
+      fullPath: '/promocoes'
+      preLoaderRoute: typeof PromocoesRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/historico': {
-      id: '/_authenticated/historico'
-      path: '/historico'
-      fullPath: '/historico'
-      preLoaderRoute: typeof AuthenticatedHistoricoRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/perfil': {
-      id: '/_authenticated/perfil'
-      path: '/perfil'
-      fullPath: '/perfil'
-      preLoaderRoute: typeof AuthenticatedPerfilRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/indique-amigos': {
+      id: '/indique-amigos'
+      path: '/indique-amigos'
+      fullPath: '/indique-amigos'
+      preLoaderRoute: typeof IndiqueAmigosRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/saque': {
-      id: '/_authenticated/saque'
-      path: '/saque'
-      fullPath: '/saque'
-      preLoaderRoute: typeof AuthenticatedSaqueRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/cassino': {
+      id: '/cassino'
+      path: '/cassino'
+      fullPath: '/cassino'
+      preLoaderRoute: typeof CassinoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ao-vivo': {
+      id: '/ao-vivo'
+      path: '/ao-vivo'
+      fullPath: '/ao-vivo'
+      preLoaderRoute: typeof AoVivoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/': {
       id: '/admin/'
@@ -578,81 +550,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/banners': {
-      id: '/admin/banners'
-      path: '/banners'
-      fullPath: '/admin/banners'
-      preLoaderRoute: typeof AdminBannersRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/catalogo': {
-      id: '/admin/catalogo'
-      path: '/catalogo'
-      fullPath: '/admin/catalogo'
-      preLoaderRoute: typeof AdminCatalogoRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/configuracoes': {
-      id: '/admin/configuracoes'
-      path: '/configuracoes'
-      fullPath: '/admin/configuracoes'
-      preLoaderRoute: typeof AdminConfiguracoesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/depositos': {
-      id: '/admin/depositos'
-      path: '/depositos'
-      fullPath: '/admin/depositos'
-      preLoaderRoute: typeof AdminDepositosRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/financeiro': {
-      id: '/admin/financeiro'
-      path: '/financeiro'
-      fullPath: '/admin/financeiro'
-      preLoaderRoute: typeof AdminFinanceiroRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/kyc': {
-      id: '/admin/kyc'
-      path: '/kyc'
-      fullPath: '/admin/kyc'
-      preLoaderRoute: typeof AdminKycRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/pixel': {
-      id: '/admin/pixel'
-      path: '/pixel'
-      fullPath: '/admin/pixel'
-      preLoaderRoute: typeof AdminPixelRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/saques': {
-      id: '/admin/saques'
-      path: '/saques'
-      fullPath: '/admin/saques'
-      preLoaderRoute: typeof AdminSaquesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/transacoes': {
-      id: '/admin/transacoes'
-      path: '/transacoes'
-      fullPath: '/admin/transacoes'
-      preLoaderRoute: typeof AdminTransacoesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/usuarios': {
-      id: '/admin/usuarios'
-      path: '/usuarios'
-      fullPath: '/admin/usuarios'
-      preLoaderRoute: typeof AdminUsuariosRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/legal/jogo-responsavel': {
-      id: '/legal/jogo-responsavel'
-      path: '/legal/jogo-responsavel'
-      fullPath: '/legal/jogo-responsavel'
-      preLoaderRoute: typeof LegalJogoResponsavelRouteImport
+    '/legal/termos': {
+      id: '/legal/termos'
+      path: '/legal/termos'
+      fullPath: '/legal/termos'
+      preLoaderRoute: typeof LegalTermosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/legal/privacidade': {
@@ -662,39 +564,116 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LegalPrivacidadeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/legal/termos': {
-      id: '/legal/termos'
-      path: '/legal/termos'
-      fullPath: '/legal/termos'
-      preLoaderRoute: typeof LegalTermosRouteImport
+    '/legal/jogo-responsavel': {
+      id: '/legal/jogo-responsavel'
+      path: '/legal/jogo-responsavel'
+      fullPath: '/legal/jogo-responsavel'
+      preLoaderRoute: typeof LegalJogoResponsavelRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/usuarios_/$id': {
-      id: '/admin/usuarios_/$id'
-      path: '/usuarios/$id'
-      fullPath: '/admin/usuarios/$id'
-      preLoaderRoute: typeof AdminUsuariosIdRouteImport
+    '/admin/usuarios': {
+      id: '/admin/usuarios'
+      path: '/usuarios'
+      fullPath: '/admin/usuarios'
+      preLoaderRoute: typeof AdminUsuariosRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/api/public/bspay-webhook': {
-      id: '/api/public/bspay-webhook'
-      path: '/api/public/bspay-webhook'
-      fullPath: '/api/public/bspay-webhook'
-      preLoaderRoute: typeof ApiPublicBspayWebhookRouteImport
-      parentRoute: typeof rootRouteImport
+    '/admin/transacoes': {
+      id: '/admin/transacoes'
+      path: '/transacoes'
+      fullPath: '/admin/transacoes'
+      preLoaderRoute: typeof AdminTransacoesRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/api/public/playfivers-balance': {
-      id: '/api/public/playfivers-balance'
-      path: '/api/public/playfivers-balance'
-      fullPath: '/api/public/playfivers-balance'
-      preLoaderRoute: typeof ApiPublicPlayfiversBalanceRouteImport
-      parentRoute: typeof rootRouteImport
+    '/admin/saques': {
+      id: '/admin/saques'
+      path: '/saques'
+      fullPath: '/admin/saques'
+      preLoaderRoute: typeof AdminSaquesRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/api/public/playfivers-transaction': {
-      id: '/api/public/playfivers-transaction'
-      path: '/api/public/playfivers-transaction'
-      fullPath: '/api/public/playfivers-transaction'
-      preLoaderRoute: typeof ApiPublicPlayfiversTransactionRouteImport
+    '/admin/pixel': {
+      id: '/admin/pixel'
+      path: '/pixel'
+      fullPath: '/admin/pixel'
+      preLoaderRoute: typeof AdminPixelRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/kyc': {
+      id: '/admin/kyc'
+      path: '/kyc'
+      fullPath: '/admin/kyc'
+      preLoaderRoute: typeof AdminKycRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/financeiro': {
+      id: '/admin/financeiro'
+      path: '/financeiro'
+      fullPath: '/admin/financeiro'
+      preLoaderRoute: typeof AdminFinanceiroRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/depositos': {
+      id: '/admin/depositos'
+      path: '/depositos'
+      fullPath: '/admin/depositos'
+      preLoaderRoute: typeof AdminDepositosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/configuracoes': {
+      id: '/admin/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/admin/configuracoes'
+      preLoaderRoute: typeof AdminConfiguracoesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/catalogo': {
+      id: '/admin/catalogo'
+      path: '/catalogo'
+      fullPath: '/admin/catalogo'
+      preLoaderRoute: typeof AdminCatalogoRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/banners': {
+      id: '/admin/banners'
+      path: '/banners'
+      fullPath: '/admin/banners'
+      preLoaderRoute: typeof AdminBannersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_authenticated/saque': {
+      id: '/_authenticated/saque'
+      path: '/saque'
+      fullPath: '/saque'
+      preLoaderRoute: typeof AuthenticatedSaqueRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/perfil': {
+      id: '/_authenticated/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof AuthenticatedPerfilRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/historico': {
+      id: '/_authenticated/historico'
+      path: '/historico'
+      fullPath: '/historico'
+      preLoaderRoute: typeof AuthenticatedHistoricoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/deposito': {
+      id: '/_authenticated/deposito'
+      path: '/deposito'
+      fullPath: '/deposito'
+      preLoaderRoute: typeof AuthenticatedDepositoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/api/public/veopag-webhook': {
+      id: '/api/public/veopag-webhook'
+      path: '/api/public/veopag-webhook'
+      fullPath: '/api/public/veopag-webhook'
+      preLoaderRoute: typeof ApiPublicVeopagWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/podpay-webhook': {
@@ -704,12 +683,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPodpayWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/veopag-webhook': {
-      id: '/api/public/veopag-webhook'
-      path: '/api/public/veopag-webhook'
-      fullPath: '/api/public/veopag-webhook'
-      preLoaderRoute: typeof ApiPublicVeopagWebhookRouteImport
+    '/api/public/playfivers-transaction': {
+      id: '/api/public/playfivers-transaction'
+      path: '/api/public/playfivers-transaction'
+      fullPath: '/api/public/playfivers-transaction'
+      preLoaderRoute: typeof ApiPublicPlayfiversTransactionRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/public/playfivers-balance': {
+      id: '/api/public/playfivers-balance'
+      path: '/api/public/playfivers-balance'
+      fullPath: '/api/public/playfivers-balance'
+      preLoaderRoute: typeof ApiPublicPlayfiversBalanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/bspay-webhook': {
+      id: '/api/public/bspay-webhook'
+      path: '/api/public/bspay-webhook'
+      fullPath: '/api/public/bspay-webhook'
+      preLoaderRoute: typeof ApiPublicBspayWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/usuarios_/$id': {
+      id: '/admin/usuarios_/$id'
+      path: '/usuarios/$id'
+      fullPath: '/admin/usuarios/$id'
+      preLoaderRoute: typeof AdminUsuariosIdRouteImport
+      parentRoute: typeof AdminRoute
     }
   }
 }
