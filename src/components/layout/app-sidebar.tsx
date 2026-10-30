@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Sidebar, SidebarContent, useSidebar } from "@/components/ui/sidebar";
 import {
   Flame, Gamepad2, Rocket, MonitorPlay, LayoutGrid, Trophy, Gift,
-  Users, ChevronDown, ChevronsLeft, Wallet, ShieldCheck,
+  Users, ChevronDown, Trophy as Cup, Radio, ChevronsLeft, Wallet, ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -17,6 +17,11 @@ const jogar: Item[] = [
   { label: "Slots", to: "/slots", icon: Gamepad2 },
   { label: "Crash", to: "/cassino", icon: Rocket, cat: "crash" },
   { label: "Ao Vivo", to: "/ao-vivo", icon: MonitorPlay },
+];
+
+const esportes: Item[] = [
+  { label: "Esportes", to: "/esportes", icon: Cup },
+  { label: "Ao vivo agora", to: "/esportes", icon: Radio, cat: "live" },
 ];
 
 const extras: Item[] = [
@@ -125,6 +130,7 @@ export function AppSidebar() {
 
         <div className="mt-2">
           <Group title="Jogar" items={jogar} path={path} collapsed={collapsed} />
+          <Group title="Esportes" items={esportes} path={path} collapsed={collapsed} />
           <Group title="Mais" items={extras} path={path} collapsed={collapsed} />
         </div>
 

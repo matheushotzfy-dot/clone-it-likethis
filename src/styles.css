@@ -54,19 +54,19 @@
 
 :root {
   --radius: 0.5rem;
-  /* Graphite surfaces with a luminous sky-blue action color. */
-  --background: oklch(0.185 0.006 260);
+  /* Deep slate-blue surfaces, electric sky-blue action, green reserved for live. */
+  --background: oklch(0.2 0.028 238);
   --foreground: oklch(0.97 0.004 250);
-  --surface: oklch(0.235 0.007 260);
-  --surface-2: oklch(0.28 0.008 260);
+  --surface: oklch(0.25 0.03 236);
+  --surface-2: oklch(0.31 0.032 234);
   --line: oklch(0.98 0.005 250 / 0.08);
   --card: var(--surface);
   --card-foreground: var(--foreground);
-  --popover: oklch(0.22 0.007 260);
+  --popover: oklch(0.23 0.03 237);
   --popover-foreground: var(--foreground);
   --brand: var(--background);
   --brand-2: var(--surface);
-  --primary: oklch(0.77 0.13 242);
+  --primary: oklch(0.74 0.16 238);
   --primary-foreground: oklch(0.18 0.03 250);
   --secondary: var(--surface-2);
   --secondary-foreground: var(--foreground);
@@ -80,7 +80,7 @@
   --border: var(--line);
   --input: oklch(0.98 0.005 250 / 0.1);
   --ring: var(--primary);
-  --sidebar: oklch(0.215 0.006 260);
+  --sidebar: oklch(0.23 0.03 237);
   --sidebar-foreground: var(--foreground);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
@@ -90,7 +90,7 @@
   --sidebar-ring: var(--primary);
   --accent-hot: oklch(0.83 0.15 80);
   --accent-crash: oklch(0.73 0.18 35);
-  --accent-live: oklch(0.76 0.15 345);
+  --accent-live: oklch(0.8 0.2 148);
   --accent-slots: var(--primary);
   --accent-gold: var(--primary);
   --shadow-tile: 0 8px 18px -12px oklch(0 0 0 / 0.7);
@@ -518,3 +518,7 @@
 .registration-progress::-webkit-progress-bar { background: var(--surface); }
 .registration-progress::-webkit-progress-value { background: var(--primary); }
 .registration-progress::-moz-progress-bar { background: var(--primary); }
+
+@keyframes live-pulse { 0%,100% { opacity: 1; transform: scale(1);} 50% { opacity: .45; transform: scale(.8);} }
+@utility live-dot { animation: live-pulse 1.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }

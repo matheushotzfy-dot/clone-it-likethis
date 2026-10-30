@@ -12,6 +12,7 @@ const nav = [
   { to: "/cassino", label: "Cassino" },
   { to: "/slots", label: "Slots" },
   { to: "/ao-vivo", label: "Ao vivo" },
+  { to: "/esportes", label: "Esportes" },
 ] as const;
 
 export function Header() {
