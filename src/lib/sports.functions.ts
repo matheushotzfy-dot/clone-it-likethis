@@ -49,9 +49,14 @@ async function fetchLeague(l: (typeof LEAGUES)[number]): Promise<SportEvent[]> {
       const h = teams.find((t) => t.homeAway === "home") ?? teams[0];
       const a = teams.find((t) => t.homeAway === "away") ?? teams[1];
       const o = comp.odds?.[0];
-      const home = mlToDecimal(o?.homeTeamOdds?.moneyLine);
-      const away = mlToDecimal(o?.awayTeamOdds?.moneyLine);
-      const draw = mlToDecimal(o?.drawOdds?.moneyLine);
+      // ESPN coloca a moneyline em odds.moneyline.<lado>.(current|close|open).odds
+      const side = (k: "home" | "away" | "draw") => {
+        const m = o?.moneyline?.[k];
+        return mlToDecimal(m?.current?.odds ?? m?.close?.odds ?? m?.open?.odds);
+      };
+      const home = side("home") ?? mlToDecimal(o?.homeTeamOdds?.moneyLine);
+      const away = side("away") ?? mlToDecimal(o?.awayTeamOdds?.moneyLine);
+      const draw = side("draw") ?? mlToDecimal(o?.drawOdds?.moneyLine);
       return {
         id: String(e.id),
         league: l.id,
