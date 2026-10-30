@@ -1,15 +1,17 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Sidebar, SidebarContent, useSidebar } from "@/components/ui/sidebar";
+import { ChevronDown, ChevronsLeft, ShieldCheck } from "lucide-react";
 import {
-  Flame, Gamepad2, Rocket, MonitorPlay, LayoutGrid, Trophy, Gift,
-  Users, ChevronDown, Trophy as Cup, Radio, ChevronsLeft, Wallet, ShieldCheck,
-} from "lucide-react";
+  IcFire as Flame, IcSlots as Gamepad2, IcCrash as Rocket, IcLive as MonitorPlay, IcGrid as LayoutGrid,
+  IcTrophy as Trophy, IcGift as Gift, IcFriends as Users, IcSports as Cup, IcLive as Radio, IcPix as Wallet, type MaxyIcon,
+} from "@/components/icons/maxy-icons";
+import { ModeSwitch } from "./mode-switch";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuthDialog } from "@/components/auth/auth-dialog-context";
 
-type Item = { label: string; to: string; icon: typeof Flame; cat?: string };
+type Item = { label: string; to: string; icon: MaxyIcon; cat?: string };
 
 const jogar: Item[] = [
   { label: "Populares", to: "/", icon: Flame },
@@ -51,7 +53,7 @@ function Row({ item, active, collapsed }: { item: Item; active: boolean; collaps
           active ? "opacity-100" : "opacity-0",
         )}
       />
-      <Icon className="size-[18px] shrink-0" strokeWidth={1.75} />
+      <Icon className="size-[18px] shrink-0" />
       {!collapsed && <span className="truncate">{item.label}</span>}
     </Link>
   );
@@ -74,7 +76,7 @@ function Group({
     <div className="border-t border-border px-2 py-2 first:border-t-0">
       <Button variant="ghost"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between px-1 py-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+        className="flex w-full items-center justify-between px-1 py-2 font-display text-[12px] font-bold uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground"
       >
         <span>{title}</span>
         <ChevronDown className={cn("size-3.5 transition-transform", !open && "-rotate-90")} strokeWidth={2} />
@@ -114,16 +116,17 @@ export function AppSidebar() {
           </div>
         )}
 
-        <div className="px-2 pt-2">
+        <div className="space-y-2 px-2 pt-2">
+          <ModeSwitch compact={collapsed} />
           <Button variant="ghost"
             onClick={() => open("deposit")}
             title="Depositar"
             className={cn(
-              "slick shine relative flex h-10 w-full items-center gap-2 overflow-hidden rounded-md bg-primary px-3 text-sm font-bold text-primary-foreground hover:brightness-110",
+              "relative flex h-10 w-full items-center gap-2 overflow-hidden rounded-[4px] bg-primary px-3 font-display text-[15px] font-extrabold uppercase tracking-wide text-primary-foreground hover:brightness-110",
               collapsed && "justify-center px-0",
             )}
           >
-            <Wallet className="size-[18px] shrink-0" strokeWidth={2} />
+            <Wallet className="size-[18px] shrink-0" />
             {!collapsed && <span>Depositar</span>}
           </Button>
         </div>

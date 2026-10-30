@@ -28,7 +28,7 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
       onClick={() => onPlay(game)}
       disabled={loading}
       aria-label={`Jogar ${game.name}`}
-      className="tile sweep group relative block h-auto w-full p-0 overflow-hidden rounded-lg border border-border bg-surface text-left aspect-[3/4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      className="lift group relative block h-auto w-full p-0 overflow-hidden rounded-md bg-surface hover:bg-surface text-left aspect-[3/4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
     >
       {failed ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-card p-3 text-center">
@@ -54,7 +54,7 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
               setFailed(true);
             }}
             className={cn(
-              "size-full object-cover transition-[transform,opacity] duration-300 ease-out group-hover:scale-[1.05]",
+              "size-full object-cover transition-[transform,opacity] duration-300 ease-out group-hover:scale-[1.03]",
               loaded ? "opacity-100" : "opacity-0",
             )}
             draggable={false}
@@ -66,20 +66,17 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-t from-background via-background/70 to-transparent" />
 
       {/* centred play affordance */}
-      <div className="pointer-events-none absolute inset-0 grid place-items-center bg-background/0 transition-colors duration-200 group-hover:bg-background/35 group-active:bg-background/35">
-        <span className={cn("grid size-10 scale-75 place-items-center rounded-full bg-primary text-background opacity-0 play-halo transition-[opacity,transform] duration-200 ease-out group-hover:scale-100 group-hover:opacity-100 group-active:scale-100 group-active:opacity-100 md:size-11", loading && "scale-100 opacity-100")}>
-          {loading ? (
-            <Loader2 className="size-5 animate-spin" />
-          ) : (
-            <Play className="size-4 fill-current" />
-          )}
+      <div className="pointer-events-none absolute inset-x-2 bottom-2 z-10">
+        <span className={cn("title-cond flex h-8 translate-y-2 items-center justify-center gap-1.5 rounded-[4px] bg-primary text-sm text-primary-foreground opacity-0 transition-[opacity,transform] duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100", loading && "translate-y-0 opacity-100")}>
+          {loading ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-3.5 fill-current" />}
+          Jogar
         </span>
       </div>
 
       {rank !== undefined && rank <= 10 && (
         <span
           className={cn(
-            "font-display pointer-events-none absolute left-0 top-0 grid h-6 min-w-6 place-items-center rounded-br-[8px] px-1.5 text-[11px] font-bold tabular-nums",
+            "font-display pointer-events-none absolute left-0 top-0 grid h-6 min-w-6 place-items-center rounded-br-[4px] px-1.5 text-[11px] font-bold tabular-nums",
             rank <= 3 ? "bg-primary text-background" : "bg-background/75 text-foreground/80",
           )}
         >
@@ -88,7 +85,7 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
       )}
 
       {!failed && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 px-2 pb-1.5">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 px-2 pb-1.5 transition-opacity group-hover:opacity-0">
           <p className="truncate text-[11.5px] font-semibold leading-tight md:text-xs">{game.name}</p>
           <p className="truncate text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
             {game.provider.name}

@@ -20,7 +20,7 @@ export function CatalogHeader({
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] items-end gap-4 md:flex md:justify-between">
       <div className="min-w-0">
-        <h1 className="page-title truncate text-[15px] md:text-[18px]">{title}</h1>
+        <h1 className="title-cond truncate text-3xl md:text-4xl">{title}</h1>
         <p className="mt-1 text-[12px] text-muted-foreground md:text-[13px]">{subtitle}</p>
       </div>
       <div className="relative w-full md:w-80">
