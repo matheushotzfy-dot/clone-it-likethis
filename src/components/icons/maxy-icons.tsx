@@ -1,10 +1,10 @@
-import type { SVGProps } from "react";
+import type { ReactElement, SVGProps } from "react";
 
 /**
  * Conjunto de ícones próprio da apostamaxy: traço único de 1.75px,
  * cantos vivos e cortes diagonais, para não parecer biblioteca padrão.
  */
-export type MaxyIcon = (p: SVGProps<SVGSVGElement>) => JSX.Element;
+export type MaxyIcon = (p: SVGProps<SVGSVGElement>) => ReactElement;
 
 function Base({ children, ...p }: SVGProps<SVGSVGElement>) {
   return (

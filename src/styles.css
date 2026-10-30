@@ -9,8 +9,8 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --font-display: "Outfit", system-ui, sans-serif;
-  --font-sans: "Manrope", system-ui, sans-serif;
+  --font-display: "Barlow Condensed", system-ui, sans-serif;
+  --font-sans: "Figtree", system-ui, sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -53,7 +53,7 @@
 }
 
 :root {
-  --radius: 0.5rem;
+  --radius: 0.375rem;
   /* Deep slate-blue surfaces, electric sky-blue action, green reserved for live. */
   --background: oklch(0.2 0.028 238);
   --foreground: oklch(0.97 0.004 250);
@@ -522,3 +522,16 @@
 @keyframes live-pulse { 0%,100% { opacity: 1; transform: scale(1);} 50% { opacity: .45; transform: scale(.8);} }
 @utility live-dot { animation: live-pulse 1.4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
+
+/* Títulos estilo placar: condensado, caixa alta. */
+@utility title-cond {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-weight: 800;
+  line-height: 1;
+}
+@utility lift {
+  transition: transform 180ms cubic-bezier(.2,.7,.3,1);
+  &:hover { transform: translateY(-4px); }
+}
