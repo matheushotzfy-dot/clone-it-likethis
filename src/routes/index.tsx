@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { SiteShell } from "@/components/layout/site-shell";
 import { BannerCarousel } from "@/components/casino/banner-carousel";
 import { PFGameCard } from "@/components/casino/pf-game-card";
+import { HubTiles } from "@/components/casino/hub-tiles";
 import { CategoryNav } from "@/components/casino/category-nav";
 import { ProviderStrip } from "@/components/casino/provider-strip";
 import { GameRail, GAME_GRID } from "@/components/casino/game-rail";
@@ -75,6 +76,7 @@ function Index() {
     <SiteShell>
       <div className="aurora mx-auto max-w-[1600px] overflow-x-hidden space-y-5 px-3 py-3 md:space-y-6 md:px-6 md:py-4">
         <BannerCarousel aspectClass="aspect-[1.8/1] sm:aspect-[3/1] md:aspect-[3.8/1]" />
+        <HubTiles />
 
         {/* nav + search on one line */}
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:gap-3">

@@ -14,4 +14,4 @@
 - [x] Verificar páginas públicas, cadastro, seleção de PIX e metadados
 - [x] Aplicar atualização de segurança dos pacotes
 
-Verificação: sem overflow em 360px e desktop; cadastro valida campos; seleção de PIX não gera cobrança; build automático OK. A integração PlayFivers ainda retorna 403 no servidor para provedores, e algumas artes externas usam fallback; lançamento de jogos não foi validado.- [ ] Início no estilo stake.com/pt (atalhos Cassino/Esportes no topo)
+Verificação: sem overflow em 360px e desktop; cadastro valida campos; seleção de PIX não gera cobrança; build automático OK. A integração PlayFivers ainda retorna 403 no servidor para provedores, e algumas artes externas usam fallback; lançamento de jogos não foi validado.- [x] Início no estilo stake.com/pt (atalhos Cassino/Esportes no topo)
