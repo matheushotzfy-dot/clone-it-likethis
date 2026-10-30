@@ -78,11 +78,9 @@ function Page() {
         </section>
 
         <div className="lg:sticky lg:top-20 lg:self-start max-lg:fixed max-lg:inset-x-0 max-lg:bottom-16 max-lg:z-40 max-lg:px-3">
-          {(selection || typeof window === "undefined" || true) && (
-            <div className={cn(!selection && "max-lg:hidden")}>
-              <BetSlip selection={selection} onClear={() => setSelection(null)} />
-            </div>
-          )}
+          <div className={cn(!selection && "max-lg:hidden")}>
+            <BetSlip selection={selection} onClear={() => setSelection(null)} />
+          </div>
         </div>
       </div>
     </SiteShell>
