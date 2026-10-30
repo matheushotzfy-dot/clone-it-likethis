@@ -26,7 +26,7 @@ type Tab = "live" | "next";
 
 function Page() {
   const fetchEvents = useServerFn(getSportsEvents);
-  const q = useQuery({ queryKey: ["sports-events"], queryFn: () => fetchEvents(), refetchInterval: 30_000, staleTime: 20_000 });
+  const q = useQuery({ queryKey: ["sports-events"], queryFn: () => fetchEvents(), refetchInterval: 5_000, refetchIntervalInBackground: false, staleTime: 4_000 });
   const [tab, setTab] = useState<Tab>("next");
   const [league, setLeague] = useState<string | null>(null);
   const [selection, setSelection] = useState<Selection | null>(null);

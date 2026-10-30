@@ -6,7 +6,7 @@ import { getSportsEvents } from "@/lib/sports.functions";
 /** Faixa horizontal com jogos reais (ao vivo primeiro) e odds 1/X/2. */
 export function LiveStrip() {
   const fetchEvents = useServerFn(getSportsEvents);
-  const q = useQuery({ queryKey: ["sports-events"], queryFn: () => fetchEvents(), refetchInterval: 30_000, staleTime: 20_000 });
+  const q = useQuery({ queryKey: ["sports-events"], queryFn: () => fetchEvents(), refetchInterval: 5_000, refetchIntervalInBackground: false, staleTime: 4_000 });
   const list = [...(q.data ?? [])]
     .filter((e) => e.odds)
     .sort((a, b) => Number(b.state === "in") - Number(a.state === "in"))
