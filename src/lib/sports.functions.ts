@@ -10,6 +10,13 @@ export const LEAGUES = [
   { id: "uefa.champions", sport: "soccer", label: "Champions League" },
   { id: "eng.1", sport: "soccer", label: "Premier League" },
   { id: "esp.1", sport: "soccer", label: "La Liga" },
+  { id: "bra.2", sport: "soccer", label: "Série B" },
+  { id: "bra.copa_do_brazil", sport: "soccer", label: "Copa do Brasil" },
+  { id: "conmebol.sudamericana", sport: "soccer", label: "Sul-Americana" },
+  { id: "ita.1", sport: "soccer", label: "Serie A" },
+  { id: "ger.1", sport: "soccer", label: "Bundesliga" },
+  { id: "fra.1", sport: "soccer", label: "Ligue 1" },
+  { id: "uefa.europa", sport: "soccer", label: "Europa League" },
   { id: "nba", sport: "basketball", label: "NBA" },
 ] as const;
 
