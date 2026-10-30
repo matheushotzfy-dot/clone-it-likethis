@@ -68,14 +68,14 @@ export function MobileBottomNav() {
         </li>
 
         <li>
-          <Link to="/ao-vivo" className="block h-full w-full rounded-none p-0">
-            <span className={cell(path === "/ao-vivo")}>
-              {indicator(path === "/ao-vivo")}
+          <Link to="/esportes" className="block h-full w-full rounded-none p-0">
+            <span className={cell(path === "/esportes")}>
+              {indicator(path === "/esportes")}
               <span className="relative">
                 <MonitorPlay className="size-[22px]" strokeWidth={2} />
-                <span className="soft-pulse absolute -right-1 -top-0.5 size-2 rounded-full bg-destructive" />
+                <span className="soft-pulse absolute -right-1 -top-0.5 size-2 rounded-full bg-live" />
               </span>
-              Ao vivo
+              Esportes
             </span>
           </Link>
         </li>
