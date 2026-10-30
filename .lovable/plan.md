@@ -1,23 +1,26 @@
-# Redesign apostamaxy no estilo da referência (shuffle.com/pt)
+# Redesign apostamaxy no estilo esportivo da Stake, só que melhorado e com cara própria
 
-A referência bloqueia acesso do nosso servidor (aviso de região, mesmo pelo Paraguai). O plano segue o estilo conhecido do site; se você mandar prints (home, menu lateral, jogos, celular), ajusto os detalhes para ficar fiel.
+A referência é a área de esportes da Stake: fundo azul-ardósia escuro, menu lateral com as modalidades, abas Ao Vivo / Próximos e a lista de jogos com odds clicáveis. A gente usa essa base, mas com identidade apostamaxy e acabamento melhor.
 
 ## O que muda
-- **Cores:** fundo quase preto, cartões grafite, roxo vibrante como cor principal (botões, destaques, menu ativo). Sai o azul-claro.
-- **Menu lateral:** estreito, recolhível (só ícones), grupos Cassino / Esportes / Promoções, ativo em roxo.
-- **Topo:** logo apostamaxy à esquerda, busca central, saldo em R$ com botão roxo "Depositar" (PIX), login/cadastro.
-- **Início:** 3 banners lado a lado (cadastro, PIX, esportes) no topo; abaixo faixas horizontais de jogos com setas: Populares, Slots, Crash, Ao Vivo, Provedores.
-- **Cards de jogos:** capa vertical arredondada, leve zoom e brilho roxo ao passar o mouse, botão jogar.
-- **Rodapé:** colunas de links, jogo responsável, +18.
-- **Celular:** menu inferior com Depositar no centro, faixas roláveis com o dedo.
+- **Cores:** fundo azul-ardósia profundo, cartões em camadas um pouco mais claras, azul-claro elétrico como cor de ação (Depositar, odd selecionada). Verde só para "ao vivo" e ganhos. Não copiamos o verde da Stake.
+- **Menu lateral:** blocos "Cassino" e "Esportes" no topo; lista de modalidades e ligas com ícones próprios; recolhível em ícones.
+- **Topo:** logo apostamaxy, busca, saldo em R$ com botão "Depositar" (PIX), entrar/cadastrar.
+- **Esportes (página principal da referência):**
+  - Faixa de banners (Copa, PIX, cadastro).
+  - Abas Ao Vivo / Próximos / Favoritos e chips de modalidade.
+  - Linhas de jogo compactas: liga, horário ou placar ao vivo, times com escudos e 3 botões de odd (1 / X / 2) que acendem ao clicar.
+  - Cupom de aposta fixo à direita no computador e como gaveta embaixo no celular.
+- **Cassino / Início:** mesmo visual, com faixas de jogos (Populares, Slots, Crash, Ao Vivo) e cards com efeito ao passar o mouse.
+- **Melhorias além da referência:** animação suave nas odds que mudam, indicador ao vivo pulsando, carregamento com esqueletos, tudo bem legível no celular.
 
 ## O que não muda
-- Marca apostamaxy e logo atual (não copiamos logo, nomes nem artes da referência).
+- Marca e logo apostamaxy; nada de logo, nome ou arte da Stake.
 - Só reais e PIX, sem cripto; sem vitórias ou prêmios inventados.
-- Jogos, login, depósito/saque, KYC e painel admin continuam funcionando igual.
+- Dados de jogos esportivos, regras de aposta, login, depósito/saque, KYC e painel admin continuam iguais.
 
 ## Detalhes técnicos
-- Tokens novos em `src/styles.css` (primary roxo em oklch, superfícies, glow).
-- Editar `app-sidebar`, `header`, `header-account`, `mobile-bottom-nav`, `footer`, `banner-carousel` (3 colunas), `game-rail`, `pf-game-card`, `category-nav`, `routes/index.tsx`.
-- Atualizar memória de identidade (roxo substitui azul-claro).
-- Validar com Playwright em desktop e 393px: sem overflow, jogos carregando, abertura de cadastro/depósito.
+- Novos tokens em `src/styles.css` (superfícies ardósia, primary azul-claro, `--live` verde, glow).
+- Editar `app-sidebar`, `header`, `header-account`, `mobile-bottom-nav`, `footer`, `banner-carousel`, `game-rail`, `pf-game-card`, `category-nav`, `routes/index.tsx` e a página de esportes (linhas de jogo, botões de odd, cupom com o `BetSlipDialog`/RPC existentes).
+- Registrar a tarefa no roadmap e atualizar a memória de identidade.
+- Validar com Playwright em desktop e 393px: sem overflow, jogos e odds carregando, clique em odd abre o cupom, cadastro/depósito abrem.
