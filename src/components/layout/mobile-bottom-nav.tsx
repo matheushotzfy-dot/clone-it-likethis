@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Menu, LayoutGrid, MonitorPlay, Plus, User } from "lucide-react";
+import { Menu, User } from "lucide-react";
+import { IcCasino as LayoutGrid, IcSports as MonitorPlay, IcPix as Plus } from "@/components/icons/maxy-icons";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useAuthDialog } from "@/components/auth/auth-dialog-context";
 import { useAuth } from "@/hooks/use-auth";
@@ -44,7 +45,7 @@ export function MobileBottomNav() {
           <Link to="/cassino" className="block h-full w-full rounded-none p-0">
             <span className={cell(path === "/cassino")}>
               {indicator(path === "/cassino")}
-              <LayoutGrid className="size-[22px]" strokeWidth={2} />
+              <LayoutGrid className="size-[22px]" />
               Cassino
             </span>
           </Link>
@@ -58,7 +59,7 @@ export function MobileBottomNav() {
           >
             <span className="flex h-full flex-col items-center justify-center gap-0.5">
               <span className="grid size-9 place-items-center rounded-lg bg-primary text-primary-foreground cta-glow">
-                <Plus className="size-5" strokeWidth={3} />
+                <Plus className="size-5" />
               </span>
               <span className="text-[10px] font-semibold text-primary">
                 Depositar
@@ -72,7 +73,7 @@ export function MobileBottomNav() {
             <span className={cell(path === "/esportes")}>
               {indicator(path === "/esportes")}
               <span className="relative">
-                <MonitorPlay className="size-[22px]" strokeWidth={2} />
+                <MonitorPlay className="size-[22px]" />
                 <span className="soft-pulse absolute -right-1 -top-0.5 size-2 rounded-full bg-live" />
               </span>
               Esportes

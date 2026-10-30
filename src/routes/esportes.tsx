@@ -43,7 +43,7 @@ function Page() {
         <section className="min-w-0 space-y-4">
           <header className="flex items-center gap-2">
             <Trophy className="size-5 text-primary" />
-            <h1 className="text-xl font-bold">Esportes</h1>
+            <h1 className="title-cond text-3xl">Esportes</h1>
           </header>
 
           <div className="flex gap-1 rounded-full bg-surface p-1 w-fit" role="tablist">

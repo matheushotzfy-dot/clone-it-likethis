@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { SiteShell } from "@/components/layout/site-shell";
 import { BannerCarousel } from "@/components/casino/banner-carousel";
 import { PFGameCard } from "@/components/casino/pf-game-card";
+import { LiveStrip } from "@/components/sports/live-strip";
 import { HubTiles } from "@/components/casino/hub-tiles";
 import { CategoryNav } from "@/components/casino/category-nav";
 import { ProviderStrip } from "@/components/casino/provider-strip";
@@ -77,6 +78,7 @@ function Index() {
       <div className="aurora mx-auto max-w-[1600px] overflow-x-hidden space-y-5 px-3 py-3 md:space-y-6 md:px-6 md:py-4">
         <BannerCarousel aspectClass="aspect-[1.8/1] sm:aspect-[3/1] md:aspect-[3.8/1]" />
         <HubTiles />
+        <LiveStrip />
 
         {/* nav + search on one line */}
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:gap-3">
@@ -93,7 +95,7 @@ function Index() {
               onChange={(e) => setQ(e.target.value)}
               placeholder="Buscar jogo ou provedor"
               aria-label="Buscar jogo"
-              className="h-10 w-full rounded-[8px] border border-border bg-surface/50 pl-9 pr-9 text-[13px] font-medium text-foreground placeholder:font-normal placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+              className="h-10 w-full rounded-[4px] border border-border bg-surface pl-9 pr-9 text-[13px] font-medium text-foreground placeholder:font-normal placeholder:text-muted-foreground focus:border-primary focus:outline-none"
             />
             {q && (
               <Button variant="ghost" size="icon"
