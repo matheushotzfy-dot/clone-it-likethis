@@ -17,7 +17,6 @@ type VeoPagEvent = {
   error_message?: string;
 };
 
-type WebhookTx = { id: string; status: string };
 
 async function loadSignatureSecret(): Promise<string> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -62,7 +61,6 @@ export const Route = createFileRoute("/api/public/veopag-webhook")({
 
         console.log("VeoPag webhook event", JSON.stringify(payload));
 
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const veopagId = payload.transaction_id;
         const externalId = payload.external_id;
         const eventId = veopagId || externalId;
@@ -80,7 +78,6 @@ export const Route = createFileRoute("/api/public/veopag-webhook")({
           const result = await syncDepositByExternalId(externalId);
           console.log("VeoPag webhook sync", externalId, result);
         }
-        void supabaseAdmin;
         return new Response("ok", { status: 200, headers: corsHeaders });
       },
     },
