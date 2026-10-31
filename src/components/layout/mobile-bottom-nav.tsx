@@ -12,6 +12,8 @@ export function MobileBottomNav() {
   const { toggleSidebar } = useSidebar();
   const { open } = useAuthDialog();
   const { user } = useAuth();
+  const casinoActive = ["/", "/cassino", "/slots", "/ao-vivo", "/torneios", "/promocoes"].includes(path);
+  const accountActive = ["/perfil", "/historico", "/saque", "/deposito"].includes(path);
 
   const cell = (active: boolean) =>
     cn(
@@ -43,8 +45,8 @@ export function MobileBottomNav() {
 
         <li>
           <Link to="/cassino" className="block h-full w-full rounded-none p-0">
-            <span className={cell(path === "/cassino")}>
-              {indicator(path === "/cassino")}
+              <span className={cell(casinoActive)}>
+              {indicator(casinoActive)}
               <LayoutGrid className="size-[22px]" />
               Cassino
             </span>
@@ -84,8 +86,8 @@ export function MobileBottomNav() {
         <li>
           {user ? (
             <Link to="/perfil" className="block h-full w-full rounded-none p-0">
-              <span className={cell(path === "/perfil")}>
-                {indicator(path === "/perfil")}
+              <span className={cell(accountActive)}>
+                {indicator(accountActive)}
                 <User className="size-[22px]" strokeWidth={2} />
                 Perfil
               </span>

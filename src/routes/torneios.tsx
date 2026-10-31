@@ -2,6 +2,7 @@ import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute } from "@tanstack/react-router";
 import { Trophy, Calendar, Users, ArrowRight, Gift, Timer } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SiteShell } from "@/components/layout/site-shell";
 
 export const Route = createFileRoute("/torneios")({
   head: () => ({ meta: pageMeta('Torneios — apostamaxy', 'Participe dos nossos torneios exclusivos e ganhe prêmios incríveis.') }),
@@ -10,7 +11,7 @@ export const Route = createFileRoute("/torneios")({
 
 function TorneiosPage() {
   return (
-    <div className="container mx-auto px-4 py-8">
+    <SiteShell><div className="container mx-auto min-w-0 px-3 py-5 md:px-6 md:py-8">
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="page-title text-2xl md:text-3xl flex items-center gap-3">
@@ -57,6 +58,6 @@ function TorneiosPage() {
           </p>
         </div>
       </div>
-    </div>
+    </div></SiteShell>
   );
 }

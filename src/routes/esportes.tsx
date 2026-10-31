@@ -86,7 +86,7 @@ function Page() {
           </div>
         </section>
 
-        <div className="lg:sticky lg:top-20 lg:self-start max-lg:fixed max-lg:inset-x-0 max-lg:bottom-16 max-lg:z-40 max-lg:px-3">
+        <div className="lg:sticky lg:top-20 lg:self-start max-lg:fixed max-lg:inset-x-0 max-lg:bottom-[calc(64px+env(safe-area-inset-bottom))] max-lg:z-40 max-lg:px-3">
           <div className={cn(!selection && "max-lg:hidden")}>
             {selection && !activeSelection && <p role="status" className="bg-surface px-4 pt-3 text-xs text-muted-foreground">Cotação alterada ou indisponível. Selecione novamente.</p>}
             <BetSlip selection={activeSelection} onClear={() => setSelection(null)} />
