@@ -74,47 +74,13 @@ export const Route = createFileRoute("/api/public/veopag-webhook")({
           });
         }
 
-        const map: Record<string, "approved" | "rejected" | "pending"> = {
-          COMPLETED: "approved",
-          PAID: "approved",
-          PROCESSING: "pending",
-          PENDING: "pending",
-          QUEUE: "pending",
-          FAILED: "rejected",
-          REFUNDED: "rejected",
-          PARTIALLY_REFUNDED: "rejected",
-        };
-        const newStatus = map[status] ?? "pending";
-
-        const matchIds = [veopagId, externalId].filter(Boolean) as string[];
-        let tx: WebhookTx | null = null;
-        if (matchIds.length) {
-          const { data } = await supabaseAdmin
-            .from("transactions")
-            .select("id,status")
-            .in("gateway_external_id", matchIds)
-            .maybeSingle();
-          tx = data as WebhookTx | null;
+        // Never trust the body: re-check the deposit directly with VeoPag.
+        if ((payload.type || "Deposit").toLowerCase() === "deposit" && externalId) {
+          const { syncDepositByExternalId } = await import("@/lib/veopag.server");
+          const result = await syncDepositByExternalId(externalId);
+          console.log("VeoPag webhook sync", externalId, result);
         }
-
-        if (!tx) {
-          const { data } = await supabaseAdmin
-            .from("transactions")
-            .select("id,status")
-            .ilike("description", `%${eventId}%`)
-            .maybeSingle();
-          tx = data as WebhookTx | null;
-        }
-
-        if (!tx) {
-          console.warn("VeoPag webhook: no matching tx for", eventId);
-          return new Response("ok", { status: 200, headers: corsHeaders });
-        }
-
-        if (newStatus !== "pending" && tx.status === "pending") {
-          await supabaseAdmin.from("transactions").update({ status: newStatus }).eq("id", tx.id);
-        }
-
+        void supabaseAdmin;
         return new Response("ok", { status: 200, headers: corsHeaders });
       },
     },
