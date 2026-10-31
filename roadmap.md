@@ -1,5 +1,11 @@
 # Roadmap
 
+## Mensuração Meta do cassino
+- [x] Conferir conexão Meta disponível e explicar atribuição entre quiz e cassino — nenhuma conexão acessível neste projeto
+- [ ] Inspecionar permissões e restrições do Pixel solicitado — depende de conexão Meta
+- [ ] Instalar PageView, cadastro concluído e primeiro depósito aprovado, com deduplicação e bloqueio regional — depende de verificações e consentimento para identificadores
+- [ ] Atualizar política, validar eventos de teste e publicar cassino — depende da instalação; quiz exige acesso ao outro projeto
+
 ## Compactação mobile
 - [x] Diminuir faixa esportiva e ajustar espaçamentos somente no celular
 - [x] Conferir navegação, busca sem zoom automático e preservação do computador — 360/393/430px sem overflow; saldo conectado e depósito abrindo/fechando; cards desktop preservados em 260px
