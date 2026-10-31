@@ -45,7 +45,7 @@ function Page() {
 
   return (
     <SiteShell>
-      <div className="mx-auto grid max-w-[1400px] gap-4 px-3 py-4 md:px-6 lg:grid-cols-[1fr_320px]">
+      <div className="sports-page mx-auto grid max-w-[1400px] gap-4 px-3 py-4 md:px-6 lg:grid-cols-[1fr_320px]">
         <section className="min-w-0 space-y-4">
           <header className="flex items-center gap-2">
             <Trophy className="size-5 text-primary" />

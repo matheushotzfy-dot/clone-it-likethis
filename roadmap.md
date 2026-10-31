@@ -1,5 +1,9 @@
 # Roadmap
 
+## Compactação mobile
+- [x] Diminuir faixa esportiva e ajustar espaçamentos somente no celular
+- [x] Conferir navegação, busca sem zoom automático e preservação do computador — 360/393/430px sem overflow; saldo conectado e depósito abrindo/fechando; cards desktop preservados em 260px
+
 ## Mobile estilo aplicativo
 - [x] Corrigir fechamento livre do depósito, inclusive com PIX pendente — verificado sem copiar nem pagar
 - [x] Harmonizar cadastro, login, saldo e navegação para celular

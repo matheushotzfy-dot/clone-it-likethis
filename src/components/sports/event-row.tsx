@@ -37,7 +37,7 @@ export function EventRow({ event, selected, onPick }: EventRowProps) {
     : [];
 
   return (
-    <article className="grid gap-3 rounded-lg bg-surface p-3 transition-colors hover:bg-surface-2/70 md:grid-cols-[1fr_auto] md:items-center">
+    <article className="sports-event grid gap-3 rounded-lg bg-surface p-3 transition-colors hover:bg-surface-2/70 md:grid-cols-[1fr_auto] md:items-center">
       <div className="min-w-0 space-y-1.5">
         <div className="flex items-center gap-2 text-[11px] font-semibold text-muted-foreground">
           {live ? (
