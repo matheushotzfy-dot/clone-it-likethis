@@ -1,5 +1,11 @@
 # Roadmap
 
+## Conexão PlayFivers atual
+- [x] Atualizar credenciais pelo formulário seguro
+- [x] Consultar catálogo e verificar credenciais — catálogo respondeu; agente bloqueado por IP
+- [ ] Proteger e validar callbacks de saldo e transação
+- [ ] Validar lançamento real — depende de IP autorizado e callback autenticado no provedor
+
 ## Cobertura esportiva e capas
 - [x] Ampliar campeonatos brasileiros disponíveis na fonte atual
 - [x] Usar apenas odds publicadas, sem estimativas ou odds antigas ao vivo
