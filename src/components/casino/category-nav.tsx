@@ -41,7 +41,7 @@ export function CategoryNav({ active }: { active?: string }) {
                 <svg viewBox="0 0 24 24" className="size-4 opacity-80 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth={2.5} aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
               </span>
               <img src={img} alt="" width={816} height={816} loading="lazy"
-                className="cat-card-art pointer-events-none absolute -right-2 top-1/2 -mt-[34px] size-[68px] object-contain drop-shadow-[0_8px_12px_rgba(0,0,0,0.45)] md:-mt-[40px] md:size-[80px]" />
+                className="cat-card-art pointer-events-none absolute -right-2 top-1/2 -mt-[34px] size-[68px] object-contain drop-shadow-[0_8px_12px_var(--background)] md:-mt-[40px] md:size-[80px]" />
               {live && (
                 <span className="absolute left-3 top-1.5 z-10 flex items-center gap-1 rounded-full bg-live px-1.5 py-0.5 text-[9px] font-bold uppercase text-primary-foreground">
                   <span className="size-1.5 animate-pulse rounded-full bg-primary-foreground" /> live
