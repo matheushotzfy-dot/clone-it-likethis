@@ -7,7 +7,7 @@ import {
 } from "@/components/icons/maxy-icons";
 import { ModeSwitch } from "./mode-switch";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuthDialog } from "@/components/auth/auth-dialog-context";
 
@@ -92,28 +92,28 @@ function Group({
 }
 
 export function AppSidebar() {
-  const { state, toggleSidebar } = useSidebar();
+  const { state, toggleSidebar, setOpenMobile } = useSidebar();
   const collapsed = state === "collapsed";
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { open } = useAuthDialog();
+  // Close the mobile drawer after navigating so the page is visible again.
+  useEffect(() => { setOpenMobile(false); }, [path, setOpenMobile]);
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border">
       <SidebarContent className="bg-sidebar text-sidebar-foreground custom-scrollbar">
-        {!collapsed && (
-          <div className="flex items-center justify-between px-3 pb-1 pt-3">
-            <span className="text-[11px] font-semibold text-muted-foreground">
-              Explorar
-            </span>
-            <Button variant="ghost"
-              onClick={toggleSidebar}
-              className="slick grid size-7 place-items-center rounded-md border border-border text-foreground/70 hover:border-primary hover:text-primary"
-              aria-label="Recolher menu"
-            >
-              <ChevronsLeft className="size-4" strokeWidth={1.75} />
-            </Button>
-          </div>
-        )}
+        <div className={cn("flex items-center px-3 pb-1 pt-3", collapsed ? "justify-center px-0" : "justify-between")}>
+          {!collapsed && (
+            <span className="text-[11px] font-semibold text-muted-foreground">Explorar</span>
+          )}
+          <Button variant="ghost"
+            onClick={toggleSidebar}
+            className="slick grid size-7 place-items-center rounded-md border border-border p-0 text-foreground/70 hover:border-primary hover:text-primary"
+            aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
+          >
+            <ChevronsLeft className={cn("size-4 transition-transform", collapsed && "rotate-180")} strokeWidth={1.75} />
+          </Button>
+        </div>
 
         <div className="space-y-2 px-2 pt-2">
           <ModeSwitch compact={collapsed} />

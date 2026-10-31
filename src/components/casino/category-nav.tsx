@@ -35,17 +35,18 @@ export function CategoryNav({ active }: { active?: string }) {
           <li key={label} className="flex flex-1">
             <Link to={to} search={(search ?? {}) as never} aria-current={active === label ? "page" : undefined}
               data-active={active === label}
-              className={cn("cat-card group relative flex h-[86px] w-[112px] flex-1 flex-col items-center justify-end overflow-hidden rounded-xl pb-2 md:h-[104px] md:min-w-[128px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary")}>
+              className={cn("cat-card group relative flex h-[72px] w-[148px] flex-1 items-center overflow-hidden rounded-xl pl-3.5 md:h-[84px] md:min-w-[160px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary")}>
+              <span className="relative z-10 flex items-center gap-0.5 text-[15px] font-black uppercase leading-none tracking-tight text-foreground md:text-[17px]">
+                {label}
+                <svg viewBox="0 0 24 24" className="size-4 opacity-80 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth={2.5} aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
+              </span>
               <img src={img} alt="" width={816} height={816} loading="lazy"
-                className="pointer-events-none absolute left-1/2 top-1 size-[58px] -translate-x-1/2 object-contain drop-shadow-[0_8px_14px_var(--cat-shadow)] transition-transform duration-300 group-hover:-translate-y-1 group-hover:scale-110 md:size-[70px]" />
+                className="cat-card-art pointer-events-none absolute -right-2 top-1/2 -mt-[34px] size-[68px] object-contain drop-shadow-[0_8px_12px_var(--background)] md:-mt-[40px] md:size-[80px]" />
               {live && (
-                <span className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-live/90 px-1.5 py-0.5 text-[9px] font-bold uppercase text-primary-foreground">
+                <span className="absolute left-3 top-1.5 z-10 flex items-center gap-1 rounded-full bg-live px-1.5 py-0.5 text-[9px] font-bold uppercase text-primary-foreground">
                   <span className="size-1.5 animate-pulse rounded-full bg-primary-foreground" /> live
                 </span>
               )}
-              <span className="relative font-display text-[12px] font-bold uppercase tracking-wide text-foreground/85 group-hover:text-foreground group-data-[active=true]:text-foreground md:text-[13px]">
-                {label}
-              </span>
             </Link>
           </li>
         ))}
