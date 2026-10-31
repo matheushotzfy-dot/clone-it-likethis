@@ -23,15 +23,18 @@ const cats: Cat[] = [
 
 export function CategoryNav({ active }: { active?: string }) {
   return (
-    <nav aria-label="Categorias de jogos" className="no-scrollbar w-full min-w-0 overflow-x-auto rounded-md bg-surface">
-      <ul className="flex w-max min-w-full items-stretch">
-        {cats.map(({ label, to, Icon, search }) => (
+    <nav aria-label="Categorias de jogos" className="no-scrollbar w-full min-w-0 overflow-x-auto">
+      <ul className="flex w-max min-w-full items-stretch gap-2">
+        {cats.map(({ label, to, Icon, search, accent, live }) => (
           <li key={label} className="flex flex-1">
             <Link to={to} search={(search ?? {}) as never} aria-current={active === label ? "page" : undefined}
               data-active={active === label}
-              className={cn("category-tab flex h-12 shrink-0 items-center justify-center gap-2 px-4 font-display text-[13px] font-bold uppercase tracking-wide text-muted-foreground hover:bg-surface-2 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:px-5")}>
-              <Icon className="size-[18px] shrink-0" />
-              {label}
+              className={cn(accent, "category-chip group flex h-12 w-full shrink-0 items-center justify-center gap-2.5 rounded-lg px-3.5 font-display text-[13px] font-bold uppercase tracking-wide text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:px-4")}>
+              <span className="category-chip-icon relative grid size-7 shrink-0 place-items-center rounded-md">
+                <Icon className="size-[16px]" />
+                {live && <span className="absolute -right-0.5 -top-0.5 size-2 animate-pulse rounded-full bg-live" />}
+              </span>
+              <span className="whitespace-nowrap">{label}</span>
             </Link>
           </li>
         ))}
