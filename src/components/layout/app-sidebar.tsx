@@ -7,7 +7,7 @@ import {
 } from "@/components/icons/maxy-icons";
 import { ModeSwitch } from "./mode-switch";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuthDialog } from "@/components/auth/auth-dialog-context";
 
