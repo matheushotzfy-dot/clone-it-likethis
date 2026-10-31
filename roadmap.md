@@ -1,5 +1,11 @@
 # Roadmap
 
+## Cobertura esportiva e capas
+- [ ] Ampliar campeonatos brasileiros disponíveis na fonte atual
+- [ ] Usar apenas odds publicadas, sem estimativas ou odds antigas ao vivo
+- [ ] Conferir atualização e filtros no computador e celular
+- [ ] Conferir acesso às capas da referência e corrigir capas recuperáveis
+
 - [x] Carregar e remover duplicados do catálogo completo de jogos
 - [x] Adicionar diagnóstico do catálogo ao painel administrativo
 - [x] Configurar a conta administrativa sem salvar a senha no código
