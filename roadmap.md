@@ -3,8 +3,10 @@
 ## Conexão PlayFivers atual
 - [x] Atualizar credenciais pelo formulário seguro
 - [x] Consultar catálogo e verificar credenciais — catálogo respondeu; agente bloqueado por IP
-- [ ] Proteger e validar callbacks de saldo e transação
+- [x] Proteger callbacks de saldo e transação — 6 testes passaram; chamadas sem credenciais retornam 401
 - [ ] Validar lançamento real — depende de IP autorizado e callback autenticado no provedor
+- [ ] Confirmar autenticação do callback BALANCE com PlayFivers — documentação não inclui credenciais nesse retorno; acesso permanece bloqueado sem autenticação
+- [ ] Habilitar reembolsos — depende de contrato confirmado para reconciliar a rodada original sem crédito duplicado
 
 ## Cobertura esportiva e capas
 - [x] Ampliar campeonatos brasileiros disponíveis na fonte atual
