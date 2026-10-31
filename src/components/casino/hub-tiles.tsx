@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { IcCasino, IcSports } from "@/components/icons/maxy-icons";
-import casinoArt from "@/assets/casino-banner.png.asset.json";
-import sportsArt from "@/assets/sports-banner.png.asset.json";
+import casinoArt from "@/assets/casino-banner-v2.png.asset.json";
+import sportsArt from "@/assets/sports-banner-v2.png.asset.json";
 
 /** Two large hub cards (Cassino / Esportes) with artwork and a footer action bar. */
 export function HubTiles() {
