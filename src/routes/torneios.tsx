@@ -18,7 +18,7 @@ function TorneiosPage() {
             Torneios
           </h1>
           <p className="mt-2 text-muted-foreground">
-            Competições exclusivas com premiações em dinheiro e bônus.
+            Competições exclusivas com premiações em dinheiro.
           </p>
         </div>
       </div>

@@ -10,7 +10,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getMyProfile, listMyTransactions } from "@/lib/profile.functions";
 import { createPodPayPixDeposit } from "@/lib/podpay.functions";
 import { createBSPayPixDeposit } from "@/lib/bspay.functions";
-import { createVeoPagPixDeposit } from "@/lib/veopag.functions";
+import { createVeoPagPixDeposit, syncMyVeoPagDeposit } from "@/lib/veopag.functions";
 import { getSettings } from "@/lib/settings.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
@@ -28,6 +28,7 @@ export function DepositDialog() {
   const createPixPod = useServerFn(createPodPayPixDeposit);
   const createPixBs = useServerFn(createBSPayPixDeposit);
   const createPixVeo = useServerFn(createVeoPagPixDeposit);
+  const syncVeo = useServerFn(syncMyVeoPagDeposit);
   const fetchSettings = useServerFn(getSettings);
   const fetchProfile = useServerFn(getMyProfile);
   const fetchTransactions = useServerFn(listMyTransactions);
@@ -49,7 +50,11 @@ export function DepositDialog() {
   });
   const { data: txs } = useQuery({
     queryKey: ["my-tx"],
-    queryFn: () => fetchTransactions(),
+    queryFn: async () => {
+      // Confirm with VeoPag directly in case the webhook is delayed.
+      if (pix?.transactionId) await syncVeo({ data: { transactionId: pix.transactionId } }).catch(() => null);
+      return fetchTransactions();
+    },
     enabled: !!user && open && step === "pix" && !!pix,
     refetchInterval: 3000,
   });

@@ -76,16 +76,11 @@ function Index() {
   return (
     <SiteShell>
       <div className="aurora mx-auto max-w-[1600px] overflow-x-hidden space-y-5 px-3 py-3 md:space-y-6 md:px-6 md:py-4">
-        <BannerCarousel aspectClass="aspect-[1.8/1] sm:aspect-[3/1] md:aspect-[3.8/1]" />
         <HubTiles />
-        <LiveStrip />
 
-        {/* nav + search on one line */}
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:gap-3">
-          <div className="min-w-0 flex-1">
-            <CategoryNav active="Populares" />
-          </div>
-          <div className="relative w-full xl:w-56">
+        {/* wide search, then categories */}
+        <div className="space-y-3">
+          <div className="relative w-full">
             <Search
               className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
               strokeWidth={1.75}
@@ -93,9 +88,9 @@ function Index() {
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Buscar jogo ou provedor"
+              placeholder="Buscar na apostamaxy"
               aria-label="Buscar jogo"
-              className="h-10 w-full rounded-[4px] border border-border bg-surface pl-9 pr-9 text-[13px] font-medium text-foreground placeholder:font-normal placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+              className="h-12 w-full rounded-lg border-2 border-border bg-background pl-9 pr-9 text-[13px] font-medium text-foreground placeholder:font-normal placeholder:text-muted-foreground focus:border-primary focus:outline-none"
             />
             {q && (
               <Button variant="ghost" size="icon"
@@ -107,6 +102,7 @@ function Index() {
               </Button>
             )}
           </div>
+          <CategoryNav active="Populares" />
         </div>
 
         {gamesQ.isLoading ? (
@@ -144,7 +140,7 @@ function Index() {
         ) : (
           <>
             <GameRail
-              title="Mais jogados"
+              title="Jogos para você"
               items={top}
               to="/cassino"
               rows={2}
@@ -154,6 +150,8 @@ function Index() {
               launchingCode={launchingCode}
               onPlay={play}
             />
+            <BannerCarousel aspectClass="aspect-[1.8/1] sm:aspect-[3/1] md:aspect-[3.8/1]" />
+            <LiveStrip />
             <GameRail
               title="Crash games"
               items={crash}

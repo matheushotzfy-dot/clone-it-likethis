@@ -1,25 +1,31 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
-import { IcCasino as Dices, IcSports as Trophy } from "@/components/icons/maxy-icons";
-import casinoCover from "@/assets/maxy-casino-cover.webp";
-import pixCover from "@/assets/maxy-pix-cover.webp";
+import { IcCasino, IcSports } from "@/components/icons/maxy-icons";
+import casinoArt from "@/assets/casino-banner.png.asset.json";
+import sportsArt from "@/assets/sports-banner.png.asset.json";
 
-/** Atalhos grandes Cassino / Esportes no topo do início (estilo hub). */
+/** Two large hub cards (Cassino / Esportes) with artwork and a footer action bar. */
 export function HubTiles() {
   const tiles = [
-    { to: "/cassino", title: "Cassino", sub: "Slots, crash e mesas ao vivo", icon: Dices, img: casinoCover },
-    { to: "/esportes", title: "Esportes", sub: "Futebol e NBA com odds ao vivo", icon: Trophy, img: pixCover },
+    { to: "/cassino", title: "Cassino", cta: "Jogar agora", note: "Slots, crash e ao vivo", icon: IcCasino, img: casinoArt.url },
+    { to: "/esportes", title: "Esportes", cta: "Apostar agora", note: "Odds ao vivo", icon: IcSports, img: sportsArt.url },
   ] as const;
   return (
-    <div className="grid grid-cols-2 gap-3">
-      {tiles.map(({ to, title, sub, icon: Icon, img }) => (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
+      {tiles.map(({ to, title, cta, note, icon: Icon, img }) => (
         <Link key={to} to={to}
-          className="group relative flex h-28 overflow-hidden rounded-md bg-surface p-4 transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-primary sm:h-36">
-          <img src={img} alt="" loading="lazy" className="absolute inset-y-0 right-0 h-full w-2/3 object-cover opacity-40 transition-transform duration-500 group-hover:scale-105 [mask-image:linear-gradient(to_left,black,transparent)]" />
-          <div className="relative mt-auto">
-            <Icon className="mb-2 size-7 text-primary" />
-            <p className="title-cond flex items-center gap-1 text-2xl sm:text-3xl">{title} <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" /></p>
-            <p className="hidden text-xs text-muted-foreground sm:block">{sub}</p>
+          className="group overflow-hidden rounded-lg bg-surface transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-primary">
+          <div className="relative aspect-[2.6/1] overflow-hidden">
+            <img src={img} alt={title} width={900} height={346} fetchPriority="high"
+              className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+            <h2 className="sr-only">{title}</h2>
+          </div>
+          <div className="flex items-center justify-between gap-2 px-4 py-3 md:px-5">
+            <span className="flex items-center gap-2 text-sm font-bold md:text-base">
+              <Icon className="size-5 text-foreground/80" /> {cta}
+            </span>
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground md:text-sm">
+              <span className="size-2 animate-pulse rounded-full bg-live" /> {note}
+            </span>
           </div>
         </Link>
       ))}

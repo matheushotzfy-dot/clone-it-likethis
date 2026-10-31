@@ -3,55 +3,6 @@ import { getRequestHost } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
-const VEOPAG_BASE = process.env.VEOPAG_BASE_URL || "https://api.veopag.com";
-
-type Creds = { clientId: string; clientSecret: string };
-
-async function loadCreds(): Promise<Creds> {
-  // Prefer admin-managed DB values; fall back to env vars.
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin
-    .from("gateway_credentials")
-    .select("key,value")
-    .in("key", ["veopag_client_id", "veopag_client_secret"]);
-  const map: Record<string, string> = {};
-  for (const row of (data ?? []) as { key: string; value: string | null }[]) {
-    if (row.value) map[row.key] = row.value;
-  }
-  const clientId = map.veopag_client_id || process.env.VEOPAG_CLIENT_ID || "";
-  const clientSecret = map.veopag_client_secret || process.env.VEOPAG_CLIENT_SECRET || "";
-  if (!clientId || !clientSecret) {
-    throw new Error("Credenciais VeoPag não configuradas. Defina em Admin → Configurações.");
-  }
-  return { clientId, clientSecret };
-}
-
-// Worker isolate token cache (1h validity; refresh at 55min).
-let cachedToken: { token: string; expiresAt: number } | null = null;
-
-async function getToken(): Promise<string> {
-  const now = Date.now();
-  if (cachedToken && cachedToken.expiresAt - now > 5 * 60_000) {
-    return cachedToken.token;
-  }
-  const { clientId, clientSecret } = await loadCreds();
-  const r = await fetch(`${VEOPAG_BASE}/api/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ client_id: clientId, client_secret: clientSecret }),
-  });
-  const j = (await r.json().catch(() => ({}))) as {
-    token?: string;
-    message?: string;
-  };
-  if (!r.ok || !j.token) {
-    console.error("VeoPag login error", r.status, JSON.stringify(j));
-    throw new Error(j.message || `VeoPag auth HTTP ${r.status}`);
-  }
-  cachedToken = { token: j.token, expiresAt: now + 55 * 60_000 };
-  return j.token;
-}
-
 async function loadLimits(supabase: {
   from: (t: string) => {
     select: (c: string) => {
@@ -210,7 +161,8 @@ export const createVeoPagPixDeposit = createServerFn({ method: "POST" })
         : undefined;
     }
 
-    const token = await getToken();
+    const { getVeoPagToken, resetVeoPagToken, VEOPAG_BASE } = await import("./veopag.server");
+    const token = await getVeoPagToken();
     const doRequest = async (bearer: string) =>
       fetch(`${VEOPAG_BASE}/api/payments/deposit`, {
         method: "POST",
@@ -234,8 +186,8 @@ export const createVeoPagPixDeposit = createServerFn({ method: "POST" })
 
     let res = await doRequest(token);
     if (res.status === 401) {
-      cachedToken = null;
-      const fresh = await getToken();
+      resetVeoPagToken();
+      const fresh = await getVeoPagToken();
       res = await doRequest(fresh);
     }
     const j = (await res.json().catch(() => ({}))) as DepositResponse & {
@@ -285,4 +237,21 @@ export const createVeoPagPixDeposit = createServerFn({ method: "POST" })
       qrCodeImage: "",
       copyPaste,
     };
+  });
+
+/** Polled by the deposit window: confirms the user's own pending PIX with VeoPag. */
+export const syncMyVeoPagDeposit = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ transactionId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: tx } = await context.supabase
+      .from("transactions")
+      .select("id,status,gateway_external_id")
+      .eq("id", data.transactionId)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (!tx) return { status: "unknown" as const };
+    if (tx.status !== "pending" || !tx.gateway_external_id) return { status: tx.status };
+    const { syncDepositByExternalId } = await import("./veopag.server");
+    return { status: await syncDepositByExternalId(tx.gateway_external_id) };
   });

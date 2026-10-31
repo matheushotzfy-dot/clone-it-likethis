@@ -8,6 +8,13 @@
       "when": 1793402505187,
       "tag": "0000_restrict_app_settings_read",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793459000113,
+      "tag": "0001_remove_deposit_bonus",
+      "breakpoints": true
     }
   ]
 }

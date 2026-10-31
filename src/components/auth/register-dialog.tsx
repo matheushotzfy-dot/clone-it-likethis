@@ -3,8 +3,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthDialog } from "./auth-dialog-context";
-import { PromoSide } from "./promo-side";
-import { User, Mail, Phone, Lock, Eye, EyeOff, ShieldCheck, Check, Gift, Loader2 } from "lucide-react";
+import { User, Mail, Phone, Lock, Eye, EyeOff, ShieldCheck, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { maskCPF, maskPhone, validateCPF, EMAIL_DOMAINS } from "@/lib/validations";
 import { getTrackingMetadata } from "@/lib/tracking";
@@ -137,9 +136,7 @@ export function RegisterDialog() {
 
   return (
     <Dialog open={current === "register"} onOpenChange={(o) => !o && close()}>
-      <DialogContent className="flex max-h-[100dvh] w-screen max-w-none flex-col gap-0 overflow-hidden border-border bg-background p-0 sm:max-h-[94vh] sm:w-[calc(100vw-2rem)] sm:max-w-[880px] sm:rounded-lg md:flex-row">
-        <PromoSide />
-
+      <DialogContent className="flex max-h-[100dvh] w-screen max-w-none flex-col gap-0 overflow-hidden border-border bg-background p-0 sm:max-h-[94vh] sm:w-[calc(100vw-2rem)] sm:max-w-[460px] sm:rounded-lg">
         <div className="flex-1 overflow-y-auto px-5 pb-8 pt-6 md:px-8 md:py-8">
           <div className="mb-5 flex items-start justify-between gap-3 pr-8">
             <span className="font-display shrink-0 text-xl font-extrabold md:text-2xl">
@@ -158,21 +155,8 @@ export function RegisterDialog() {
               Crie sua conta em 1 minuto
             </DialogTitle>
             <DialogDescription className="mt-1 text-sm text-muted-foreground">
-              Cadastro rápido, depósito por PIX e bônus liberado na hora.
+              Cadastro rápido, depósito e saque por PIX.
             </DialogDescription>
-          </div>
-
-          {/* bonus highlight */}
-          <div className="mb-5 flex items-center gap-3 rounded-lg border border-primary/35 bg-primary/10 px-3.5 py-3">
-            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground">
-              <Gift className="size-[18px]" strokeWidth={2.25} />
-            </span>
-            <p className="text-[12px] font-bold leading-snug">
-              Bônus de 100% no 1º depósito
-              <span className="block text-[11px] font-semibold text-muted-foreground">
-                Válido a partir de R$ 30 via PIX
-              </span>
-            </p>
           </div>
 
           {/* progress */}
@@ -307,8 +291,8 @@ export function RegisterDialog() {
               disabled={loading}
               className="cta-glow slick mt-2 flex h-13 w-full items-center justify-center gap-2 rounded-lg bg-primary py-3.5 text-sm font-extrabold tracking-normal text-primary-foreground disabled:opacity-60"
             >
-              {loading ? <Loader2 className="size-4 animate-spin" /> : <Gift className="size-4" strokeWidth={2.5} />}
-              {loading ? "Criando conta…" : "Criar conta e receber bônus"}
+              {loading ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" strokeWidth={2.5} />}
+              {loading ? "Criando conta…" : "Criar conta"}
             </Button>
           </form>
 
