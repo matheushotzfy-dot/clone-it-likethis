@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthDialog } from "./auth-dialog-context";
-import { User, Mail, Phone, Lock, Eye, EyeOff, ShieldCheck, Check, Gift, Loader2 } from "lucide-react";
+import { User, Mail, Phone, Lock, Eye, EyeOff, ShieldCheck, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { maskCPF, maskPhone, validateCPF, EMAIL_DOMAINS } from "@/lib/validations";
 import { getTrackingMetadata } from "@/lib/tracking";
@@ -291,7 +291,7 @@ export function RegisterDialog() {
               disabled={loading}
               className="cta-glow slick mt-2 flex h-13 w-full items-center justify-center gap-2 rounded-lg bg-primary py-3.5 text-sm font-extrabold tracking-normal text-primary-foreground disabled:opacity-60"
             >
-              {loading ? <Loader2 className="size-4 animate-spin" /> : <Gift className="size-4" strokeWidth={2.5} />}
+              {loading ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" strokeWidth={2.5} />}
               {loading ? "Criando conta…" : "Criar conta"}
             </Button>
           </form>
