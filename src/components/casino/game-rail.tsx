@@ -40,7 +40,7 @@ export function GameRail({
         {shown.map((g, i) => (
           <div
             key={`${g.provider.name}-${g.game_code}`}
-            className="pop-in"
+            className="contents"
             
           >
             <PFGameCard
