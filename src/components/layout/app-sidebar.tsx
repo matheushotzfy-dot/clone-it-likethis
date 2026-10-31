@@ -92,10 +92,12 @@ function Group({
 }
 
 export function AppSidebar() {
-  const { state, toggleSidebar } = useSidebar();
+  const { state, toggleSidebar, setOpenMobile } = useSidebar();
   const collapsed = state === "collapsed";
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { open } = useAuthDialog();
+  // Close the mobile drawer after navigating so the page is visible again.
+  useEffect(() => { setOpenMobile(false); }, [path, setOpenMobile]);
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border">
