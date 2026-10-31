@@ -21,7 +21,13 @@ export function HeaderAccount() {
   return <div className="header-account ml-auto flex min-w-0 shrink-0 items-center gap-1.5 md:gap-2">
           {user ? (
             <>
-              <div className="flex h-9 shrink-0 items-center gap-1 rounded-md border border-border bg-surface pl-2 pr-1 md:h-10 md:pl-3">
+              <Button variant="ghost" aria-label="Atualizar saldo" title="Atualizar saldo"
+                onClick={() => refetch()}
+                className="flex h-10 min-w-0 max-w-28 flex-col items-start justify-center gap-1 rounded-lg border border-primary/25 bg-primary/10 px-2.5 py-1 text-left hover:bg-primary/15 sm:hidden">
+                <span className="flex w-full items-center justify-between gap-2 text-[8px] font-semibold uppercase text-muted-foreground">Saldo <RefreshCw className={cn("size-2.5 shrink-0 text-primary", isFetching && "animate-spin")} /></span>
+                <span className="block max-w-full truncate text-[12px] font-extrabold leading-none tabular-nums text-foreground"><span className="text-primary">R$</span> {brl(balance)}</span>
+              </Button>
+              <div className="hidden sm:flex h-9 shrink-0 items-center gap-1 rounded-md border border-border bg-surface pl-2 pr-1 md:h-10 md:pl-3">
                 <span className="flex flex-col leading-none">
                   <span className="text-[9px] font-medium text-muted-foreground">
                     Saldo
