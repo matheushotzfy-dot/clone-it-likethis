@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { balanceCallbackSchema, hasCallbackCredentials } from "@/lib/playfivers-callback";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,13 +18,13 @@ export const Route = createFileRoute("/api/public/playfivers-balance")({
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: corsHeaders }),
       POST: async ({ request }) => {
-        let payload: any = null;
+        let payload: unknown = null;
         try { payload = await request.json(); } catch { return json({ balance: 0, msg: "BAD_JSON" }, 400); }
-
-        const userCode = payload?.user_code;
-        if (!userCode || typeof userCode !== "string") {
-          return json({ balance: 0, msg: "INVALID_USER" }, 404);
+        const parsed = balanceCallbackSchema.safeParse(payload);
+        if (!parsed.success || !hasCallbackCredentials(parsed.data, process.env.PLAYFIVERS_AGENT_CODE, process.env.PLAYFIVERS_SECRET_KEY)) {
+          return json({ balance: 0, msg: "INVALID_AGENT" }, 401);
         }
+        const userCode = parsed.data.user_code;
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data: prof, error } = await supabaseAdmin

@@ -1,5 +1,7 @@
 # Project conventions
 
+- PlayFivers callbacks must fail closed without validated agent credentials and nonnegative numeric amounts; never persist callback secrets. Refunds need a separately verified original-round reconciliation before they can be enabled.
+
 - Public game tiles must use the shared game-image availability rule and disappear on artwork failure; grid wrappers must not leave empty cells.
 
 - Keep the public casino presentation in the shared SiteShell and casino components so theme and navigation changes stay consistent across routes.
