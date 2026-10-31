@@ -19,7 +19,7 @@ export function Header() {
   }
   return (
     <header className="app-header sticky top-0 z-40 border-b border-border bg-sidebar">
-      <div className="app-header-row flex h-14 min-w-0 w-full items-center gap-1 px-2 sm:gap-3 md:px-6">
+      <div className="app-header-row grid grid-cols-[auto_minmax(0,1fr)_auto] h-14 min-w-0 w-full items-center gap-1 px-2 sm:flex sm:gap-3 md:px-6">
         <Button variant="ghost" size="icon" onClick={toggleSidebar} className="size-8 shrink-0 text-muted-foreground" aria-label="Abrir menu"><Menu /></Button>
         <Logo />
         <ModeSwitch className="ml-4 hidden w-60 md:grid" />

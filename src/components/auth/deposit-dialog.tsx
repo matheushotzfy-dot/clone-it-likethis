@@ -110,7 +110,7 @@ export function DepositDialog() {
 
   const showDialog = open && !!user;
   return (
-    <Dialog open={showDialog} onOpenChange={(o) => !o && canDismissDeposit() && close()}>
+    <Dialog open={showDialog} onOpenChange={(o) => canDismissDeposit(o) && close()}>
       <DialogContent className="auth-sheet deposit-sheet flex max-h-[92dvh] w-[calc(100vw-1.5rem)] max-w-[460px] flex-col overflow-hidden rounded-lg border-border bg-background p-0 text-foreground shadow-2xl sm:w-full">
         <DialogTitle className="sr-only">Depósito via PIX</DialogTitle>
         <DialogDescription className="sr-only">Gere um QR Code PIX para depositar na sua conta</DialogDescription>
