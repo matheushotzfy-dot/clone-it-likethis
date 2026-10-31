@@ -1,5 +1,13 @@
 # Roadmap
 
+## Cobertura esportiva e capas
+- [x] Ampliar campeonatos brasileiros disponíveis na fonte atual
+- [x] Usar apenas odds publicadas, sem estimativas ou odds antigas ao vivo
+- [x] Conferir atualização e filtros no computador e celular
+- [x] Conferir acesso às capas da referência e corrigir capas recuperáveis
+- [ ] Validar catálogo completo e lançamento de slots — bloqueado pelo 403 da PlayFivers
+- [ ] Habilitar odds ao vivo para todas as partidas — depende de fornecedor com mercados in-play
+
 - [x] Carregar e remover duplicados do catálogo completo de jogos
 - [x] Adicionar diagnóstico do catálogo ao painel administrativo
 - [x] Configurar a conta administrativa sem salvar a senha no código

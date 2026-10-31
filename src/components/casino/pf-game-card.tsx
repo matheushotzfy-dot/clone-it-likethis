@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { PFGameLite } from "@/hooks/use-pf-launch";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getGameArtwork } from "@/lib/game-artwork";
 
 interface Props {
   game: PFGameLite;
@@ -21,7 +22,8 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
   // Use the existing local artwork for this known provider-image failure.
-  const localArtwork = game.name.trim().toLowerCase() === "spaceman" ? "/games/spaceman.webp" : undefined;
+  const matchedArtwork = getGameArtwork(game.name, game.provider.name);
+  const [usingProviderFallback, setUsingProviderFallback] = useState(false);
 
   return (
     <Button variant="ghost"
@@ -41,7 +43,7 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
         <>
           {!loaded && <div className="skeleton absolute inset-0" />}
           <img
-            src={localArtwork ?? game.image_url}
+            src={!usingProviderFallback && matchedArtwork ? matchedArtwork : game.image_url}
             alt={game.name}
             loading={priority ? "eager" : "lazy"}
             fetchPriority={priority ? "high" : "auto"}
@@ -51,7 +53,10 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
             sizes="(max-width: 640px) 31vw, (max-width: 1024px) 16vw, 160px"
             onLoad={() => setLoaded(true)}
             onError={() => {
-              setFailed(true);
+              if (matchedArtwork && !usingProviderFallback) {
+                setUsingProviderFallback(true);
+                setLoaded(false);
+              } else setFailed(true);
             }}
             className={cn(
               "size-full object-cover transition-[transform,opacity] duration-300 ease-out group-hover:scale-[1.03]",

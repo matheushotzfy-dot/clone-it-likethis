@@ -2,90 +2,78 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-/** Ligas suportadas (ESPN public scoreboard). */
-export const LEAGUES = [
-  { id: "fifa.world", sport: "soccer", label: "Copa do Mundo" },
-  { id: "bra.1", sport: "soccer", label: "Brasileirão" },
-  { id: "conmebol.libertadores", sport: "soccer", label: "Libertadores" },
-  { id: "uefa.champions", sport: "soccer", label: "Champions League" },
-  { id: "eng.1", sport: "soccer", label: "Premier League" },
-  { id: "esp.1", sport: "soccer", label: "La Liga" },
-  { id: "bra.2", sport: "soccer", label: "Série B" },
-  { id: "bra.copa_do_brazil", sport: "soccer", label: "Copa do Brasil" },
-  { id: "conmebol.sudamericana", sport: "soccer", label: "Sul-Americana" },
-  { id: "ita.1", sport: "soccer", label: "Serie A" },
-  { id: "ger.1", sport: "soccer", label: "Bundesliga" },
-  { id: "fra.1", sport: "soccer", label: "Ligue 1" },
-  { id: "uefa.europa", sport: "soccer", label: "Europa League" },
-  { id: "nba", sport: "basketball", label: "NBA" },
-] as const;
+import { LEAGUES, SPORTS_POLL_MS, mapEspnEvent, validateBetQuote, type EspnEvent, type SportEvent, type League } from "./sports-data";
+export { LEAGUES } from "./sports-data";
+export type { SportEvent } from "./sports-data";
 
-export type SportEvent = {
-  id: string;
-  league: string;
-  leagueLabel: string;
-  sport: string;
-  start: string;
-  state: "pre" | "in" | "post";
-  clock: string;
-  home: { name: string; logo?: string; score?: string };
-  away: { name: string; logo?: string; score?: string };
-  /** Odds decimais 1 / X / 2; null quando a fonte não fornece. */
-  odds: { home: number; draw: number | null; away: number } | null;
-};
+const scoreboardCache = new Map<string, { at: number; events: SportEvent[] }>();
+const pending = new Map<string, Promise<SportEvent[]>>();
+let snapshot: { at: number; events: SportEvent[] } | null = null;
+let loading: Promise<SportEvent[]> | null = null;
 
-/** Converte moneyline americana em odd decimal. */
-function mlToDecimal(ml: unknown): number | null {
-  const n = typeof ml === "number" ? ml : Number(ml);
-  if (!Number.isFinite(n) || n === 0) return null;
-  const d = n > 0 ? 1 + n / 100 : 1 + 100 / Math.abs(n);
-  return Math.round(d * 100) / 100;
+async function fetchScoreboard(league: League, date: string, today: boolean, force = false): Promise<SportEvent[]> {
+  const key = `${league.id}:${date}`;
+  const cached = scoreboardCache.get(key);
+  const ttl = today ? SPORTS_POLL_MS - 500 : 120_000;
+  if (!force && cached && Date.now() - cached.at < ttl) return cached.events;
+  const inflight = pending.get(key);
+  if (inflight) return inflight;
+  const request = (async () => {
+    const url = `https://site.api.espn.com/apis/site/v2/sports/${league.sport}/${league.id}/scoreboard?dates=${date}&limit=1000`;
+    try {
+      const res = await fetch(url, { headers: { accept: "application/json" }, signal: AbortSignal.timeout(8_000) });
+      if (!res.ok) { console.warn("ESPN scoreboard", league.id, date, res.status); return []; }
+      const json = await res.json() as { events?: EspnEvent[] };
+      const fetchedAt = new Date().toISOString();
+      const events = (json.events ?? []).flatMap((e) => {
+        const event = mapEspnEvent(e, league, fetchedAt);
+        return event ? [event] : [];
+      });
+      scoreboardCache.set(key, { at: Date.now(), events });
+      return events;
+    } catch (error) {
+      console.warn("ESPN unavailable", league.id, date, error instanceof Error ? error.name : "unknown");
+      // Never keep stale prices selectable after a failed refresh.
+      return (cached?.events ?? []).map((e) => ({ ...e, odds: null, oddsKind: null, oddsSource: null }));
+    }
+  })().finally(() => pending.delete(key));
+  pending.set(key, request);
+  return request;
 }
 
-type EspnTeam = { homeAway: string; score?: string; team?: { displayName?: string; logo?: string } };
-
-async function fetchLeague(l: (typeof LEAGUES)[number]): Promise<SportEvent[]> {
-  const url = `https://site.api.espn.com/apis/site/v2/sports/${l.sport}/${l.id}/scoreboard`;
-  try {
-    const res = await fetch(url, { headers: { accept: "application/json" } });
-    if (!res.ok) return [];
-    const json = (await res.json()) as { events?: Array<Record<string, any>> };
-    return (json.events ?? []).map((e) => {
-      const comp = e.competitions?.[0] ?? {};
-      const teams: EspnTeam[] = comp.competitors ?? [];
-      const h = teams.find((t) => t.homeAway === "home") ?? teams[0];
-      const a = teams.find((t) => t.homeAway === "away") ?? teams[1];
-      const o = comp.odds?.[0];
-      // ESPN coloca a moneyline em odds.moneyline.<lado>.(current|close|open).odds
-      const side = (k: "home" | "away" | "draw") => {
-        const m = o?.moneyline?.[k];
-        return mlToDecimal(m?.current?.odds ?? m?.close?.odds ?? m?.open?.odds);
-      };
-      const home = side("home") ?? mlToDecimal(o?.homeTeamOdds?.moneyLine);
-      const away = side("away") ?? mlToDecimal(o?.awayTeamOdds?.moneyLine);
-      const draw = side("draw") ?? mlToDecimal(o?.drawOdds?.moneyLine);
-      return {
-        id: String(e.id),
-        league: l.id,
-        leagueLabel: l.label,
-        sport: l.sport,
-        start: String(e.date),
-        state: (e.status?.type?.state ?? "pre") as SportEvent["state"],
-        clock: String(e.status?.type?.shortDetail ?? ""),
-        home: { name: h?.team?.displayName ?? "Casa", logo: h?.team?.logo, score: h?.score },
-        away: { name: a?.team?.displayName ?? "Fora", logo: a?.team?.logo, score: a?.score },
-        odds: home && away ? { home, away, draw } : null,
-      } satisfies SportEvent;
+async function loadSportsEvents(): Promise<SportEvent[]> {
+  if (snapshot && Date.now() - snapshot.at < SPORTS_POLL_MS - 500) return snapshot.events;
+  if (loading) return loading;
+  loading = (async () => {
+    const now = new Date();
+    const dates = Array.from({ length: 7 }, (_, offset) => {
+      const date = new Date(now); date.setUTCDate(date.getUTCDate() + offset);
+      return date.toISOString().slice(0, 10).replaceAll("-", "");
     });
-  } catch {
-    return [];
-  }
+    const tasks = LEAGUES.flatMap((league) => dates.map((date, i) => () => fetchScoreboard(league, date, i === 0)));
+    const results: SportEvent[] = [];
+    let index = 0;
+    await Promise.all(Array.from({ length: 16 }, async () => {
+      while (index < tasks.length) {
+        const task = tasks[index++];
+        if (task) results.push(...await task());
+      }
+    }));
+    const unique = new Map<string, SportEvent>();
+    const end = Date.now() + 7 * 86_400_000;
+    for (const e of results) {
+      if (e.state === "post" || (e.state === "pre" && (Date.parse(e.start) < Date.now() || Date.parse(e.start) > end))) continue;
+      unique.set(`${e.league}:${e.id}`, e);
+    }
+    const events = [...unique.values()].sort((a, b) => Number(b.state === "in") - Number(a.state === "in") || a.start.localeCompare(b.start));
+    snapshot = { at: Date.now(), events };
+    for (const key of scoreboardCache.keys()) if (!dates.some((date) => key.endsWith(`:${date}`))) scoreboardCache.delete(key);
+    return events;
+  })().finally(() => { loading = null; });
+  return loading;
 }
 
-export const getSportsEvents = createServerFn({ method: "GET" }).handler(async () => {
-  const all = (await Promise.all(LEAGUES.map(fetchLeague))).flat();
-  return all.filter((e) => e.state !== "post").sort((a, b) => a.start.localeCompare(b.start));
-});
+export const getSportsEvents = createServerFn({ method: "GET" }).handler(loadSportsEvents);
 
 const betSchema = z.object({
   matchId: z.string().min(1).max(64),
@@ -99,10 +87,16 @@ export const placeSportsBet = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => betSchema.parse(d))
   .handler(async ({ data, context }) => {
+    const listed = (await loadSportsEvents()).find((e) => e.id === data.matchId);
+    const league = LEAGUES.find((l) => l.id === listed?.league);
+    if (!listed || !league) throw new Error("Mercado indisponível. Atualize os jogos.");
+    const date = listed.start.slice(0, 10).replaceAll("-", "");
+    const event = (await fetchScoreboard(league, date, true, true)).find((e) => e.id === data.matchId);
+    const price = validateBetQuote(event, data.pick, data.odd, Date.now());
     const { data: balance, error } = await context.supabase.rpc("place_sports_bet", {
       p_user_id: context.userId,
       p_stake: data.stake,
-      p_odd: data.odd,
+      p_odd: price,
       p_match_id: data.matchId,
       p_pick: data.pick,
       p_description: data.description,

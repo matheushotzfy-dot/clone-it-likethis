@@ -55,7 +55,7 @@ export function EventRow({ event, selected, onPick }: EventRowProps) {
       <div className="grid auto-cols-fr grid-flow-col gap-2 md:w-[260px]">
         {picks.length === 0 && (
           <span className="col-span-3 rounded-md border border-border px-3 py-2 text-center text-xs text-muted-foreground">
-            Odds em breve
+            {live ? "Odds ao vivo indisponíveis na fonte" : "Fonte sem cotação para este jogo"}
           </span>
         )}
         {picks.map((p) => (
@@ -76,6 +76,7 @@ export function EventRow({ event, selected, onPick }: EventRowProps) {
           </Button>
         ))}
       </div>
+      {event.odds && <p className="text-[10px] text-muted-foreground md:col-span-2">{event.oddsSource} via ESPN · Pré-jogo</p>}
     </article>
   );
 }
