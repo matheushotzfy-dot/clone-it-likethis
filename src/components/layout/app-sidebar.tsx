@@ -3,7 +3,7 @@ import { Sidebar, SidebarContent, useSidebar } from "@/components/ui/sidebar";
 import { ChevronDown, ChevronsLeft, ShieldCheck } from "lucide-react";
 import {
   IcFire as Flame, IcSlots as Gamepad2, IcCrash as Rocket, IcLive as MonitorPlay, IcGrid as LayoutGrid,
-  IcTrophy as Trophy, IcGift as Gift, IcFriends as Users, IcSports as Cup, IcLive as Radio, IcPix as Wallet, type MaxyIcon,
+  IcTrophy as Trophy, IcGift as Gift, IcSports as Cup, IcLive as Radio, IcPix as Wallet, type MaxyIcon,
 } from "@/components/icons/maxy-icons";
 import { ModeSwitch } from "./mode-switch";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,6 @@ const esportes: Item[] = [
 const extras: Item[] = [
   { label: "Torneios", to: "/torneios", icon: Trophy },
   { label: "Promoções", to: "/promocoes", icon: Gift },
-  { label: "Indique e ganhe", to: "/indique-amigos", icon: Users },
 ];
 
 function Row({ item, active, collapsed }: { item: Item; active: boolean; collapsed: boolean }) {
@@ -40,20 +39,20 @@ function Row({ item, active, collapsed }: { item: Item; active: boolean; collaps
       search={item.cat ? ({ cat: item.cat } as never) : undefined}
       title={item.label}
       className={cn(
-        "slick group relative flex h-10 items-center gap-3 rounded-md px-3 text-[13px] font-semibold",
+        "slick group relative flex h-10 items-center gap-3 rounded-lg px-3 text-[14px] font-semibold",
         collapsed && "justify-center px-0",
         active
-          ? "bg-primary/10 text-primary"
+          ? "bg-surface-2 text-foreground"
           : "text-foreground/70 hover:bg-surface/70 hover:text-foreground",
       )}
     >
       <span
         className={cn(
-          "absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-primary transition-opacity",
+          "hidden",
           active ? "opacity-100" : "opacity-0",
         )}
       />
-      <Icon className="size-[18px] shrink-0" />
+      <Icon className={cn("size-[18px] shrink-0", active ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
       {!collapsed && <span className="truncate">{item.label}</span>}
     </Link>
   );
@@ -73,7 +72,7 @@ function Group({
     );
   }
   return (
-    <div className="border-t border-border px-2 py-2 first:border-t-0">
+    <div className="mx-2 my-2 rounded-lg bg-surface/60 p-1.5">
       <Button variant="ghost"
         onClick={() => setOpen((v) => !v)}
         className="flex w-full items-center justify-between px-1 py-2 font-display text-[12px] font-bold uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground"
