@@ -67,8 +67,8 @@ export function LoginDialog() {
 
   return (
     <Dialog open={current === "login"} onOpenChange={(o) => !o && close()}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] max-w-[420px] gap-0 overflow-hidden border-border bg-background p-0 sm:rounded-lg">
-        <div className="surface-grad relative overflow-hidden px-6 pb-7 pt-7 sm:px-8">
+      <DialogContent className="auth-sheet max-h-[94dvh] w-[calc(100vw-1.5rem)] max-w-[420px] gap-0 overflow-hidden border-border bg-background p-0 sm:rounded-lg">
+        <div className="auth-sheet-scroll surface-grad relative min-h-0 overflow-y-auto px-6 pb-7 pt-7 sm:px-8">
 
           <div className="relative mb-6 flex flex-col items-center text-center">
             <span className="font-display text-3xl font-extrabold leading-none tracking-normal">

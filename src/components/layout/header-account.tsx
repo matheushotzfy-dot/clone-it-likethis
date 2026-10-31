@@ -18,7 +18,7 @@ export function HeaderAccount() {
   const balance = Number(profile?.balance ?? 0);
   const isAdmin = !!profile?.isAdmin;
   const brl = (value: number) => value.toFixed(2).replace(".", ",");
-  return <div className="ml-auto flex shrink-0 items-center gap-1.5 md:gap-2">
+  return <div className="header-account ml-auto flex min-w-0 shrink-0 items-center gap-1.5 md:gap-2">
           {user ? (
             <>
               <div className="flex h-9 shrink-0 items-center gap-1 rounded-md border border-border bg-surface pl-2 pr-1 md:h-10 md:pl-3">

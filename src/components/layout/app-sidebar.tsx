@@ -92,8 +92,8 @@ function Group({
 }
 
 export function AppSidebar() {
-  const { state, toggleSidebar, setOpenMobile } = useSidebar();
-  const collapsed = state === "collapsed";
+  const { state, isMobile, toggleSidebar, setOpenMobile } = useSidebar();
+  const collapsed = !isMobile && state === "collapsed";
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { open } = useAuthDialog();
   // Close the mobile drawer after navigating so the page is visible again.
@@ -118,7 +118,7 @@ export function AppSidebar() {
         <div className="space-y-2 px-2 pt-2">
           <ModeSwitch compact={collapsed} />
           <Button variant="ghost"
-            onClick={() => open("deposit")}
+            onClick={() => { setOpenMobile(false); open("deposit"); }}
             title="Depositar"
             className={cn(
               "relative flex h-10 w-full items-center gap-2 overflow-hidden rounded-[4px] bg-primary px-3 font-display text-[15px] font-extrabold uppercase tracking-wide text-primary-foreground hover:brightness-110",

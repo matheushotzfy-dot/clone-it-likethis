@@ -8,6 +8,8 @@ import { listMyTransactions } from "@/lib/profile.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { ArrowDownToLine, ArrowUpFromLine, Dices, ShieldAlert } from "lucide-react";
 import { KycDialog } from "@/components/auth/kyc-dialog";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/historico")({
   head: () => ({ meta: pageMeta('Histórico — apostamaxy', 'Histórico na apostamaxy. Informações e serviços da sua conta.') }),
@@ -52,11 +54,11 @@ function Page() {
       <div className="max-w-4xl mx-auto px-3 md:px-6 py-6 space-y-5">
         <h1 className="text-2xl font-bold">Histórico de Transações</h1>
 
-        <div className="flex gap-1 bg-surface rounded-lg p-1 w-fit">
+        <div className="grid grid-cols-3 gap-1 bg-surface rounded-lg p-1 w-full sm:w-fit">
           {tabs.map((t) => (
-            <button key={t.k} onClick={() => setTab(t.k)} className={`px-4 h-9 rounded-md text-xs font-bold uppercase ${tab === t.k ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+            <Button variant="ghost" key={t.k} onClick={() => setTab(t.k)} className={cn("px-3 h-11 rounded-md text-xs font-bold uppercase", tab === t.k ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
               {t.label}
-            </button>
+            </Button>
           ))}
         </div>
 

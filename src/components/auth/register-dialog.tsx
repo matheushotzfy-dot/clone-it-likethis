@@ -136,9 +136,9 @@ export function RegisterDialog() {
 
   return (
     <Dialog open={current === "register"} onOpenChange={(o) => !o && close()}>
-      <DialogContent className="flex max-h-[100dvh] w-screen max-w-none flex-col gap-0 overflow-hidden border-border bg-background p-0 sm:max-h-[94vh] sm:w-[calc(100vw-2rem)] sm:max-w-[460px] sm:rounded-lg">
-        <div className="flex-1 overflow-y-auto px-5 pb-8 pt-6 md:px-8 md:py-8">
-          <div className="mb-5 flex items-start justify-between gap-3 pr-8">
+      <DialogContent className="auth-sheet flex max-h-[100dvh] w-screen max-w-none flex-col gap-0 overflow-hidden border-border bg-background p-0 sm:max-h-[94vh] sm:w-[calc(100vw-2rem)] sm:max-w-[460px] sm:rounded-lg">
+        <div className="auth-sheet-scroll min-h-0 flex-1 overflow-y-auto px-5 pb-8 pt-6 md:px-8 md:py-8">
+          <div className="mb-5 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 pr-12">
             <span className="font-display shrink-0 text-xl font-extrabold md:text-2xl">
               aposta<span className="text-primary">maxy</span>
             </span>
@@ -152,7 +152,7 @@ export function RegisterDialog() {
 
           <div className="mb-5">
             <DialogTitle className="font-display text-2xl font-extrabold leading-tight">
-              Crie sua conta em 1 minuto
+              Criar conta
             </DialogTitle>
             <DialogDescription className="mt-1 text-sm text-muted-foreground">
               Cadastro rápido, depósito e saque por PIX.
