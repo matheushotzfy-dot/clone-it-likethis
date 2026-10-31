@@ -14,6 +14,7 @@ import { createVeoPagPixDeposit, syncMyVeoPagDeposit } from "@/lib/veopag.functi
 import { getSettings } from "@/lib/settings.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
+import { canDismissDeposit } from "@/lib/deposit-navigation";
 
 const presets = [30, 50, 100, 250, 500, 1000];
 const hots = new Set([50, 250, 1000]);
@@ -109,18 +110,17 @@ export function DepositDialog() {
 
   const showDialog = open && !!user;
   return (
-    <Dialog open={showDialog} onOpenChange={(o) => !o && (step !== "pix" || pixCopied) && close()}>
-      <DialogContent className="flex max-h-[92vh] w-[calc(100vw-1.5rem)] max-w-[460px] flex-col overflow-hidden rounded-lg border-border bg-background p-0 text-foreground shadow-2xl sm:w-full">
+    <Dialog open={showDialog} onOpenChange={(o) => !o && canDismissDeposit() && close()}>
+      <DialogContent className="auth-sheet deposit-sheet flex max-h-[92dvh] w-[calc(100vw-1.5rem)] max-w-[460px] flex-col overflow-hidden rounded-lg border-border bg-background p-0 text-foreground shadow-2xl sm:w-full">
         <DialogTitle className="sr-only">Depósito via PIX</DialogTitle>
         <DialogDescription className="sr-only">Gere um QR Code PIX para depositar na sua conta</DialogDescription>
         <div className="relative flex flex-col min-h-0 flex-1">
-          <div className="flex shrink-0 items-center justify-between border-b border-border bg-surface/70 p-4 sm:p-6">
+          <div className="flex shrink-0 items-center justify-between border-b border-border bg-surface/70 p-4 pr-16 sm:p-6 sm:pr-16">
             <div className="flex items-center gap-3 sm:gap-4">
               <Button variant="ghost"
-                onClick={step === "pix" ? () => pixCopied && setStep("form") : close}
-                disabled={step === "pix" && !pixCopied}
+                onClick={step === "pix" ? () => setStep("form") : close}
                 className="size-10 rounded-lg bg-surface hover:bg-surface-2 flex items-center justify-center transition-colors border border-border shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-                aria-label={step === "pix" && !pixCopied ? "Copie o PIX antes de voltar" : "Voltar"}
+                aria-label="Voltar"
               >
                 <ArrowLeft className="size-5" />
               </Button>
@@ -134,7 +134,7 @@ export function DepositDialog() {
             </div>
           </div>
 
-          <div className="p-4 sm:p-6 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+          <div className="auth-sheet-scroll p-4 sm:p-6 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
             {step === "form" ? (
               <div className="space-y-5">
                 {profile?.is_frozen && (
@@ -173,13 +173,13 @@ export function DepositDialog() {
                         onFocus={(e) => e.target.select()}
                         onChange={(e) => setAmount(Number(e.target.value))}
                         placeholder="0,00"
-                        className="w-full bg-transparent text-4xl font-black text-foreground focus:outline-none placeholder:text-muted-foreground"
+                        className="min-w-0 w-full bg-transparent text-3xl sm:text-4xl font-black text-foreground focus:outline-none placeholder:text-muted-foreground"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   {presets.map((v) => (
                     <Button variant="ghost"
                       key={v}
@@ -227,7 +227,7 @@ export function DepositDialog() {
               <div className="text-center space-y-5 py-2 sm:py-4">
                 <div className="space-y-2">
                   <h3 className="text-2xl font-black text-foreground uppercase tracking-normal">Pagamento Pendente</h3>
-                  <p className="text-sm text-muted-foreground">Copie o PIX copia e cola para liberar a conclusão.</p>
+                  <p className="text-sm text-muted-foreground">Pague pelo QR Code ou pelo código PIX.</p>
                 </div>
 
                 <div className="relative inline-block group">
@@ -302,10 +302,9 @@ export function DepositDialog() {
                 <p className="text-xs text-muted-foreground">Depois de copiar, pague no seu banco. A confirmação é automática.</p>
                 <Button variant="ghost"
                   onClick={close}
-                  disabled={!pixCopied}
                   className="w-full h-14 rounded-lg bg-surface text-muted-foreground hover:text-foreground font-bold uppercase text-sm tracking-normal disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  {pixCopied ? "Concluir e Voltar" : "Copie o PIX para concluir"}
+                  Voltar ao cassino
                 </Button>
               </div>
             )}

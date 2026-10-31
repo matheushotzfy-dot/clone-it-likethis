@@ -1,5 +1,11 @@
 # Roadmap
 
+## Mobile estilo aplicativo
+- [ ] Corrigir fechamento livre do depósito, inclusive com PIX pendente
+- [ ] Harmonizar cadastro, login, saldo e navegação para celular
+- [ ] Verificar páginas e interações em 360px e 390px
+- [x] Reconsultar PlayFivers após autorização — agente e carteiras ainda retornam bloqueio por IP
+
 ## Conexão PlayFivers atual
 - [x] Atualizar credenciais pelo formulário seguro
 - [x] Consultar catálogo e verificar credenciais — catálogo respondeu; agente bloqueado por IP

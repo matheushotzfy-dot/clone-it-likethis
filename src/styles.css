@@ -568,3 +568,33 @@
   transition: transform .25s, box-shadow .25s;
 }
 .live-card:hover { transform: translateY(-3px); box-shadow: inset 0 1px 0 color-mix(in oklab, var(--foreground) 20%, transparent), 0 0 0 1px var(--primary), 0 14px 30px -14px var(--primary); }
+
+/* Shared mobile app chrome and keyboard-safe account screens. */
+.auth-sheet-scroll { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+@media (max-width: 639px) {
+  .auth-sheet {
+    top: 0;
+    left: 0;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: 100dvh;
+    transform: none;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .auth-sheet-scroll { flex: 1; min-height: 0; scroll-padding-block: 24px; }
+  .deposit-sheet .auth-sheet-scroll { padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+  .app-header { padding-top: env(safe-area-inset-top); }
+  .app-header-row { height: 64px; gap: 4px; }
+  .app-header-row > a { min-width: 0; flex-shrink: 1; }
+  .header-account { gap: 4px; }
+  .app-main { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+  .app-bottom-nav { box-shadow: 0 -4px 20px color-mix(in oklab, var(--overlay) 30%, transparent); }
+  .app-bottom-nav a, .app-bottom-nav button { touch-action: manipulation; }
+  .app-main > * { min-width: 0; }
+  .cat-card:hover, .live-card:hover, .lift:hover { transform: none; }
+}

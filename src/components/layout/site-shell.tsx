@@ -9,12 +9,12 @@ import { useTransactionNotifications } from "@/hooks/use-transaction-notificatio
 export function SiteShell({ children }: { children: ReactNode }) {
   useTransactionNotifications();
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="app-shell flex min-h-dvh w-full bg-background">
       <AppSidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <Header />
         <FreezeBanner />
-        <main className="flex-1 pb-28 lg:pb-0">{children}</main>
+        <main className="app-main min-w-0 flex-1 pb-28 lg:pb-0">{children}</main>
         <Footer />
       </div>
       <MobileBottomNav />

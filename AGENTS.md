@@ -1,5 +1,7 @@
 # Project conventions
 
+- Account dialogs share auth-sheet mobile sizing and internal scrolling so safe areas, close controls and keyboard navigation stay consistent; closing a deposit never cancels its pending payment.
+
 - PlayFivers callbacks must fail closed without validated agent credentials and nonnegative numeric amounts; never persist callback secrets. Refunds need a separately verified original-round reconciliation before they can be enabled.
 
 - Public game tiles must use the shared game-image availability rule and disappear on artwork failure; grid wrappers must not leave empty cells.
