@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-import { LEAGUES, SPORTS_POLL_MS, mapEspnEvent, type EspnEvent, type SportEvent, type League } from "./sports-data";
+import { LEAGUES, SPORTS_POLL_MS, mapEspnEvent, validateBetQuote, type EspnEvent, type SportEvent, type League } from "./sports-data";
 export { LEAGUES } from "./sports-data";
 export type { SportEvent } from "./sports-data";
 
@@ -11,11 +11,11 @@ const pending = new Map<string, Promise<SportEvent[]>>();
 let snapshot: { at: number; events: SportEvent[] } | null = null;
 let loading: Promise<SportEvent[]> | null = null;
 
-async function fetchScoreboard(league: League, date: string, today: boolean): Promise<SportEvent[]> {
+async function fetchScoreboard(league: League, date: string, today: boolean, force = false): Promise<SportEvent[]> {
   const key = `${league.id}:${date}`;
   const cached = scoreboardCache.get(key);
   const ttl = today ? SPORTS_POLL_MS - 500 : 120_000;
-  if (cached && Date.now() - cached.at < ttl) return cached.events;
+  if (!force && cached && Date.now() - cached.at < ttl) return cached.events;
   const inflight = pending.get(key);
   if (inflight) return inflight;
   const request = (async () => {
@@ -87,14 +87,16 @@ export const placeSportsBet = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => betSchema.parse(d))
   .handler(async ({ data, context }) => {
-    const event = (await loadSportsEvents()).find((e) => e.id === data.matchId);
-    const price = event?.odds?.[data.pick];
-    if (!event || event.state !== "pre" || !price || Date.now() - Date.parse(event.fetchedAt) > 15_000) throw new Error("Mercado indisponível. Atualize os jogos.");
-    if (price !== data.odd) throw new Error("A odd mudou. Selecione novamente para confirmar.");
+    const listed = (await loadSportsEvents()).find((e) => e.id === data.matchId);
+    const league = LEAGUES.find((l) => l.id === listed?.league);
+    if (!listed || !league) throw new Error("Mercado indisponível. Atualize os jogos.");
+    const date = listed.start.slice(0, 10).replaceAll("-", "");
+    const event = (await fetchScoreboard(league, date, true, true)).find((e) => e.id === data.matchId);
+    const price = validateBetQuote(event, data.pick, data.odd, Date.now());
     const { data: balance, error } = await context.supabase.rpc("place_sports_bet", {
       p_user_id: context.userId,
       p_stake: data.stake,
-      p_odd: data.odd,
+      p_odd: price,
       p_match_id: data.matchId,
       p_pick: data.pick,
       p_description: data.description,

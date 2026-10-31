@@ -85,3 +85,10 @@ export function mapEspnEvent(e: EspnEvent, league: League, fetchedAt: string): S
     odds, oddsSource: odds ? source?.provider?.name ?? "ESPN" : null, oddsKind: odds ? "pre" : null, fetchedAt,
   };
 }
+
+export function validateBetQuote(event: SportEvent | undefined, pick: "home" | "draw" | "away", submittedOdd: number, now: number): number {
+  const price = event?.odds?.[pick];
+  if (!event || event.state !== "pre" || !price || now - Date.parse(event.fetchedAt) > 15_000 || Date.parse(event.start) <= now) throw new Error("Mercado indisponível. Atualize os jogos.");
+  if (price !== submittedOdd) throw new Error("A odd mudou. Selecione novamente para confirmar.");
+  return price;
+}
