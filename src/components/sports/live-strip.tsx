@@ -2,13 +2,13 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getSportsEvents } from "@/lib/sports.functions";
+import { SPORTS_POLL_MS } from "@/lib/sports-data";
 
 /** Faixa horizontal com jogos reais (ao vivo primeiro) e odds 1/X/2. */
 export function LiveStrip() {
   const fetchEvents = useServerFn(getSportsEvents);
-  const q = useQuery({ queryKey: ["sports-events"], queryFn: () => fetchEvents(), refetchInterval: 5_000, refetchIntervalInBackground: false, staleTime: 4_000 });
+  const q = useQuery({ queryKey: ["sports-events"], queryFn: () => fetchEvents(), refetchInterval: SPORTS_POLL_MS, refetchIntervalInBackground: false, staleTime: 4_000 });
   const list = [...(q.data ?? [])]
-    .filter((e) => e.odds)
     .sort((a, b) => Number(b.state === "in") - Number(a.state === "in"))
     .slice(0, 12);
   if (!list.length) return null;
@@ -41,9 +41,9 @@ export function LiveStrip() {
                 </p>
               ))}
               <div className="mt-2 grid auto-cols-fr grid-flow-col gap-1">
-                {[e.odds!.home, e.odds!.draw, e.odds!.away].filter((o): o is number => o != null).map((o, i) => (
+                {e.odds ? [e.odds.home, e.odds.draw, e.odds.away].filter((o): o is number => o != null).map((o, i) => (
                   <span key={`o-${i}`} className="rounded-[4px] bg-background py-1 text-center text-xs font-bold tabular-nums">{o.toFixed(2)}</span>
-                ))}
+                )) : <span className="text-[10px] text-muted-foreground">Cotações indisponíveis na fonte</span>}
               </div>
             </Link>
           );
