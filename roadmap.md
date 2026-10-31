@@ -5,7 +5,8 @@
 - [x] Conferir conexão Meta disponível e explicar atribuição entre quiz e cassino — nenhuma conexão acessível neste projeto
 - [ ] Inspecionar permissões e restrições do Pixel solicitado — conexão recusada; acesso direto e elegibilidade ainda não verificados
 - [x] Respeitar opção "Sem identificadores" desativando coleta de cookies, click IDs e navegador no cadastro
-- [ ] Instalar PageView, cadastro concluído e primeiro depósito aprovado — Pixel padrão conflita com opção sem identificadores; sem atribuição e elegibilidade verificadas, instalação fica pendente
+- [ ] Confirmar correção da escolha de publicidade — usuário informou escolha anterior por engano; proposta com aceite e retirada aguarda resposta
+- [ ] Instalar PageView, cadastro concluído e primeiro depósito aprovado — depende da confirmação de consentimento e verificação de elegibilidade do Pixel
 - [ ] Atualizar política, validar eventos de teste e publicar cassino — depende da instalação; quiz exige acesso ao outro projeto
 
 ## Compactação mobile
