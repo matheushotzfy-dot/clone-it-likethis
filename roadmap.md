@@ -1,7 +1,7 @@
 # Roadmap
 
 ## Mensuração Meta do cassino
-- [ ] Definir acesso à Meta para a instalação — conexão pelo chat foi recusada; alternativa com token exige confirmação e formulário seguro
+- [ ] Guardar META_CAPI_TOKEN pelo formulário seguro conforme pedido original — usuário reiterou uso direto do token; não usar o valor exposto em chat
 - [x] Conferir conexão Meta disponível e explicar atribuição entre quiz e cassino — nenhuma conexão acessível neste projeto
 - [ ] Inspecionar permissões e restrições do Pixel solicitado — depende de conexão Meta
 - [ ] Instalar PageView, cadastro concluído e primeiro depósito aprovado, com deduplicação e bloqueio regional — depende de verificações e consentimento para identificadores
