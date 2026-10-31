@@ -105,6 +105,8 @@ function Index() {
           <CategoryNav active="Populares" />
         </div>
 
+        <LiveStrip />
+
         {gamesQ.isLoading ? (
           <div className={GAME_GRID}>
             {Array.from({ length: 27 }).map((_, i) => (
@@ -150,8 +152,6 @@ function Index() {
               launchingCode={launchingCode}
               onPlay={play}
             />
-            <BannerCarousel aspectClass="aspect-[1.8/1] sm:aspect-[3/1] md:aspect-[3.8/1]" />
-            <LiveStrip />
             <GameRail
               title="Crash games"
               items={crash}
