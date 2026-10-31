@@ -1,12 +1,4 @@
 import { games } from "./games";
-import cover0 from "@/assets/game-covers/originais-do-stake-dice.webp.asset.json";
-import cover1 from "@/assets/game-covers/originais-do-stake-mines.webp.asset.json";
-import cover2 from "@/assets/game-covers/originais-do-stake-plinko.webp.asset.json";
-import cover3 from "@/assets/game-covers/originais-do-stake-keno.webp.asset.json";
-import cover4 from "@/assets/game-covers/originais-do-stake-crash.webp.asset.json";
-import cover5 from "@/assets/game-covers/originais-do-stake-limbo.webp.asset.json";
-import cover6 from "@/assets/game-covers/originais-do-stake-slide.webp.asset.json";
-import cover7 from "@/assets/game-covers/originais-do-stake-chicken.webp.asset.json";
 import cover8 from "@/assets/game-covers/valkyrie-waylanders-forge.webp.asset.json";
 import cover9 from "@/assets/game-covers/paperclip-gaming-dragonspire-frostfall.webp.asset.json";
 import cover10 from "@/assets/game-covers/valkyrie-odin-s-vault.webp.asset.json";
@@ -15,7 +7,6 @@ import cover12 from "@/assets/game-covers/twist-gaming-boom.webp.asset.json";
 import cover13 from "@/assets/game-covers/twist-gaming-bank-basher.webp.asset.json";
 import cover14 from "@/assets/game-covers/twist-gaming-elemental-ways.webp.asset.json";
 import cover15 from "@/assets/game-covers/paperclip-gaming-candy-dash.webp.asset.json";
-import cover16 from "@/assets/game-covers/pragmatic-play-originais-do-stake.webp.asset.json";
 import cover17 from "@/assets/game-covers/evolution-roleta-ao-vivo.webp.asset.json";
 import cover18 from "@/assets/game-covers/pragmatic-play-baccarat-lobby.webp.asset.json";
 import cover19 from "@/assets/game-covers/evolution-mega-bola-da-sorte.webp.asset.json";
@@ -31,7 +22,6 @@ import cover28 from "@/assets/game-covers/evolution-ice-fishing.webp.asset.json"
 import cover29 from "@/assets/game-covers/pragmatic-play-mega-baccarat.webp.asset.json";
 import cover30 from "@/assets/game-covers/evolution-xxxtreme-lightning-roulette.webp.asset.json";
 import cover31 from "@/assets/game-covers/evolution-lucky-baccarat.webp.asset.json";
-import cover32 from "@/assets/game-covers/twist-gaming-valkyrie.webp.asset.json";
 import cover33 from "@/assets/game-covers/meta-gaming-raid-bound.webp.asset.json";
 import cover34 from "@/assets/game-covers/paperclip-gaming-lazy-vampire.webp.asset.json";
 import cover35 from "@/assets/game-covers/coreffect-interactive-candy-swipe-matchwin.webp.asset.json";
@@ -58,20 +48,12 @@ function providerKey(value: string) {
  const p = key(value.replace(/oficial|original|slots|live|casino|cassino|games|gaming/gi, ""));
  if (p.includes("pragmatic")) return "pragmatic";
  if (p.includes("evolution")) return "evolution";
- if (p.includes("pgsoft") || p.includes("pgsoft")) return "pgsoft";
+ if (p.includes("pgsoft") || p.includes("pocketsoft")) return "pgsoft";
  if (p.includes("spribe")) return "spribe";
  if (p.includes("smartsoft") || p.includes("jetx")) return "smartsoft";
  return p;
 }
 const covers = [
-  { name: "dice", provider: "Originais do Stake", url: cover0.url },
-  { name: "mines", provider: "Originais do Stake", url: cover1.url },
-  { name: "plinko", provider: "Originais do Stake", url: cover2.url },
-  { name: "keno", provider: "Originais do Stake", url: cover3.url },
-  { name: "crash", provider: "Originais do Stake", url: cover4.url },
-  { name: "limbo", provider: "Originais do Stake", url: cover5.url },
-  { name: "slide", provider: "Originais do Stake", url: cover6.url },
-  { name: "Chicken", provider: "Originais do Stake", url: cover7.url },
   { name: "Waylanders Forge", provider: "Valkyrie", url: cover8.url },
   { name: "Dragonspire Frostfall", provider: "Paperclip Gaming", url: cover9.url },
   { name: "Odin's Vault", provider: "Valkyrie", url: cover10.url },
@@ -80,7 +62,6 @@ const covers = [
   { name: "Bank Basher", provider: "Twist Gaming", url: cover13.url },
   { name: "Elemental Ways", provider: "Twist Gaming", url: cover14.url },
   { name: "Candy Dash", provider: "Paperclip Gaming", url: cover15.url },
-  { name: "Originais do Stake", provider: "Pragmatic Play", url: cover16.url },
   { name: "Roleta ao Vivo", provider: "Evolution", url: cover17.url },
   { name: "Baccarat Lobby", provider: "Pragmatic Play", url: cover18.url },
   { name: "Mega Bola Da Sorte", provider: "Evolution", url: cover19.url },
@@ -96,7 +77,6 @@ const covers = [
   { name: "Mega Baccarat", provider: "Pragmatic Play", url: cover29.url },
   { name: "XXXtreme Lightning Roulette", provider: "Evolution", url: cover30.url },
   { name: "Lucky Baccarat", provider: "Evolution", url: cover31.url },
-  { name: "Valkyrie", provider: "Twist Gaming", url: cover32.url },
   { name: "Raid Bound", provider: "Meta Gaming", url: cover33.url },
   { name: "Lazy Vampire", provider: "Paperclip Gaming", url: cover34.url },
   { name: "Candy Swipe MatchWin\u2122", provider: "Coreffect Interactive", url: cover35.url },
