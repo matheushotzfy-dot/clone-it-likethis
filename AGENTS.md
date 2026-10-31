@@ -1,5 +1,7 @@
 # Project conventions
 
+- Public game tiles must use the shared game-image availability rule and disappear on artwork failure; grid wrappers must not leave empty cells.
+
 - Keep the public casino presentation in the shared SiteShell and casino components so theme and navigation changes stay consistent across routes.
 - Define visual roles in src/styles.css and use the existing Button component for interactive controls to preserve theming and accessibility.
 - Keep banner artwork separate from HTML campaign text; preserve administrator-managed banners and use bundled branded artwork only as fallbacks.

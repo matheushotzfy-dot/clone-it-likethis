@@ -4,6 +4,7 @@ import type { PFGameLite } from "@/hooks/use-pf-launch";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getGameArtwork } from "@/lib/game-artwork";
+import { hasGameImage } from "@/lib/game-image";
 
 interface Props {
   game: PFGameLite;
@@ -24,6 +25,9 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
   // Use the existing local artwork for this known provider-image failure.
   const matchedArtwork = getGameArtwork(game.name, game.provider.name);
   const [usingProviderFallback, setUsingProviderFallback] = useState(false);
+  const imageSource = !usingProviderFallback && matchedArtwork ? matchedArtwork : game.image_url;
+
+  if (!hasGameImage(imageSource, failed)) return null;
 
   return (
     <div className="min-w-0">
@@ -33,18 +37,10 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
       aria-label={`Jogar ${game.name}`}
       className="lift group relative block h-auto w-full p-0 overflow-hidden rounded-lg bg-surface hover:bg-surface text-left aspect-[3/4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
     >
-      {failed ? (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-card p-3 text-center">
-          <span className="font-display grid size-11 place-items-center rounded-full bg-primary/15 text-lg font-black text-primary">
-            {game.name.trim().charAt(0).toUpperCase()}
-          </span>
-          <p className="line-clamp-2 text-[11px] font-bold leading-tight">{game.name}</p>
-        </div>
-      ) : (
         <>
           {!loaded && <div className="skeleton absolute inset-0" />}
           <img
-            src={!usingProviderFallback && matchedArtwork ? matchedArtwork : game.image_url}
+            src={imageSource}
             alt={game.name}
             loading={priority ? "eager" : "lazy"}
             fetchPriority={priority ? "high" : "auto"}
@@ -66,7 +62,6 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
             draggable={false}
           />
         </>
-      )}
 
       {/* centred play affordance */}
       <div className="pointer-events-none absolute inset-x-2 bottom-2 z-10">
