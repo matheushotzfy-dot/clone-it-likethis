@@ -90,7 +90,7 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
     </Button>
       <p className="mt-1.5 flex min-w-0 items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
         <span className="size-1.5 shrink-0 rounded-full bg-live" />
-        <span className="truncate">{game.provider.name}</span>
+        <span className="truncate">{game.provider.name.replace(/^oficial\s*-\s*/i, "")}</span>
       </p>
     </div>
   );

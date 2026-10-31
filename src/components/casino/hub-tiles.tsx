@@ -17,7 +17,7 @@ export function HubTiles() {
           <div className="relative aspect-[2.6/1] overflow-hidden">
             <img src={img} alt={title} width={900} height={346} fetchPriority="high"
               className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
-            <h2 className="title-cond absolute left-4 top-3 text-3xl md:left-6 md:top-4 md:text-4xl">{title}</h2>
+            <h2 className="sr-only">{title}</h2>
           </div>
           <div className="flex items-center justify-between gap-2 px-4 py-3 md:px-5">
             <span className="flex items-center gap-2 text-sm font-bold md:text-base">
