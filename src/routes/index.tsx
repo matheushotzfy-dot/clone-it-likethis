@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Search, Loader2, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { SiteShell } from "@/components/layout/site-shell";
-import { BannerCarousel } from "@/components/casino/banner-carousel";
 import { PFGameCard } from "@/components/casino/pf-game-card";
 import { LiveStrip } from "@/components/sports/live-strip";
 import { HubTiles } from "@/components/casino/hub-tiles";
@@ -105,6 +104,8 @@ function Index() {
           <CategoryNav active="Populares" />
         </div>
 
+        <LiveStrip />
+
         {gamesQ.isLoading ? (
           <div className={GAME_GRID}>
             {Array.from({ length: 27 }).map((_, i) => (
@@ -150,8 +151,6 @@ function Index() {
               launchingCode={launchingCode}
               onPlay={play}
             />
-            <BannerCarousel aspectClass="aspect-[1.8/1] sm:aspect-[3/1] md:aspect-[3.8/1]" />
-            <LiveStrip />
             <GameRail
               title="Crash games"
               items={crash}
