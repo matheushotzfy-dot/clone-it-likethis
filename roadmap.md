@@ -1,5 +1,9 @@
 # Roadmap
 
+## Compactação mobile
+- [ ] Diminuir faixa esportiva e ajustar espaçamentos somente no celular
+- [ ] Conferir navegação, busca sem zoom automático e preservação do computador
+
 ## Mobile estilo aplicativo
 - [x] Corrigir fechamento livre do depósito, inclusive com PIX pendente — verificado sem copiar nem pagar
 - [x] Harmonizar cadastro, login, saldo e navegação para celular

@@ -74,7 +74,7 @@ function Index() {
 
   return (
     <SiteShell>
-      <div className="aurora mx-auto max-w-[1600px] overflow-x-hidden space-y-5 px-3 py-3 md:space-y-6 md:px-6 md:py-4">
+      <div className="casino-home aurora mx-auto max-w-[1600px] overflow-x-hidden space-y-5 px-3 py-3 md:space-y-6 md:px-6 md:py-4">
         <HubTiles />
 
         {/* wide search, then categories */}
