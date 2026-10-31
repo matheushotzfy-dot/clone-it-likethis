@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { hasCallbackCredentials, transactionCallbackSchema, roundCallbackSchema } from "@/lib/playfivers-callback";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,33 +21,17 @@ export const Route = createFileRoute("/api/public/playfivers-transaction")({
         const expectedCode = process.env.PLAYFIVERS_AGENT_CODE;
         const expectedSecret = process.env.PLAYFIVERS_SECRET_KEY;
 
-        let payload: any = null;
+        let payload: unknown = null;
         try { payload = await request.json(); } catch { return json({ balance: 0, msg: "BAD_JSON" }, 400); }
-
-        // Verify agent credentials when both sides provide them
-        if (expectedCode && payload?.agent_code && payload.agent_code !== expectedCode) {
+        const parsed = transactionCallbackSchema.safeParse(payload);
+        if (!parsed.success || !hasCallbackCredentials(parsed.data, expectedCode, expectedSecret)) {
           return json({ balance: 0, msg: "INVALID_AGENT" }, 401);
         }
-        if (expectedSecret && payload?.agent_secret && payload.agent_secret !== expectedSecret) {
-          return json({ balance: 0, msg: "INVALID_AGENT" }, 401);
-        }
-
-        const userCode = payload?.user_code;
-        if (!userCode || typeof userCode !== "string") {
-          return json({ balance: 0, msg: "INVALID_USER" }, 404);
-        }
-
-        const gameType: string = String(payload?.game_type ?? "slot");
-        const tx = payload?.[gameType] ?? payload?.slot ?? {};
-        const txnId: string | undefined = tx?.txn_id;
-        if (!txnId) return json({ balance: 0, msg: "MISSING_TXN_ID" }, 400);
-
-        const bet = Number(tx?.bet ?? 0) || 0;
-        const win = Number(tx?.win ?? 0) || 0;
-        const roundId: string | null = tx?.round_id ?? null;
-        const provider: string | null = tx?.provider_code ?? null;
-        const gameCode: string | null = tx?.game_code ?? null;
-        const txnType: string | null = tx?.txn_type ?? null;
+        const userCode = parsed.data.user_code;
+        const gameType = parsed.data.game_type;
+        const round = roundCallbackSchema.safeParse(parsed.data[gameType]);
+        if (!round.success) return json({ balance: 0, msg: "INVALID_TRANSACTION" }, 400);
+        const { txn_id: txnId, bet, win, round_id: roundId, provider_code: provider, game_code: gameCode, txn_type: txnType } = round.data;
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -69,7 +54,8 @@ export const Route = createFileRoute("/api/public/playfivers-transaction")({
           p_txn_type: txnType ?? "",
           p_bet: bet,
           p_win: win,
-          p_payload: payload,
+          // Never persist callback authentication credentials with the round.
+          p_payload: { type: parsed.data.type, game_type: gameType, [gameType]: round.data },
         });
 
         if (error) {
