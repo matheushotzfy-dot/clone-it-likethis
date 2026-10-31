@@ -26,11 +26,12 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
   const [usingProviderFallback, setUsingProviderFallback] = useState(false);
 
   return (
+    <div className="min-w-0">
     <Button variant="ghost"
       onClick={() => onPlay(game)}
       disabled={loading}
       aria-label={`Jogar ${game.name}`}
-      className="lift group relative block h-auto w-full p-0 overflow-hidden rounded-md bg-surface hover:bg-surface text-left aspect-[3/4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      className="lift group relative block h-auto w-full p-0 overflow-hidden rounded-lg bg-surface hover:bg-surface text-left aspect-[3/4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
     >
       {failed ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-card p-3 text-center">
@@ -67,9 +68,6 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
         </>
       )}
 
-      {/* scrim only where the text sits */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-t from-background via-background/70 to-transparent" />
-
       {/* centred play affordance */}
       <div className="pointer-events-none absolute inset-x-2 bottom-2 z-10">
         <span className={cn("title-cond flex h-8 translate-y-2 items-center justify-center gap-1.5 rounded-[4px] bg-primary text-sm text-primary-foreground opacity-0 transition-[opacity,transform] duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100", loading && "translate-y-0 opacity-100")}>
@@ -89,14 +87,11 @@ export function PFGameCard({ game, rank, priority, loading, onPlay }: Props) {
         </span>
       )}
 
-      {!failed && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 px-2 pb-1.5 transition-opacity group-hover:opacity-0">
-          <p className="truncate text-[11.5px] font-semibold leading-tight md:text-xs">{game.name}</p>
-          <p className="truncate text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-            {game.provider.name}
-          </p>
-        </div>
-      )}
     </Button>
+      <p className="mt-1.5 flex min-w-0 items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+        <span className="size-1.5 shrink-0 rounded-full bg-live" />
+        <span className="truncate">{game.provider.name}</span>
+      </p>
+    </div>
   );
 }

@@ -24,7 +24,7 @@ export function HubTiles() {
               <Icon className="size-5 text-foreground/80" /> {cta}
             </span>
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground md:text-sm">
-              <span className="live-dot size-2 rounded-full bg-accent-live" /> {note}
+              <span className="size-2 animate-pulse rounded-full bg-live" /> {note}
             </span>
           </div>
         </Link>
