@@ -3,7 +3,7 @@
 ## Mensuração Meta do cassino
 - [x] Guardar META_CAPI_TOKEN pelo formulário seguro — confirmado salvo; nenhum evento instalado ou enviado ainda
 - [x] Conferir conexão Meta disponível e explicar atribuição entre quiz e cassino — nenhuma conexão acessível neste projeto
-- [ ] Inspecionar permissões e restrições do Pixel solicitado — conexão recusada; acesso direto e elegibilidade ainda não verificados
+- [ ] Inspecionar permissões e restrições do Pixel solicitado — consulta direta com segredo salvo retornou "Missing Permission"; isso não confirma invalidade do token nem impossibilidade de envio CAPI. Precisa de acesso ao Pixel ou captura das restrições no Gerenciador de Eventos
 - [x] Respeitar opção "Sem identificadores" desativando coleta de cookies, click IDs e navegador no cadastro
 - [x] Confirmar correção da escolha de publicidade — usuário confirmou "Sim, com aceite"
 - [ ] Instalar PageView, cadastro concluído e primeiro depósito aprovado — depende da confirmação de consentimento e verificação de elegibilidade do Pixel
