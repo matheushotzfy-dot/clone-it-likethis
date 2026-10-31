@@ -105,7 +105,7 @@ function Page() {
         <div className="text-center">
           <Logo className="justify-center" />
           <h1 className="text-2xl font-black mt-4 text-foreground uppercase tracking-normal">Criar sua conta</h1>
-          <p className="text-sm text-muted-foreground mt-1">Ganhe bônus de boas-vindas de 100%</p>
+          <p className="text-sm text-muted-foreground mt-1">Depósito e saque por PIX em minutos</p>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-4">

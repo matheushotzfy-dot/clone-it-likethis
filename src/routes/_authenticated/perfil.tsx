@@ -104,7 +104,6 @@ function Page() {
               <div>
                 <p className="text-xs uppercase font-bold text-muted-foreground">Saldo disponível</p>
                 <p className="text-4xl font-black">R$ {balance.toFixed(2).replace(".", ",")}</p>
-                <p className="text-xs text-muted-foreground mt-1">Bônus: R$ {Number(profile?.bonus_balance ?? 0).toFixed(2).replace(".", ",")}</p>
               </div>
               <div className="flex gap-2">
                 <Button onClick={() => open("deposit")} className="font-bold uppercase"><ArrowDownToLine className="size-4 mr-1" />Depositar</Button>
