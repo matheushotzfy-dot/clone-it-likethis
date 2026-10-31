@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Search, Loader2, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { SiteShell } from "@/components/layout/site-shell";
-import { BannerCarousel } from "@/components/casino/banner-carousel";
 import { PFGameCard } from "@/components/casino/pf-game-card";
 import { LiveStrip } from "@/components/sports/live-strip";
 import { HubTiles } from "@/components/casino/hub-tiles";

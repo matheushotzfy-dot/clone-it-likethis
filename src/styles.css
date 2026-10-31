@@ -558,3 +558,13 @@
 .cat-card:hover::after { transform: translateX(120%); }
 @keyframes cat-float { 0%,100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-6px) rotate(4deg); } }
 @media (prefers-reduced-motion: reduce) { .cat-card-art { animation: none; } }
+
+.font-brand { font-family: var(--font-brand); }
+.live-card {
+  background:
+    radial-gradient(90% 100% at 100% 0%, color-mix(in oklab, var(--primary) 45%, transparent), transparent 70%),
+    linear-gradient(160deg, color-mix(in oklab, var(--primary) 30%, var(--surface)), var(--surface));
+  box-shadow: inset 0 1px 0 color-mix(in oklab, var(--foreground) 14%, transparent), 0 0 0 1px color-mix(in oklab, var(--primary) 25%, transparent);
+  transition: transform .25s, box-shadow .25s;
+}
+.live-card:hover { transform: translateY(-3px); box-shadow: inset 0 1px 0 color-mix(in oklab, var(--foreground) 20%, transparent), 0 0 0 1px var(--primary), 0 14px 30px -14px var(--primary); }

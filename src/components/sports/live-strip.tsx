@@ -16,10 +16,10 @@ export function LiveStrip() {
   return (
     <section aria-label="Jogos esportivos" className="space-y-2">
       <div className="flex items-center gap-2">
-        <h2 className="title-cond text-xl md:text-2xl">Na arena agora</h2>
+        <h2 className="flex items-center gap-2 font-brand text-xl font-black uppercase tracking-tight md:text-2xl"><span className="live-dot size-2.5 rounded-full bg-live" />Ao vivo agora</h2>
         <span className="flex-1" />
-        <Link to="/esportes" className="rounded-[4px] border border-border px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground hover:border-primary hover:text-primary">
-          Esportes
+        <Link to="/esportes" className="rounded-full bg-primary px-3.5 py-1.5 font-brand text-[12px] font-extrabold uppercase text-primary-foreground transition hover:brightness-110">
+          Ver todos ›
         </Link>
       </div>
       <div className="no-scrollbar -mx-3 flex snap-x gap-2 overflow-x-auto px-3 md:mx-0 md:px-0">
@@ -27,7 +27,7 @@ export function LiveStrip() {
           const live = e.state === "in";
           return (
             <Link key={`${e.league}-${e.id}`} to="/esportes"
-              className="w-[250px] shrink-0 snap-start rounded-md bg-surface p-3 transition-colors hover:bg-surface-2">
+              className="live-card w-[260px] shrink-0 snap-start rounded-xl p-3.5">
               <p className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                 {live ? (<><span className="live-dot size-1.5 rounded-full bg-live" /><span className="text-live">Ao vivo</span></>) :
                   new Date(e.start).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
@@ -37,12 +37,12 @@ export function LiveStrip() {
                 <p key={t.name} className="flex items-center gap-2 text-[13px] font-semibold">
                   {t.logo ? <img src={t.logo} alt="" width={16} height={16} loading="lazy" className="size-4 object-contain" /> : <span className="size-4" />}
                   <span className="truncate">{t.name}</span>
-                  {live && <span className="ml-auto tabular-nums">{t.score}</span>}
+                  {live && <span className="ml-auto font-brand text-base font-black tabular-nums">{t.score}</span>}
                 </p>
               ))}
               <div className="mt-2 grid auto-cols-fr grid-flow-col gap-1">
                 {e.odds ? [e.odds.home, e.odds.draw, e.odds.away].filter((o): o is number => o != null).map((o, i) => (
-                  <span key={`o-${i}`} className="rounded-[4px] bg-background py-1 text-center text-xs font-bold tabular-nums">{o.toFixed(2)}</span>
+                  <span key={`o-${i}`} className="rounded-md bg-background/60 py-1.5 text-center text-xs font-bold tabular-nums text-foreground ring-1 ring-foreground/10 transition hover:bg-primary hover:text-primary-foreground">{o.toFixed(2)}</span>
                 )) : <span className="text-[10px] text-muted-foreground">Cotações indisponíveis na fonte</span>}
               </div>
             </Link>
