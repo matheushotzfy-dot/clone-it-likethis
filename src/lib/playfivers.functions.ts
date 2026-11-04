@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { getPFGameCategory, sortPFSectionGames } from "./pf-game-classification";
 
-const PF_BASE = "https://api.playfivers.com";
+import { resolvePFEndpoint } from "./playfivers-endpoint";
 
 interface PFProvider {
   id: number;
@@ -56,14 +56,17 @@ class PFRequestError extends Error {
 }
 
 async function pfFetch(path: string, init?: RequestInit) {
+  // Read inside the call: process.env is only available in server handlers.
+  const endpoint = resolvePFEndpoint(process.env.PLAYFIVERS_PROXY_URL, process.env.PLAYFIVERS_PROXY_KEY);
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8_000);
-  const res = await fetch(`${PF_BASE}${path}`, {
+  const timeout = setTimeout(() => controller.abort(), 10_000);
+  const res = await fetch(`${endpoint.base}${path}`, {
     ...init,
     signal: controller.signal,
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
+      ...endpoint.headers,
       ...(init?.headers ?? {}),
     },
   }).finally(() => clearTimeout(timeout));
@@ -92,16 +95,20 @@ async function getServerOutboundIp() {
 async function normalizeLaunchError(error: unknown): Promise<LaunchPFGameResult> {
   if (error instanceof PFRequestError) {
     const isIpDenied = error.status === 403 && /ip/i.test(error.message);
-    const outboundIp = isIpDenied ? await getServerOutboundIp() : null;
+    const viaProxy = resolvePFEndpoint(process.env.PLAYFIVERS_PROXY_URL, process.env.PLAYFIVERS_PROXY_KEY).viaProxy;
+    // Without the relay the site's outbound IP rotates, so allow-listing it is not a durable fix.
+    const outboundIp = isIpDenied && !viaProxy ? await getServerOutboundIp() : null;
     return {
       ok: false,
       status: error.status,
       code: isIpDenied ? "ip_not_allowed" : "launch_failed",
       error: isIpDenied
-        ? outboundIp
-          ? `IP do servidor não autorizado na PlayFivers. Autorize exatamente este IP: ${outboundIp}`
-          : "IP do servidor não autorizado na PlayFivers. Tente novamente em instantes."
-        : `PlayFivers ${error.status}: ${error.message}`,
+        ? viaProxy
+          ? "PlayFivers recusou o IP do servidor intermediário. Autorize o IP fixo dele no painel da PlayFivers."
+          : `Jogos indisponíveis: configure o servidor intermediário de IP fixo (IP atual, que muda: ${outboundIp ?? "desconhecido"}).`
+        : error.status === 401 && viaProxy
+          ? "Chave do servidor intermediário inválida."
+          : `PlayFivers ${error.status}: ${error.message}`,
     };
   }
 
