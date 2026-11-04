@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { getPFGameCategory, sortPFSectionGames } from "./pf-game-classification";
 
-const PF_BASE = "https://api.playfivers.com";
+import { resolvePFEndpoint } from "./playfivers-endpoint";
 
 interface PFProvider {
   id: number;
@@ -56,14 +56,17 @@ class PFRequestError extends Error {
 }
 
 async function pfFetch(path: string, init?: RequestInit) {
+  // Read inside the call: process.env is only available in server handlers.
+  const endpoint = resolvePFEndpoint(process.env.PLAYFIVERS_PROXY_URL, process.env.PLAYFIVERS_PROXY_KEY);
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8_000);
-  const res = await fetch(`${PF_BASE}${path}`, {
+  const timeout = setTimeout(() => controller.abort(), 10_000);
+  const res = await fetch(`${endpoint.base}${path}`, {
     ...init,
     signal: controller.signal,
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
+      ...endpoint.headers,
       ...(init?.headers ?? {}),
     },
   }).finally(() => clearTimeout(timeout));
