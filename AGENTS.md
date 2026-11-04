@@ -19,3 +19,5 @@
 - Use pageMeta for leaf routes that share the standard metadata shape, supplying a unique page-specific title and description.
 - Keep ESPN parsing and source-price rules in sports-data.ts; fetch scoreboards through sports.functions.ts with shared polling and request deduplication so every sports view uses the same real data.
 - Match alternative casino artwork by both game title and provider, never by generic game type, to avoid showing a different product's cover.- Credit VeoPag deposits only after re-checking status with the VeoPag API (webhook bodies are unsigned); keep that logic in src/lib/veopag.server.ts.
+
+- Send every PlayFivers API call through resolvePFEndpoint (optional fixed-IP relay configured by secrets), because the server outbound IP rotates while PlayFivers allow-lists IPs.
