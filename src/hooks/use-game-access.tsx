@@ -6,19 +6,20 @@ import { getMyProfile } from "@/lib/profile.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthDialog } from "@/components/auth/auth-dialog-context";
 import { toast } from "sonner";
+import { canAccessGames } from "@/lib/game-access";
 
 /**
  * Access flow:
  * - Not logged → open register dialog.
- * - Logged but no approved deposit → open deposit dialog.
- * - Deposited → navigate to /slots (real games via PlayFivers).
+ * - Logged but no balance or approved deposit → open deposit dialog.
+ * - Funded → navigate to /slots (real games via PlayFivers).
  */
 export function useGameAccess() {
   const { user, loading } = useAuth();
   const { open } = useAuthDialog();
   const navigate = useNavigate();
   const fetchProfile = useServerFn(getMyProfile);
-  const { data: profile } = useQuery({
+  const { data: profile, isPending: profilePending } = useQuery({
     queryKey: ["my-profile"],
     queryFn: () => fetchProfile(),
     enabled: !!user,
@@ -30,12 +31,14 @@ export function useGameAccess() {
 
   function tryPlay(_label?: string) {
     if (!isLogged) { open("register"); return false; }
-    if (!hasDeposited) { open("deposit"); return false; }
+    if (profilePending) return false;
+    if (!profile) { toast.error("Não foi possível conferir seu saldo. Tente novamente."); return false; }
+    if (!canAccessGames(profile)) { open("deposit"); return false; }
     navigate({ to: "/slots" });
     return true;
   }
 
-  return { hasDeposited, isLogged, tryPlay, loading };
+  return { hasDeposited, isLogged, tryPlay, loading: loading || (isLogged && profilePending) };
 }
 
 /**
@@ -54,7 +57,7 @@ export function useRequireAccess() {
     staleTime: 20_000,
   });
 
-  const allowed = !!user && !!profile?.hasDeposited;
+  const allowed = !!user && canAccessGames(profile);
 
   useEffect(() => {
     if (loading || redirected) return;
@@ -64,7 +67,7 @@ export function useRequireAccess() {
       navigate({ to: "/", replace: true });
       return;
     }
-    if (!profLoading && profile && !profile.hasDeposited) {
+    if (!profLoading && profile && !canAccessGames(profile)) {
       setRedirected(true);
       open("deposit");
       navigate({ to: "/", replace: true });

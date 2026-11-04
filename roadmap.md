@@ -1,5 +1,9 @@
 # Roadmap
 
+## Acesso aos jogos com saldo
+- [x] Corrigir bloqueio que exige histórico de depósito apesar de saldo disponível
+- [x] Testar regras e abertura com conta conectada, sem realizar apostas — 10 testes passaram; admin com R$100 não abre depósito, mas a provedora retorna IP não autorizado (34.6.214.1)
+
 ## Mensuração Meta do cassino
 - [x] Guardar META_CAPI_TOKEN pelo formulário seguro — confirmado salvo; nenhum evento instalado ou enviado ainda
 - [x] Conferir conexão Meta disponível e explicar atribuição entre quiz e cassino — nenhuma conexão acessível neste projeto
