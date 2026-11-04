@@ -95,16 +95,20 @@ async function getServerOutboundIp() {
 async function normalizeLaunchError(error: unknown): Promise<LaunchPFGameResult> {
   if (error instanceof PFRequestError) {
     const isIpDenied = error.status === 403 && /ip/i.test(error.message);
-    const outboundIp = isIpDenied ? await getServerOutboundIp() : null;
+    const viaProxy = resolvePFEndpoint(process.env.PLAYFIVERS_PROXY_URL, process.env.PLAYFIVERS_PROXY_KEY).viaProxy;
+    // Without the relay the site's outbound IP rotates, so allow-listing it is not a durable fix.
+    const outboundIp = isIpDenied && !viaProxy ? await getServerOutboundIp() : null;
     return {
       ok: false,
       status: error.status,
       code: isIpDenied ? "ip_not_allowed" : "launch_failed",
       error: isIpDenied
-        ? outboundIp
-          ? `IP do servidor não autorizado na PlayFivers. Autorize exatamente este IP: ${outboundIp}`
-          : "IP do servidor não autorizado na PlayFivers. Tente novamente em instantes."
-        : `PlayFivers ${error.status}: ${error.message}`,
+        ? viaProxy
+          ? "PlayFivers recusou o IP do servidor intermediário. Autorize o IP fixo dele no painel da PlayFivers."
+          : `Jogos indisponíveis: configure o servidor intermediário de IP fixo (IP atual, que muda: ${outboundIp ?? "desconhecido"}).`
+        : error.status === 401 && viaProxy
+          ? "Chave do servidor intermediário inválida."
+          : `PlayFivers ${error.status}: ${error.message}`,
     };
   }
 
