@@ -5,5 +5,6 @@ export interface GameAccessProfile {
 
 /** Deposit history and playable balance are separate facts. */
 export function canAccessGames(profile: GameAccessProfile | null | undefined): boolean {
-  return !!profile?.hasDeposited;
+  const balance = Number(profile?.balance ?? 0);
+  return !!profile?.hasDeposited || (Number.isFinite(balance) && balance > 0);
 }

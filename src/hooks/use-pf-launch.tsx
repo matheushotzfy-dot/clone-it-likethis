@@ -8,6 +8,7 @@ import { launchPFGame, getPFGames, getPFProviders } from "@/lib/playfivers.funct
 import { getMyProfile } from "@/lib/profile.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthDialog } from "@/components/auth/auth-dialog-context";
+import { canAccessGames } from "@/lib/game-access";
 
 export interface PFGameLite {
   game_code: string;
@@ -32,10 +33,20 @@ export function usePFLaunch() {
 
   async function play(game: PFGameLite) {
     if (!user) { open("register"); return; }
-    if (!profileQ.data?.hasDeposited) { open("deposit"); return; }
+    if (launchingCode) return;
     const gameWindow = window.open("about:blank", "_blank");
     setLaunchingCode(game.game_code);
     try {
+      // Refresh before deciding: administrator credits and recent payments may
+      // not yet be reflected in the cached header/profile balance.
+      const profile = await profileQ.refetch();
+      if (profile.error) throw profile.error;
+      if (!profile.data) throw new Error("Não foi possível conferir seu saldo. Tente novamente.");
+      if (!canAccessGames(profile.data)) {
+        gameWindow?.close();
+        open("deposit");
+        return;
+      }
       const res = await launch({
         data: {
           game_code: game.game_code,
@@ -55,9 +66,9 @@ export function usePFLaunch() {
       } else {
         window.location.assign(res.launch_url);
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       gameWindow?.close();
-      toast.error(e?.message ?? "Não foi possível abrir o jogo");
+      toast.error(e instanceof Error ? e.message : "Não foi possível abrir o jogo");
     } finally {
       setLaunchingCode(null);
     }

@@ -1,5 +1,7 @@
 # Project conventions
 
+- Keep game-funding access in the shared game-access predicate, separate from deposit history; refresh the profile before launching so manual credits and recent payments are recognized.
+
 - Keep advertising attribution collection centralized in tracking.ts; its current disabled mode must not read browser identifiers or attach them to signup metadata, so all signup callers honor the same privacy choice.
 
 - Account dialogs share auth-sheet mobile sizing and internal scrolling so safe areas, close controls and keyboard navigation stay consistent; closing a deposit never cancels its pending payment.
