@@ -635,6 +635,7 @@ export const listPayments = createServerFn({ method: "POST" })
         return {
           ...t,
           amount: n(t.amount),
+          fee: n(t.fee),
           user: users.get(t.user_id) ?? null,
           player: s
             ? {

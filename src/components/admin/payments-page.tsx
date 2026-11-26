@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2 } from "lucide-react";
+import { Check, Copy, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { listPayments, recheckDeposit, setTransactionStatus } from "@/lib/admin.functions";
 import { requestKycForTransaction } from "@/lib/kyc.functions";
@@ -22,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { formatBRL, formatDateTime } from "@/lib/format";
+import { maskCPF } from "@/lib/validations";
 
 type Status = "pending" | "approved" | "rejected" | "all";
 
@@ -176,11 +177,11 @@ export function PaymentsPage({ type }: { type: "deposit" | "withdrawal" }) {
                 {isWd ? (
                   <>
                     <Td>
-                      <span className="num text-[13px]">{t.pix_key?.replace(/^cpf:/, "CPF ")}</span>
+                      <PixKey value={t.pix_key} />
                     </Td>
                     <Td>
                       {t.player && (
-                        <span className="num block text-[12.5px] leading-relaxed text-muted-foreground">
+                        <span className="num block whitespace-nowrap text-[12.5px] leading-relaxed text-muted-foreground">
                           Depositou {formatBRL(t.player.deposits)}
                           <br />
                           Sacou {formatBRL(t.player.withdrawn)}
@@ -232,6 +233,9 @@ export function PaymentsPage({ type }: { type: "deposit" | "withdrawal" }) {
                               })
                             }
                             disabled={t.kyc_required}
+                            title={
+                              t.kyc_required ? "Aprove os documentos antes de pagar" : undefined
+                            }
                           >
                             Aprovar
                           </Button>
@@ -351,5 +355,33 @@ export function PaymentsPage({ type }: { type: "deposit" | "withdrawal" }) {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+/** Chave Pix do saque: mostra o CPF formatado e copia só os números. */
+function PixKey({ value }: { value: string | null }) {
+  const [copied, setCopied] = useState(false);
+  if (!value) return <span className="text-muted-foreground">–</span>;
+  const digits = value.replace(/^cpf:/, "");
+  const label = value.startsWith("cpf:") ? `CPF ${maskCPF(digits)}` : value;
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        navigator.clipboard?.writeText(digits).then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1500);
+        });
+      }}
+      className="num inline-flex items-center gap-1.5 whitespace-nowrap rounded-[6px] text-[13px] hover:text-primary"
+      aria-label={`Copiar chave Pix ${label}`}
+    >
+      {label}
+      {copied ? (
+        <Check className="size-3.5 text-live" />
+      ) : (
+        <Copy className="size-3.5 text-muted-foreground" />
+      )}
+    </button>
   );
 }

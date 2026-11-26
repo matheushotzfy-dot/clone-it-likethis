@@ -72,7 +72,7 @@ export function Stat({
     <>
       <p
         className={cn(
-          "num font-display text-[28px] font-bold leading-none md:text-[30px]",
+          "num font-display text-[21px] font-bold leading-none sm:text-[26px] lg:text-[28px] xl:text-[30px]",
           tone === "in" && "text-pix",
           tone === "out" && "text-[#e8763a]",
           tone === "warn" && "text-gold",

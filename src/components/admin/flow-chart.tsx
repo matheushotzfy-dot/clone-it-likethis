@@ -83,6 +83,7 @@ export function FlowChart({
             wrapperStyle={{ fontSize: 13, color: "#8fa3bf", paddingTop: 6 }}
           />
           <Bar
+            isAnimationActive={false}
             dataKey="deposits"
             name="Depósitos"
             fill={FLOW_IN}
@@ -90,6 +91,7 @@ export function FlowChart({
             maxBarSize={22}
           />
           <Bar
+            isAnimationActive={false}
             dataKey="withdrawals"
             name="Saques pagos"
             fill={FLOW_OUT}
@@ -127,7 +129,14 @@ export function GgrChart({ data }: { data: { day: string; ggr: number }[] }) {
             width={56}
           />
           <Tooltip content={<ChartTooltip />} cursor={{ fill: "#16283f" }} />
-          <Bar dataKey="ggr" name="GGR" fill="#2e9bff" radius={[4, 4, 0, 0]} maxBarSize={26} />
+          <Bar
+            isAnimationActive={false}
+            dataKey="ggr"
+            name="GGR"
+            fill="#2e9bff"
+            radius={[4, 4, 0, 0]}
+            maxBarSize={26}
+          />
         </BarChart>
       </ResponsiveContainer>
     </div>

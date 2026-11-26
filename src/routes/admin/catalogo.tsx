@@ -200,8 +200,8 @@ function Page() {
         )}
       </Panel>
 
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-        <label className="relative block xl:w-[300px]">
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="relative block w-full sm:w-[300px]">
           <span className="sr-only">Buscar jogo</span>
           <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -212,7 +212,7 @@ function Page() {
           />
         </label>
         <select
-          className="field-input h-11 xl:w-[220px]"
+          className="field-input h-11 w-full sm:w-[240px]"
           value={provider}
           onChange={(e) => {
             setProvider(e.target.value);
@@ -234,7 +234,7 @@ function Page() {
             setPage(0);
           }}
           options={[
-            { id: "all", label: "Todas" },
+            { id: "all", label: "Todas as categorias" },
             { id: "slot", label: "Slots" },
             { id: "crash", label: "Crash" },
             { id: "live", label: "Ao vivo" },
@@ -248,7 +248,7 @@ function Page() {
             setPage(0);
           }}
           options={[
-            { id: "all", label: "Todos" },
+            { id: "all", label: "Todos os jogos" },
             { id: "featured", label: "Destaques" },
             { id: "active", label: "No lobby" },
             { id: "inactive", label: "Fora do lobby" },

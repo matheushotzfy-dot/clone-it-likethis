@@ -219,7 +219,7 @@ function Page() {
         </>
       )}
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid gap-4 min-[1600px]:grid-cols-2">
         <AdSpendPanel range={range} />
         <ReconPanel range={range} />
       </div>

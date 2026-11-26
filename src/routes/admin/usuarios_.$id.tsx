@@ -148,7 +148,7 @@ function Page() {
         </div>
       </header>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 min-[1700px]:grid-cols-6">
         <Stat
           value={formatBRL(p.balance)}
           label="Saldo agora"

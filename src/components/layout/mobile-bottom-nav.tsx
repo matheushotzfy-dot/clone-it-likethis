@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ArrowDownToLine, Menu, User } from "lucide-react";
+import { ArrowDownToLine, Menu, User, UserPlus } from "lucide-react";
 import { IcCasino, IcSports } from "@/components/icons/maxy-icons";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useAuthDialog } from "@/components/auth/auth-dialog-context";
@@ -68,8 +68,15 @@ export function MobileBottomNav() {
             className="flex size-full flex-col items-center justify-center gap-1"
             aria-label={user ? "Depositar" : "Criar conta"}
           >
-            <span className="grid size-10 place-items-center rounded-[12px] bg-pix text-pix-foreground">
-              <ArrowDownToLine className="size-5" />
+            {/* Verde Pix só quando o botão é de depósito; para criar conta, azul de ação. */}
+            <span
+              className={
+                user
+                  ? "grid size-10 place-items-center rounded-[12px] bg-pix text-pix-foreground"
+                  : "grid size-10 place-items-center rounded-[12px] bg-primary text-primary-foreground"
+              }
+            >
+              {user ? <ArrowDownToLine className="size-5" /> : <UserPlus className="size-5" />}
             </span>
             <span className="text-[11px] font-semibold text-foreground/80">
               {user ? "Depositar" : "Criar conta"}

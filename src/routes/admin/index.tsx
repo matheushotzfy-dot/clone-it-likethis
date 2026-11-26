@@ -71,7 +71,7 @@ function Dashboard() {
             d.queues.kyc > 0 ||
             d.reconciliationIssues > 0 ||
             d.pfProblems24h > 0) && (
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-[repeat(auto-fit,minmax(240px,1fr))]">
               {d.queues.withdrawals > 0 && (
                 <Stat
                   to="/admin/saques"
