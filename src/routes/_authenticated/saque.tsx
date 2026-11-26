@@ -1,207 +1,205 @@
-import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { SiteShell } from "@/components/layout/site-shell";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { createTransaction, getMyProfile } from "@/lib/profile.functions";
-import { getSettings } from "@/lib/settings.functions";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { ArrowUpFromLine, ShieldCheck } from "lucide-react";
+import { AccountLayout, Section } from "@/components/account/account-layout";
+import { PaymentRow } from "@/components/account/payment-row";
+import { Button } from "@/components/ui/button";
+import { listMyPayments, requestWithdrawal } from "@/lib/wallet.functions";
+import { useProfile, useRefreshMoney, useWallet } from "@/hooks/use-account";
+import { formatBRL, newRequestId, parseBRL } from "@/lib/format";
+import { maskCPF } from "@/lib/validations";
+import { pageMeta } from "@/lib/page-meta";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/saque")({
-  head: () => ({ meta: pageMeta('Saque — apostamaxy', 'Saque na apostamaxy. Informações e serviços da sua conta.') }),
+  head: () => ({
+    meta: pageMeta("Sacar | apostamaxy", "Saque por Pix para a chave CPF do titular da conta."),
+  }),
   component: Page,
 });
 
-const presets = [50, 100, 250, 500, 1000];
-const keyTypes = ["CPF", "E-mail", "Telefone", "Aleatória"] as const;
-type KeyType = typeof keyTypes[number];
-
-function onlyDigits(s: string) { return s.replace(/\D/g, ""); }
-
-function formatPixKey(type: KeyType, raw: string): string {
-  if (type === "CPF") {
-    const d = onlyDigits(raw).slice(0, 11);
-    return d
-      .replace(/^(\d{3})(\d)/, "$1.$2")
-      .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
-      .replace(/\.(\d{3})(\d{1,2})$/, ".$1-$2");
-  }
-  if (type === "Telefone") {
-    const d = onlyDigits(raw).slice(0, 11);
-    if (d.length <= 2) return d.length ? `(${d}` : "";
-    if (d.length <= 7) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
-    return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
-  }
-  if (type === "E-mail") return raw.trim().toLowerCase();
-  return raw.trim();
-}
-
-function isValidCPF(cpf: string): boolean {
-  const d = onlyDigits(cpf);
-  if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false;
-  let s = 0;
-  for (let i = 0; i < 9; i++) s += Number(d[i]) * (10 - i);
-  let r = (s * 10) % 11; if (r === 10) r = 0;
-  if (r !== Number(d[9])) return false;
-  s = 0;
-  for (let i = 0; i < 10; i++) s += Number(d[i]) * (11 - i);
-  r = (s * 10) % 11; if (r === 10) r = 0;
-  return r === Number(d[10]);
-}
-
-function validatePixKey(type: KeyType, value: string): string | null {
-  const v = value.trim();
-  if (!v) return "Informe sua chave PIX";
-  if (type === "CPF") {
-    if (onlyDigits(v).length !== 11) return "CPF deve ter 11 dígitos";
-    if (!isValidCPF(v)) return "CPF inválido";
-    return null;
-  }
-  if (type === "Telefone") {
-    const d = onlyDigits(v);
-    if (d.length !== 10 && d.length !== 11) return "Telefone deve ter DDD + número (10 ou 11 dígitos)";
-    return null;
-  }
-  if (type === "E-mail") {
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return "E-mail inválido";
-    if (v.length > 254) return "E-mail muito longo";
-    return null;
-  }
-  // Aleatória — UUID v4 padrão do BCB
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v))
-    return "Chave aleatória deve estar no formato UUID (ex: 1a2b3c4d-...).";
-  return null;
-}
-
 function Page() {
-  const [amount, setAmount] = useState(50);
-  const [pixKey, setPixKey] = useState("");
-  const [keyType, setKeyType] = useState<KeyType>("CPF");
-  const create = useServerFn(createTransaction);
-  const profileFn = useServerFn(getMyProfile);
-  const settingsFn = useServerFn(getSettings);
-  const qc = useQueryClient();
-  const { data: profile } = useQuery({ queryKey: ["my-profile"], queryFn: () => profileFn() });
-  const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: () => settingsFn(), staleTime: 0, refetchOnMount: "always", refetchOnWindowFocus: true });
-  const balance = Number(profile?.balance ?? 0);
-  const min = settings?.min_withdraw ?? 50;
-  const max = settings?.max_withdraw ?? 5000;
-  const fee = settings?.withdrawal_fee_pct ?? 0;
-  const feeAmount = amount * (fee / 100);
-  const net = amount - feeAmount;
-  const keyError = pixKey ? validatePixKey(keyType, pixKey) : null;
+  const wallet = useWallet();
+  const profile = useProfile();
+  const refresh = useRefreshMoney();
+  const request = useServerFn(requestWithdrawal);
+  const fetchPayments = useServerFn(listMyPayments);
+  const payments = useQuery({ queryKey: ["payments"], queryFn: () => fetchPayments() });
+  const [raw, setRaw] = useState("");
+  // Um id por tentativa: clique duplo manda o mesmo id e não cria dois saques.
+  const [requestId, setRequestId] = useState(newRequestId);
 
-  useEffect(() => { setAmount(min); }, [min]);
-  useEffect(() => { setPixKey(""); }, [keyType]);
+  const w = wallet.data;
+  const amount = parseBRL(raw);
+  const min = w?.limits.minWithdraw ?? 50;
+  const max = Math.min(w?.limits.maxWithdraw ?? 5000, w?.balance ?? 0);
+  const fee = w?.limits.withdrawFeePct ? Math.round(amount * w.limits.withdrawFeePct) / 100 : 0;
+  const error =
+    amount > 0 && amount < min
+      ? `O saque mínimo é ${formatBRL(min)}.`
+      : amount > (w?.balance ?? 0)
+        ? "O valor passa do seu saldo."
+        : amount > (w?.limits.maxWithdraw ?? Infinity)
+          ? `O saque máximo é ${formatBRL(w?.limits.maxWithdraw)}.`
+          : null;
 
-  const mut = useMutation({
-    mutationFn: () => create({ data: { type: "withdrawal", amount, pix_key: `${keyType}: ${pixKey}` } }),
+  const withdrawals = useMemo(
+    () => (payments.data ?? []).filter((p) => p.type === "withdrawal"),
+    [payments.data],
+  );
+
+  const submit = useMutation({
+    mutationFn: () => request({ data: { amount, requestId } }),
     onSuccess: () => {
-      toast.success("Saque solicitado! Análise em até 24h.");
-      qc.invalidateQueries({ queryKey: ["transactions"] });
-      qc.invalidateQueries({ queryKey: ["my-profile"] });
-      setPixKey("");
+      toast.success(`Saque de ${formatBRL(amount)} solicitado`, {
+        description: "O valor foi reservado e você recebe o Pix assim que for aprovado.",
+      });
+      setRaw("");
+      setRequestId(newRequestId());
+      refresh();
+      payments.refetch();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => {
+      toast.error(e.message);
+      setRequestId(newRequestId());
+    },
   });
 
+  const cpf = profile.data?.cpf;
+  const disabled = !w?.realMoney;
 
   return (
-    <SiteShell>
-      <div className="max-w-2xl mx-auto px-3 md:px-6 py-6 space-y-5">
-        <div className="flex items-center gap-3">
-          <ArrowUpFromLine className="size-6 text-primary" />
-          <h1 className="text-2xl font-bold">Solicitar Saque</h1>
-        </div>
+    <AccountLayout
+      title="Sacar"
+      aside={
+        <Section title="Como funciona">
+          <ol className="space-y-3 text-[14px] leading-relaxed text-muted-foreground">
+            <li>
+              <span className="font-semibold text-foreground">1. Você pede o saque.</span> O valor
+              sai do saldo na hora e fica reservado.
+            </li>
+            <li>
+              <span className="font-semibold text-foreground">2. A gente confere.</span> Em alguns
+              casos pedimos uma foto do documento antes de liberar.
+            </li>
+            <li>
+              <span className="font-semibold text-foreground">3. O Pix cai na sua conta.</span>{" "}
+              Sempre na chave CPF do titular. Se o saque for recusado, o valor volta para o saldo.
+            </li>
+          </ol>
+        </Section>
+      }
+    >
+      <div className="space-y-4">
+        <Section title="Novo saque">
+          {disabled ? (
+            <p className="rounded-[10px] border border-border bg-background p-4 text-[14.5px] text-muted-foreground">
+              A plataforma está em homologação e ainda não faz saques com dinheiro real.
+            </p>
+          ) : (
+            <form
+              className="space-y-5"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!error && amount > 0) submit.mutate();
+              }}
+            >
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-[10px] border border-border bg-background p-3.5">
+                  <p className="text-[13px] text-muted-foreground">Disponível para saque</p>
+                  <p className="num font-display text-[26px] font-bold">{formatBRL(w?.balance)}</p>
+                </div>
+                <div className="rounded-[10px] border border-border bg-background p-3.5">
+                  <p className="text-[13px] text-muted-foreground">Chave Pix (CPF)</p>
+                  <p className="num mt-1 text-[16px] font-semibold">
+                    {cpf ? maskCPF(cpf) : "Sem CPF cadastrado"}
+                  </p>
+                </div>
+              </div>
 
-        <div className="bg-gradient-to-br from-primary/20 to-surface border border-primary/30 rounded-2xl p-5">
-          <div className="text-xs uppercase font-bold text-muted-foreground">Saldo disponível</div>
-          <div className="text-4xl font-black text-primary">R$ {balance.toFixed(2).replace(".", ",")}</div>
-        </div>
-
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            const err = validatePixKey(keyType, pixKey);
-            if (err) return toast.error(err);
-            if (amount > balance) return toast.error("Saldo insuficiente");
-            mut.mutate();
-          }}
-          className="bg-surface border border-border rounded-2xl p-5 md:p-6 space-y-5"
-        >
-          <div>
-            <label className="text-xs uppercase font-bold text-muted-foreground">Tipo de chave</label>
-            <div className="grid grid-cols-4 gap-2 mt-1">
-              {keyTypes.map((k) => (
-                <button
-                  key={k}
-                  type="button"
-                  onClick={() => setKeyType(k)}
-                  className={`h-10 rounded-md text-xs font-bold transition-all ${keyType === k ? "bg-primary text-primary-foreground" : "bg-surface-2 text-muted-foreground hover:text-foreground"}`}
+              <label className="block">
+                <span className="mb-1.5 block text-[13.5px] font-semibold">Valor do saque</span>
+                <span
+                  className={cn(
+                    "flex h-[64px] items-center rounded-[12px] border bg-background px-4 focus-within:border-primary",
+                    error ? "border-destructive" : "border-input",
+                  )}
                 >
-                  {k}
-                </button>
-              ))}
-            </div>
-          </div>
+                  <span className="mr-2 font-display text-[24px] font-bold text-muted-foreground">
+                    R$
+                  </span>
+                  <input
+                    value={raw}
+                    onChange={(e) => setRaw(e.target.value.replace(/[^\d,]/g, ""))}
+                    inputMode="decimal"
+                    placeholder="0,00"
+                    className="num w-full min-w-0 bg-transparent font-display text-[34px] font-bold outline-none placeholder:text-muted-foreground/50"
+                  />
+                  {max >= min && (
+                    <button
+                      type="button"
+                      onClick={() => setRaw(String(max).replace(".", ","))}
+                      className="shrink-0 rounded-[8px] border border-border px-3 py-1.5 text-[13px] font-semibold hover:border-primary"
+                    >
+                      Tudo
+                    </button>
+                  )}
+                </span>
+                <span
+                  className={cn(
+                    "mt-1.5 block text-[13px]",
+                    error ? "text-destructive" : "text-muted-foreground",
+                  )}
+                >
+                  {error ??
+                    `Entre ${formatBRL(min)} e ${formatBRL(w?.limits.maxWithdraw)} por saque.${fee ? ` Taxa de ${w?.limits.withdrawFeePct}%: ${formatBRL(fee)}.` : ""}`}
+                </span>
+              </label>
 
-          <div>
-            <label className="text-xs uppercase font-bold text-muted-foreground">Chave PIX</label>
-            <Input
-              value={pixKey}
-              onChange={(e) => setPixKey(formatPixKey(keyType, e.target.value))}
-              inputMode={keyType === "CPF" || keyType === "Telefone" ? "numeric" : keyType === "E-mail" ? "email" : "text"}
-              placeholder={
-                keyType === "E-mail" ? "voce@email.com" :
-                keyType === "CPF" ? "000.000.000-00" :
-                keyType === "Telefone" ? "(11) 99999-9999" :
-                "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d"
-              }
-              maxLength={keyType === "CPF" ? 14 : keyType === "Telefone" ? 15 : keyType === "Aleatória" ? 36 : 254}
-              className={`mt-1 bg-surface-2 h-12 ${keyError ? "border-destructive focus-visible:ring-destructive" : ""}`}
-            />
-            {keyError && <p className="text-xs text-destructive mt-1">{keyError}</p>}
-          </div>
-
-
-          <div>
-            <label className="text-xs uppercase font-bold text-muted-foreground">Valor a sacar</label>
-            <div className="relative mt-1">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">R$</span>
-              <Input type="number" min={min} max={max} value={amount || ""} onFocus={(e) => e.target.select()} onChange={(e) => setAmount(Number(e.target.value))} className="bg-surface-2 h-14 pl-10 text-2xl font-black" />
-            </div>
-            <div className="grid grid-cols-5 gap-2 mt-2">
-              {presets.map((p) => (
-                <button key={p} type="button" onClick={() => setAmount(p)} className={`h-9 rounded-md text-xs font-bold border ${amount === p ? "border-primary text-primary bg-primary/10" : "border-border text-muted-foreground hover:text-foreground"}`}>
-                  R$ {p}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {fee > 0 && (
-            <div className="bg-surface-2 rounded-lg p-3 text-sm space-y-1">
-              <div className="flex justify-between"><span className="text-muted-foreground">Valor solicitado</span><span>R$ {amount.toFixed(2)}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Taxa ({fee}%)</span><span className="text-destructive">- R$ {feeAmount.toFixed(2)}</span></div>
-              <div className="flex justify-between font-bold border-t border-border pt-1 mt-1"><span>Receberá</span><span className="text-primary">R$ {net.toFixed(2)}</span></div>
-            </div>
+              {!cpf ? (
+                <p className="text-[14px] text-muted-foreground">
+                  Cadastre seu CPF em{" "}
+                  <Link to="/perfil" className="text-primary underline">
+                    Minha conta
+                  </Link>{" "}
+                  para sacar.
+                </p>
+              ) : (
+                <Button
+                  type="submit"
+                  disabled={submit.isPending || !!error || amount <= 0}
+                  className="h-12 w-full rounded-[10px] text-[16px] font-bold shadow-none sm:w-auto sm:px-8"
+                >
+                  {submit.isPending ? (
+                    <Loader2 className="animate-spin" />
+                  ) : amount > 0 ? (
+                    `Sacar ${formatBRL(amount)}`
+                  ) : (
+                    "Informe o valor"
+                  )}
+                </Button>
+              )}
+            </form>
           )}
+        </Section>
 
-          <div className="bg-surface-2 rounded-lg p-3 text-xs text-muted-foreground flex items-start gap-2">
-            <ShieldCheck className="size-4 text-primary shrink-0 mt-0.5" />
-            <span>Saque mínimo R$ {min} · máximo R$ {max}. Processamento em até 24h. A chave PIX deve estar no seu CPF.</span>
-          </div>
-
-          <Button type="submit" disabled={mut.isPending} className="w-full font-black h-12 uppercase">
-            {mut.isPending ? "Solicitando..." : `Sacar R$ ${amount}`}
-          </Button>
-          <Link to="/historico" className="block text-center text-sm text-primary hover:underline">Ver histórico de saques</Link>
-        </form>
+        <Section title="Seus saques">
+          {payments.isLoading ? (
+            <div className="skeleton h-24 rounded-[10px]" />
+          ) : withdrawals.length === 0 ? (
+            <p className="text-[14px] text-muted-foreground">Você ainda não fez nenhum saque.</p>
+          ) : (
+            <ul className="divide-y divide-border">
+              {withdrawals.map((t) => (
+                <PaymentRow key={t.id} payment={t} />
+              ))}
+            </ul>
+          )}
+        </Section>
       </div>
-    </SiteShell>
+    </AccountLayout>
   );
 }

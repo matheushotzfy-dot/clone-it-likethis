@@ -1,7 +1,11 @@
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import {
-  Outlet, Link, createRootRouteWithContext, useRouter,
-  HeadContent, Scripts,
+  Outlet,
+  Link,
+  createRootRouteWithContext,
+  useRouter,
+  HeadContent,
+  Scripts,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
@@ -14,7 +18,6 @@ import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthDialogProvider } from "@/components/auth/auth-dialog-context";
 import { AuthDialogs } from "@/components/auth/auth-dialogs";
-import { WithdrawalWatcher } from "@/components/notifications/withdrawal-watcher";
 
 function NotFoundComponent() {
   return (
@@ -24,7 +27,10 @@ function NotFoundComponent() {
         <h2 className="mt-4 text-xl font-semibold text-foreground">Página não encontrada</h2>
         <p className="mt-2 text-sm text-muted-foreground">A página que você procura não existe.</p>
         <div className="mt-6">
-          <Link to="/" className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+          <Link
+            to="/"
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
             Voltar ao início
           </Link>
         </div>
@@ -36,7 +42,9 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error(error);
   const router = useRouter();
-  useEffect(() => { reportLovableError(error, { boundary: "tanstack_root_error_component" }); }, [error]);
+  useEffect(() => {
+    reportLovableError(error, { boundary: "tanstack_root_error_component" });
+  }, [error]);
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
@@ -44,10 +52,17 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
         <p className="mt-2 text-sm text-muted-foreground">Algo deu errado.</p>
         <div className="mt-6 flex gap-2 justify-center">
           <button
-            onClick={() => { router.invalidate(); reset(); }}
+            onClick={() => {
+              router.invalidate();
+              reset();
+            }}
             className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
-          >Tentar novamente</button>
-          <a href="/" className="rounded-md border border-input px-4 py-2 text-sm">Início</a>
+          >
+            Tentar novamente
+          </button>
+          <a href="/" className="rounded-md border border-input px-4 py-2 text-sm">
+            Início
+          </a>
         </div>
       </div>
     </div>
@@ -58,17 +73,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { name: "theme-color", content: "#091423" },
       { title: "apostamaxy — Cassino Online" },
       { property: "og:title", content: "apostamaxy — Cassino Online" },
-      { name: "description", content: "Cassino online com slots, crash games e mesas ao vivo dos melhores provedores." },
+      {
+        name: "description",
+        content: "Cassino online com slots, crash games e mesas ao vivo dos melhores provedores.",
+      },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "icon", type: "image/png", href: "/favicon.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Figtree:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Figtree:wght@400;500;600;700;800&display=swap",
+      },
     ],
   }),
   shellComponent: RootShell,
@@ -80,7 +102,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="pt-BR" className="dark">
-      <head><HeadContent /></head>
+      <head>
+        <HeadContent />
+      </head>
       <body>
         {children}
         <Scripts />
@@ -93,7 +117,9 @@ function AuthCacheInvalidator() {
   const router = useRouter();
   const queryClient = useQueryClient();
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
       // Only invalidate on meaningful transitions — not on TOKEN_REFRESHED or INITIAL_SESSION
       if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
         router.invalidate();
@@ -115,7 +141,6 @@ function RootComponent() {
             <AuthCacheInvalidator />
             <Outlet />
             <AuthDialogs />
-            <WithdrawalWatcher />
             <Toaster />
           </SidebarProvider>
         </AuthDialogProvider>

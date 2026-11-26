@@ -1,182 +1,100 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Button } from "@/components/ui/button";
-import { Search, Loader2, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { Search } from "lucide-react";
 import { SiteShell } from "@/components/layout/site-shell";
-import { PFGameCard } from "@/components/casino/pf-game-card";
-import { LiveStrip } from "@/components/sports/live-strip";
 import { HubTiles } from "@/components/casino/hub-tiles";
+import { PromoBanners } from "@/components/casino/promo-banners";
 import { CategoryNav } from "@/components/casino/category-nav";
+import { GameRail, TopTenRail } from "@/components/casino/game-section";
 import { ProviderStrip } from "@/components/casino/provider-strip";
-import { GameRail, GAME_GRID } from "@/components/casino/game-rail";
-import { usePFGames, usePFLaunch, type PFGameLite } from "@/hooks/use-pf-launch";
-import { splitPFGamesByCategory } from "@/lib/pf-game-classification";
+import { LiveStrip } from "@/components/sports/live-strip";
+import { useLobby, usePlay, useTopGames } from "@/hooks/use-games";
+import { pageMeta } from "@/lib/page-meta";
 
 export const Route = createFileRoute("/")({
   head: () => ({
-    meta: [
-      { title: "apostamaxy — Cassino Online" },
-      {
-        name: "description",
-        content:
-          "Jogue slots, crash games e mesas ao vivo dos maiores provedores. Depósito e saque por PIX em segundos.",
-      },
-      { property: "og:title", content: "apostamaxy — Cassino Online" },
-      { property: "og:description", content: "Slots, crash games e cassino ao vivo com PIX instantâneo." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
+    meta: pageMeta(
+      "apostamaxy: cassino e apostas esportivas",
+      "Slots, crash, cassino ao vivo e apostas esportivas, com depósito e saque por Pix.",
+    ),
   }),
-  component: Index,
+  component: Home,
 });
 
-function Index() {
-  const [q, setQ] = useState("");
-  const gamesQ = usePFGames(undefined, { limit: 420 });
-  const { play, launchingCode } = usePFLaunch();
-
-  const all = gamesQ.data ?? [];
-  const { live, crash, slots, top } = useMemo(() => {
-    const grouped = splitPFGamesByCategory(all);
-
-    /** Same title can be exposed by several provider aliases — keep the first. */
-    const dedupe = (list: PFGameLite[]) => {
-      const seen = new Set<string>();
-      return list.filter((g) => {
-        const key = g.name.trim().toLowerCase();
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
-    };
-
-    const slots = dedupe(grouped.slots);
-    const crash = dedupe(grouped.crash);
-    const live = dedupe(grouped.live);
-    const top = dedupe([...slots, ...crash, ...live]).slice(0, 18);
-
-    /** Rails shouldn't repeat what the "most played" block already shows. */
-    const inTop = new Set(top.map((g) => g.game_code));
-    const rest = (list: PFGameLite[]) => {
-      const fresh = list.filter((g) => !inTop.has(g.game_code));
-      return fresh.length >= 8 ? fresh : list;
-    };
-
-    return { slots: rest(slots), crash: rest(crash), live: rest(live), top };
-  }, [all]);
-
-  const term = q.trim().toLowerCase();
-  const filtered = term
-    ? all.filter(
-        (g) => g.name.toLowerCase().includes(term) || g.provider.name.toLowerCase().includes(term),
-      )
-    : null;
+function Home() {
+  const play = usePlay();
+  const navigate = useNavigate();
+  const [term, setTerm] = useState("");
+  const top = useTopGames();
+  const slots = useLobby({ category: "slot" }, 9);
+  const crash = useLobby({ category: "crash" }, 9);
+  const live = useLobby({ category: "live" }, 9);
 
   return (
     <SiteShell>
-      <div className="casino-home aurora mx-auto max-w-[1600px] overflow-x-hidden space-y-5 px-3 py-3 md:space-y-6 md:px-6 md:py-4">
+      <div className="mx-auto max-w-[1600px] space-y-7 px-3 py-4 md:space-y-9 md:px-6 md:py-6">
+        <PromoBanners />
         <HubTiles />
 
-        {/* wide search, then categories */}
         <div className="space-y-3">
-          <div className="relative w-full">
-            <Search
-              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-              strokeWidth={1.75}
-            />
+          <form
+            role="search"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (term.trim()) navigate({ to: "/cassino", search: { q: term.trim() } });
+            }}
+            className="relative xl:hidden"
+          >
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Buscar na apostamaxy"
-              aria-label="Buscar jogo"
-              className="h-12 w-full rounded-lg border-2 border-border bg-background pl-9 pr-9 text-[13px] font-medium text-foreground placeholder:font-normal placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+              value={term}
+              onChange={(e) => setTerm(e.target.value)}
+              placeholder="Buscar jogo ou provedor"
+              aria-label="Buscar jogo ou provedor"
+              enterKeyHint="search"
+              className="h-11 w-full rounded-[10px] border border-border bg-surface pl-10 pr-3 outline-none placeholder:text-muted-foreground focus:border-primary"
             />
-            {q && (
-              <Button variant="ghost" size="icon"
-                onClick={() => setQ("")}
-                aria-label="Limpar busca"
-                className="absolute right-2 top-1/2 grid size-7 -translate-y-1/2 place-items-center rounded-[6px] text-muted-foreground hover:text-foreground"
-              >
-                <X className="size-4" strokeWidth={2} />
-              </Button>
-            )}
-          </div>
-          <CategoryNav active="Populares" />
+          </form>
+          <CategoryNav active="inicio" />
         </div>
+
+        <TopTenRail
+          title={top.data?.byPlays ? "Mais jogados da semana" : "Os favoritos do Brasil"}
+          games={top.data?.games ?? []}
+          loading={top.isLoading}
+          onPlay={play}
+        />
 
         <LiveStrip />
 
-        {gamesQ.isLoading ? (
-          <div className={GAME_GRID}>
-            {Array.from({ length: 27 }).map((_, i) => (
-              <div key={i} className="skeleton aspect-[3/4] rounded-[10px]" />
-            ))}
-          </div>
-        ) : filtered ? (
-          <section className="space-y-3">
-            <div className="flex items-end justify-between border-b border-border pb-2">
-              <h2 className="font-display text-[13px] font-bold uppercase tracking-[0.18em]">
-                {filtered.length} resultado{filtered.length === 1 ? "" : "s"}
-              </h2>
-              <span className="truncate text-[11px] text-muted-foreground">“{q.trim()}”</span>
-            </div>
-            {filtered.length === 0 ? (
-              <p className="rounded-[10px] border border-border p-6 text-sm text-muted-foreground">
-                Nenhum jogo encontrado. Tente outro termo.
-              </p>
-            ) : (
-              <div className={GAME_GRID}>
-                {filtered.slice(0, 54).map((g, i) => (
-                  <PFGameCard
-                    key={`s-${g.game_code}-${i}`}
-                    game={g}
-                    priority={i < 8}
-                    loading={launchingCode === g.game_code}
-                    onPlay={play}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-        ) : (
-          <>
-            <GameRail
-              title="Jogos para você"
-              items={top}
-              to="/cassino"
-              rows={2}
-              accent="cat-hot"
-              ranked
-              priority
-              launchingCode={launchingCode}
-              onPlay={play}
-            />
-            <GameRail
-              title="Crash games"
-              items={crash}
-              to="/cassino"
-              accent="cat-crash"
-              launchingCode={launchingCode}
-              onPlay={play}
-            />
-            <GameRail
-              title="Cassino ao vivo"
-              items={live}
-              to="/ao-vivo"
-              accent="cat-live"
-              launchingCode={launchingCode}
-              onPlay={play}
-            />
-            <GameRail title="Slots" items={slots} to="/slots" rows={2} accent="cat-slots" launchingCode={launchingCode} onPlay={play} />
-            <ProviderStrip />
-          </>
-        )}
+        <GameRail
+          title="Slots"
+          games={slots.data?.games ?? []}
+          count={slots.data?.total}
+          loading={slots.isLoading}
+          to="/slots"
+          onPlay={play}
+          priority
+        />
+        <GameRail
+          title="Crash"
+          games={crash.data?.games ?? []}
+          count={crash.data?.total}
+          loading={crash.isLoading}
+          to="/cassino"
+          search={{ cat: "crash" }}
+          onPlay={play}
+        />
+        <GameRail
+          title="Cassino ao vivo"
+          games={live.data?.games ?? []}
+          count={live.data?.total}
+          loading={live.isLoading}
+          to="/ao-vivo"
+          onPlay={play}
+        />
 
-        {gamesQ.isFetching && !gamesQ.isLoading && (
-          <div className="flex justify-center py-2">
-            <Loader2 className="size-4 animate-spin text-primary" />
-          </div>
-        )}
+        <ProviderStrip />
       </div>
     </SiteShell>
   );

@@ -1,38 +1,27 @@
 import { Link } from "@tanstack/react-router";
-import { usePFProviders } from "@/hooks/use-pf-launch";
+import { useProviders } from "@/hooks/use-games";
 
-const fallback = [
-  "PG Soft", "Pragmatic Play", "Spribe", "TaDa Gaming", "Smartsoft",
-  "BGaming", "Hacksaw", "Spinomenal", "Evoplay", "Popok",
-  "Nolimit City", "Galaxsys", "Platipus", "Irondog",
-];
-
+/** Provedores do catálogo, do que tem mais jogos para o que tem menos. */
 export function ProviderStrip() {
-  const providersQ = usePFProviders();
-  const names = (providersQ.data ?? []).map((p) => p.name);
-  const list = names.length > 0 ? names.slice(0, 24) : fallback;
-
+  const { data } = useProviders();
+  if (!data?.length) return null;
   return (
-    <section className="min-w-0 max-w-full space-y-2.5 overflow-hidden">
-      <div className="flex items-baseline justify-between border-b border-border pb-2">
-        <h2 className="font-display text-[12px] font-extrabold uppercase tracking-[0.16em] text-muted-foreground">
-          Provedores oficiais
-        </h2>
-        <Link to="/cassino" className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground hover:text-gold">
-          Ver todos
-        </Link>
-      </div>
-      <div className="no-scrollbar snap-row flex w-full max-w-full min-w-0 gap-2 overflow-x-auto overscroll-x-contain pb-1">
-        {list.map((name) => (
-          <Link
-            key={name}
-            to="/cassino"
-            className="tile flex h-11 shrink-0 items-center rounded-[8px] border border-border bg-surface/50 px-5 text-[12px] font-bold uppercase tracking-[0.12em] text-foreground/70 hover:text-gold"
-          >
-            {name}
-          </Link>
+    <section>
+      <h2 className="mb-3 text-[22px] md:text-[26px]">Provedores</h2>
+      <ul className="no-scrollbar -mx-3 flex gap-2 overflow-x-auto px-3 md:mx-0 md:flex-wrap md:px-0">
+        {data.slice(0, 24).map((p) => (
+          <li key={p.name} className="shrink-0">
+            <Link
+              to="/cassino"
+              search={{ provedor: p.name } as never}
+              className="flex h-14 min-w-[136px] flex-col justify-center rounded-[10px] border border-border bg-surface px-4 transition-colors hover:border-primary/60"
+            >
+              <span className="truncate text-[14.5px] font-semibold">{p.name}</span>
+              <span className="num text-[12px] text-muted-foreground">{p.games} jogos</span>
+            </Link>
+          </li>
         ))}
-      </div>
+      </ul>
     </section>
   );
 }

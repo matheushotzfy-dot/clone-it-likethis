@@ -1,234 +1,40 @@
-import { pageMeta } from "@/lib/page-meta";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState, useEffect, useRef } from "react";
-import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Logo } from "@/components/layout/logo";
-import { toast } from "sonner";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { SiteShell } from "@/components/layout/site-shell";
 import { useAuth } from "@/hooks/use-auth";
-import { maskCPF, maskPhone, validateCPF, EMAIL_DOMAINS } from "@/lib/validations";
 import { useAuthDialog } from "@/components/auth/auth-dialog-context";
-import { User, Mail, Phone, Lock, Eye, EyeOff, Info, Check } from "lucide-react";
-
-const schema = z.object({
-  fullName: z.string().trim().min(2, "Nome muito curto").max(100),
-  email: z.string().trim().email("Email inválido").max(255),
-  password: z.string().min(6, "Mínimo 6 caracteres").max(72),
-  cpf: z.string().refine(validateCPF, "CPF inválido"),
-  acceptTerms: z.boolean().refine((v) => v, "Você precisa aceitar os termos"),
-});
+import { pageMeta } from "@/lib/page-meta";
 
 export const Route = createFileRoute("/registro")({
-  head: () => ({ meta: pageMeta('Cadastro — apostamaxy', 'Crie sua conta na apostamaxy e comece a ganhar.') }),
+  head: () => ({
+    meta: pageMeta("Criar conta | apostamaxy", "Cadastro com CPF em menos de um minuto."),
+  }),
   component: Page,
 });
 
+/** Endereço direto para o cadastro (links de anúncio caem aqui). */
 function Page() {
+  const { user, loading } = useAuth();
+  const { open, current } = useAuthDialog();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { open } = useAuthDialog();
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [cpf, setCpf] = useState("");
-  const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPass, setShowPass] = useState(false);
-  const [acceptTerms, setAcceptTerms] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [showEmailHints, setShowEmailHints] = useState(false);
-  const emailRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
+    if (loading) return;
     if (user) navigate({ to: "/", replace: true });
-  }, [user, navigate]);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (emailRef.current && !emailRef.current.contains(event.target as Node)) {
-        setShowEmailHints(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const handleEmailChange = (val: string) => {
-    setEmail(val);
-    if (val.includes("@")) {
-      const parts = val.split("@");
-      if (parts[1].length < 3) setShowEmailHints(true);
-      else setShowEmailHints(false);
-    } else setShowEmailHints(false);
-  };
-
-  const selectHint = (domain: string) => {
-    const prefix = email.split("@")[0];
-    setEmail(`${prefix}@${domain}`);
-    setShowEmailHints(false);
-  };
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const parsed = schema.safeParse({ fullName, email, password, cpf, acceptTerms });
-    if (!parsed.success) {
-      toast.error(parsed.error.issues[0].message);
-      return;
-    }
-    setLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email: parsed.data.email,
-      password: parsed.data.password,
-      options: {
-        emailRedirectTo: window.location.origin,
-        data: { 
-          full_name: parsed.data.fullName,
-          cpf: cpf.replace(/\D/g, ""),
-          phone: phone.replace(/\D/g, "")
-        },
-      },
-    });
-    setLoading(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    toast.success("Conta criada! Bem-vindo 🎉");
-    open("deposit");
-  }
-
+    else if (current !== "register" && current !== "login") open("register");
+  }, [user, loading]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <div className="min-h-screen flex items-center justify-center bg-brand px-4 py-10 overflow-x-hidden">
-      <div className="w-full max-w-md bg-brand-2 border border-border rounded-lg p-6 md:p-8 space-y-6 shadow-2xl">
-        <div className="text-center">
-          <Logo className="justify-center" />
-          <h1 className="text-2xl font-black mt-4 text-foreground uppercase tracking-normal">Criar sua conta</h1>
-          <p className="text-sm text-muted-foreground mt-1">Depósito e saque por PIX em minutos</p>
-        </div>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1">
-            <Label htmlFor="name" className="text-[11px] font-bold text-muted-foreground uppercase ml-1">Nome completo</Label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input 
-                id="name" 
-                value={fullName} 
-                onChange={(e) => setFullName(e.target.value)} 
-                className="h-12 pl-10 bg-brand border-border text-foreground placeholder:text-muted-foreground focus:border-primary text-base" 
-                placeholder="Seu nome aqui"
-                required 
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <Label htmlFor="cpf" className="text-[11px] font-bold text-muted-foreground uppercase ml-1">CPF</Label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input 
-                id="cpf" 
-                value={cpf} 
-                onChange={(e) => setCpf(maskCPF(e.target.value))} 
-                inputMode="numeric"
-                className="h-12 pl-10 bg-brand border-border text-foreground placeholder:text-muted-foreground focus:border-primary text-base" 
-                placeholder="000.000.000-00"
-                required 
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1" ref={emailRef}>
-            <Label htmlFor="email" className="text-[11px] font-bold text-muted-foreground uppercase ml-1">Email</Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input 
-                id="email" 
-                type="email" 
-                value={email} 
-                onChange={(e) => handleEmailChange(e.target.value)} 
-                className="h-12 pl-10 bg-brand border-border text-foreground placeholder:text-muted-foreground focus:border-primary text-base" 
-                placeholder="exemplo@email.com"
-                required 
-              />
-              {showEmailHints && (
-                <div className="absolute top-[calc(100%+4px)] left-0 w-full bg-brand border border-border rounded-lg shadow-xl z-50 overflow-hidden">
-                  {EMAIL_DOMAINS.map((domain) => (
-                    <Button variant="ghost"
-                      key={domain}
-                      type="button"
-                      onClick={() => selectHint(domain)}
-                      className="w-full text-left px-4 py-2 text-sm hover:bg-surface text-muted-foreground transition-colors border-b border-border last:border-0"
-                    >
-                      @{domain}
-                    </Button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <Label htmlFor="phone" className="text-[11px] font-bold text-muted-foreground uppercase ml-1">Celular</Label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input 
-                id="phone" 
-                value={phone} 
-                onChange={(e) => setPhone(maskPhone(e.target.value))} 
-                inputMode="numeric"
-                className="h-12 pl-10 bg-brand border-border text-foreground placeholder:text-muted-foreground focus:border-primary text-base" 
-                placeholder="(00) 00000-0000"
-                required 
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <Label htmlFor="password" className="text-[11px] font-bold text-muted-foreground uppercase ml-1">Senha</Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input 
-                id="password" 
-                type={showPass ? "text" : "password"} 
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)} 
-                className="h-12 pl-10 pr-10 bg-brand border-border text-foreground placeholder:text-muted-foreground focus:border-primary text-base" 
-                placeholder="Mínimo 6 caracteres"
-                required 
-              />
-              <Button variant="ghost" type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                {showPass ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-              </Button>
-            </div>
-          </div>
-
-          <label className="flex items-start gap-3 text-[11px] text-muted-foreground cursor-pointer group pt-2">
-            <div className="relative mt-0.5">
-              <input 
-                type="checkbox" 
-                checked={acceptTerms} 
-                onChange={(e) => setAcceptTerms(e.target.checked)} 
-                className="appearance-none size-4 rounded bg-brand border border-border checked:bg-primary checked:border-primary cursor-pointer transition-all" 
-              />
-              {acceptTerms && <Check className="absolute inset-0 size-3 m-auto text-primary-foreground pointer-events-none" strokeWidth={4} />}
-            </div>
-            <span>Tenho mais de 18 anos e aceito os <Link to="/legal/termos" className="text-primary font-bold hover:underline">termos</Link></span>
-          </label>
-
-          <Button type="submit" className="w-full h-12 font-black uppercase tracking-normal bg-primary text-primary-foreground hover:brightness-110 transition-all" disabled={loading}>
-            {loading ? "Criando..." : "CRIAR MINHA CONTA"}
-          </Button>
-        </form>
-
-        <div className="text-center text-sm border-t border-border pt-6">
-          <p className="text-muted-foreground">
-            Já tem conta? <Link to="/login" className="text-primary font-bold hover:underline">Entrar agora</Link>
-          </p>
-        </div>
+    <SiteShell>
+      <div className="mx-auto max-w-md px-4 py-16 text-center">
+        <h1 className="text-[30px]">Crie sua conta</h1>
+        <p className="mt-2 text-muted-foreground">Cadastro com CPF, 18 anos ou mais.</p>
+        <button
+          type="button"
+          onClick={() => open("register")}
+          className="mt-6 h-11 rounded-[10px] bg-primary px-6 font-bold text-primary-foreground"
+        >
+          Criar conta
+        </button>
       </div>
-    </div>
+    </SiteShell>
   );
 }

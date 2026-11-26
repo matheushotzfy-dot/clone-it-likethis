@@ -2,20 +2,33 @@ import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import mark from "@/assets/apostaya-mark.png";
 
-export function Logo({ className = "" }: { className?: string }) {
+export function Logo({
+  className = "",
+  compact = false,
+}: {
+  className?: string;
+  compact?: boolean;
+}) {
   return (
     <Link
       to="/"
-      aria-label="apostamaxy"
-      className={cn("flex h-12 shrink-0 items-center overflow-visible md:h-14", className)}
+      aria-label="apostamaxy, ir para o início"
+      className={cn("flex shrink-0 items-center gap-1.5", className)}
     >
-      <span className="flex items-center gap-1.5 font-black">
-        <img src={mark} alt="" width={1024} height={1024} className="size-7 shrink-0 object-contain md:size-8" fetchPriority="high" decoding="async" />
-        <span className="whitespace-nowrap text-[17px] leading-none md:text-[21px]">
-          <span className="text-foreground">aposta</span>
-          <span className="text-primary">maxy</span>
+      <img
+        src={mark}
+        alt=""
+        width={64}
+        height={64}
+        className="size-7 shrink-0 object-contain md:size-8"
+        fetchPriority="high"
+        decoding="async"
+      />
+      {!compact && (
+        <span className="whitespace-nowrap text-[19px] font-extrabold leading-none tracking-[-0.02em] md:text-[21px]">
+          aposta<span className="text-primary">maxy</span>
         </span>
-      </span>
+      )}
     </Link>
   );
 }

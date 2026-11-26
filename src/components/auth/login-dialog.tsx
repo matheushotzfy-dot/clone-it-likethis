@@ -1,22 +1,17 @@
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
-import { resolveEmailFromCpf } from "@/lib/auth.functions";
-import { useAuthDialog } from "./auth-dialog-context";
-import { User, Lock, Eye, EyeOff, ShieldCheck, Loader2, LogIn } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { signInWithCpf } from "@/lib/auth.functions";
 import { maskCPF } from "@/lib/validations";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { useAuthDialog } from "./auth-dialog-context";
+import { AuthSheet, Field } from "./auth-sheet";
 
-function isLikelyCpf(input: string) {
-  const digits = input.replace(/\D/g, "");
-  return digits.length === 11 && !input.includes("@");
+function looksLikeCpf(value: string) {
+  return !value.includes("@") && value.replace(/\D/g, "").length === 11;
 }
-
-const inputBase =
-  "h-12 w-full rounded-lg border border-border bg-background/50 pl-11 pr-3 text-base font-semibold text-foreground placeholder:font-normal placeholder:text-muted-foreground focus:border-primary focus:outline-none";
 
 export function LoginDialog() {
   const { current, close, open } = useAuthDialog();
@@ -24,129 +19,176 @@ export function LoginDialog() {
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
-  const resolveCpf = useServerFn(resolveEmailFromCpf);
+  const [error, setError] = useState<string | null>(null);
+  const [resetSent, setResetSent] = useState(false);
+  const cpfLogin = useServerFn(signInWithCpf);
 
-  function handleIdentifierChange(val: string) {
-    const onlyDigits = val.replace(/\D/g, "");
-    if (!val.includes("@") && onlyDigits.length > 0 && onlyDigits.length <= 11 && !/[a-zA-Z]/.test(val)) {
-      setIdentifier(maskCPF(val));
-    } else {
-      setIdentifier(val);
-    }
+  function onIdentifier(val: string) {
+    setError(null);
+    const digits = val.replace(/\D/g, "");
+    setIdentifier(
+      !val.includes("@") && !/[a-zA-Z]/.test(val) && digits.length > 0 && digits.length <= 11
+        ? maskCPF(val)
+        : val,
+    );
   }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!identifier.trim() || !password) {
+      setError("Preencha e-mail ou CPF e a senha.");
+      return;
+    }
     setLoading(true);
+    setError(null);
     try {
-      let emailToUse = identifier.trim();
-
-      if (isLikelyCpf(emailToUse)) {
-        const digits = emailToUse.replace(/\D/g, "");
-        const { email } = await resolveCpf({ data: { cpf: digits } });
-        if (!email) {
-          toast.error("CPF ou senha incorretos");
+      if (looksLikeCpf(identifier)) {
+        const res = await cpfLogin({ data: { cpf: identifier.replace(/\D/g, ""), password } });
+        if (!res.ok) {
+          setError(res.error);
           return;
         }
-        emailToUse = email;
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: res.access_token,
+          refresh_token: res.refresh_token,
+        });
+        if (sessionError) {
+          setError("Não foi possível entrar. Tente de novo.");
+          return;
+        }
+      } else {
+        const { error: authError } = await supabase.auth.signInWithPassword({
+          email: identifier.trim(),
+          password,
+        });
+        if (authError) {
+          setError(
+            authError.message.toLowerCase().includes("not confirmed")
+              ? "Confirme seu e-mail pelo link que enviamos antes de entrar."
+              : "E-mail ou senha incorretos.",
+          );
+          return;
+        }
       }
-
-      const { error } = await supabase.auth.signInWithPassword({ email: emailToUse, password });
-      if (error) {
-        toast.error(
-          error.message === "Invalid login credentials" ? "Email/CPF ou senha incorretos" : error.message,
-        );
-        return;
-      }
-      toast.success("Bem-vindo!");
+      setPassword("");
       close();
+      toast.success("Você entrou na sua conta.");
     } finally {
       setLoading(false);
     }
   }
 
+  async function forgot() {
+    const email = identifier.trim();
+    if (!email.includes("@")) {
+      setError("Para recuperar a senha, digite o e-mail da conta no primeiro campo.");
+      return;
+    }
+    setLoading(true);
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/perfil?aba=seguranca`,
+    });
+    setLoading(false);
+    if (resetError) {
+      setError("Não foi possível enviar o e-mail agora. Tente em instantes.");
+      return;
+    }
+    setResetSent(true);
+  }
+
   return (
-    <Dialog open={current === "login"} onOpenChange={(o) => !o && close()}>
-      <DialogContent className="auth-sheet max-h-[94dvh] w-[calc(100vw-1.5rem)] max-w-[420px] gap-0 overflow-hidden border-border bg-background p-0 sm:rounded-lg">
-        <div className="auth-sheet-scroll surface-grad relative min-h-0 overflow-y-auto px-6 pb-7 pt-7 sm:px-8">
-
-          <div className="relative mb-6 flex flex-col items-center text-center">
-            <span className="font-display text-3xl font-extrabold leading-none tracking-normal">
-              aposta<span className="text-primary">maxy</span>
-            </span>
-          </div>
-
-          <DialogTitle className="font-display text-xl font-extrabold">Entrar na conta</DialogTitle>
-          <DialogDescription className="mb-5 mt-1 text-sm text-muted-foreground">
-            Use seu e-mail ou CPF e senha.
-          </DialogDescription>
-
-          <form onSubmit={submit} className="space-y-3">
-            <div className="relative">
-              <User className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" strokeWidth={2} />
-              <input
-                type="text"
-                inputMode="text"
-                autoComplete="username"
-                placeholder="E-mail ou CPF"
-                value={identifier}
-                onChange={(e) => handleIdentifierChange(e.target.value)}
-                required
-                className={inputBase}
-              />
-            </div>
-
-            <div className="relative">
-              <Lock className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" strokeWidth={2} />
-              <input
-                type={show ? "text" : "password"}
-                autoComplete="current-password"
-                placeholder="Senha"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className={cn(inputBase, "pr-11")}
-              />
-              <Button variant="ghost"
-                type="button"
-                onClick={() => setShow(!show)}
-                aria-label={show ? "Ocultar senha" : "Mostrar senha"}
-                className="absolute right-3 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-lg text-muted-foreground hover:text-foreground"
-              >
-                {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-              </Button>
-            </div>
-
-            <Button variant="ghost"
-              type="submit"
-              disabled={loading}
-              className="cta-glow slick flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-extrabold tracking-normal text-primary-foreground disabled:opacity-60"
-            >
-              {loading ? <Loader2 className="size-4 animate-spin" /> : <LogIn className="size-4" strokeWidth={2.5} />}
-              {loading ? "Entrando…" : "Entrar"}
-            </Button>
-          </form>
-
-          <Button variant="ghost"
+    <AuthSheet
+      open={current === "login"}
+      onOpenChange={(o) => {
+        if (!o) {
+          close();
+          setResetSent(false);
+          setError(null);
+        }
+      }}
+      title="Entrar"
+      description={
+        <>
+          Ainda não tem conta?{" "}
+          <button
             type="button"
-            className="mx-auto mt-4 block text-sm font-bold text-primary hover:underline"
+            onClick={() => open("register")}
+            className="font-semibold text-primary hover:underline"
           >
-            Esqueci minha senha
-          </Button>
-
-          <p className="mt-4 text-center text-sm text-muted-foreground">
-            Não tem uma conta?{" "}
-            <Button variant="ghost" onClick={() => open("register")} className="font-bold text-primary hover:underline">
-              Cadastre-se
-            </Button>
-          </p>
-
-          <div className="mt-5 flex items-center justify-center gap-2 text-[10px] font-semibold text-muted-foreground">
-            <ShieldCheck className="size-3.5 text-success" strokeWidth={2.25} />
-            Conexão segura · 18+
+            Criar conta
+          </button>
+        </>
+      }
+      width={420}
+    >
+      <form onSubmit={submit} className="space-y-4" noValidate>
+        <Field label="E-mail ou CPF" htmlFor="login-id">
+          <input
+            id="login-id"
+            className="field-input"
+            value={identifier}
+            onChange={(e) => onIdentifier(e.target.value)}
+            autoComplete="username"
+            placeholder="voce@email.com ou 000.000.000-00"
+            autoFocus
+          />
+        </Field>
+        <Field label="Senha" htmlFor="login-pass">
+          <div className="relative">
+            <input
+              id="login-pass"
+              type={show ? "text" : "password"}
+              className="field-input pr-12"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setError(null);
+              }}
+              autoComplete="current-password"
+            />
+            <button
+              type="button"
+              onClick={() => setShow((s) => !s)}
+              aria-label={show ? "Ocultar senha" : "Mostrar senha"}
+              className="absolute right-1.5 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-md text-muted-foreground hover:text-foreground"
+            >
+              {show ? <EyeOff className="size-[18px]" /> : <Eye className="size-[18px]" />}
+            </button>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </Field>
+
+        {error && (
+          <p
+            role="alert"
+            className="rounded-[8px] border border-destructive/40 bg-destructive/10 px-3 py-2.5 text-[13.5px]"
+          >
+            {error}
+          </p>
+        )}
+        {resetSent && (
+          <p
+            role="status"
+            className="rounded-[8px] border border-pix/40 bg-pix/10 px-3 py-2.5 text-[13.5px]"
+          >
+            Enviamos um link para {identifier.trim()}. Abra o e-mail para criar uma nova senha.
+          </p>
+        )}
+
+        <Button
+          type="submit"
+          disabled={loading}
+          className="h-12 w-full rounded-[10px] text-[16px] font-bold shadow-none"
+        >
+          {loading ? <Loader2 className="animate-spin" /> : "Entrar"}
+        </Button>
+        <button
+          type="button"
+          onClick={forgot}
+          className="block w-full text-center text-[14px] font-medium text-muted-foreground hover:text-foreground"
+        >
+          Esqueci minha senha
+        </button>
+      </form>
+    </AuthSheet>
   );
 }

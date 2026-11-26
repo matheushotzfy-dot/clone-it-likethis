@@ -1,144 +1,218 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { ArrowDownToLine, ArrowUpFromLine, LifeBuoy, ShieldCheck } from "lucide-react";
 import { Sidebar, SidebarContent, useSidebar } from "@/components/ui/sidebar";
-import { ChevronDown, ChevronsLeft, ShieldCheck } from "lucide-react";
 import {
-  IcFire as Flame, IcSlots as Gamepad2, IcCrash as Rocket, IcLive as MonitorPlay, IcGrid as LayoutGrid,
-  IcTrophy as Trophy, IcGift as Gift, IcSports as Cup, IcLive as Radio, IcPix as Wallet, type MaxyIcon,
+  IcFire,
+  IcSlots,
+  IcCrash,
+  IcLive,
+  IcGrid,
+  IcTrophy,
+  IcGift,
+  IcSports,
+  type MaxyIcon,
 } from "@/components/icons/maxy-icons";
 import { ModeSwitch } from "./mode-switch";
-import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
-import { cn } from "@/lib/utils";
+import { Logo } from "./logo";
+import { useAuth } from "@/hooks/use-auth";
 import { useAuthDialog } from "@/components/auth/auth-dialog-context";
+import { useWallet } from "@/hooks/use-account";
+import { formatBRL } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
-type Item = { label: string; to: string; icon: MaxyIcon; cat?: string };
+type Item = {
+  label: string;
+  to: string;
+  icon: MaxyIcon;
+  search?: Record<string, string>;
+  match: (path: string, search: Record<string, unknown>) => boolean;
+};
 
-const jogar: Item[] = [
-  { label: "Populares", to: "/", icon: Flame },
-  { label: "Cassino", to: "/cassino", icon: LayoutGrid },
-  { label: "Slots", to: "/slots", icon: Gamepad2 },
-  { label: "Crash", to: "/cassino", icon: Rocket, cat: "crash" },
-  { label: "Ao Vivo", to: "/ao-vivo", icon: MonitorPlay },
+const groups: { title: string; items: Item[] }[] = [
+  {
+    title: "Cassino",
+    items: [
+      { label: "Início", to: "/", icon: IcFire, match: (p) => p === "/" },
+      {
+        label: "Todos os jogos",
+        to: "/cassino",
+        icon: IcGrid,
+        match: (p, s) => p === "/cassino" && !s.cat,
+      },
+      { label: "Slots", to: "/slots", icon: IcSlots, match: (p) => p === "/slots" },
+      {
+        label: "Crash",
+        to: "/cassino",
+        search: { cat: "crash" },
+        icon: IcCrash,
+        match: (p, s) => p === "/cassino" && s.cat === "crash",
+      },
+      { label: "Cassino ao vivo", to: "/ao-vivo", icon: IcLive, match: (p) => p === "/ao-vivo" },
+    ],
+  },
+  {
+    title: "Esportes",
+    items: [
+      {
+        label: "Apostas esportivas",
+        to: "/esportes",
+        icon: IcSports,
+        match: (p) => p === "/esportes",
+      },
+    ],
+  },
+  {
+    title: "Mais",
+    items: [
+      { label: "Torneios", to: "/torneios", icon: IcTrophy, match: (p) => p === "/torneios" },
+      { label: "Promoções", to: "/promocoes", icon: IcGift, match: (p) => p === "/promocoes" },
+    ],
+  },
 ];
 
-const esportes: Item[] = [
-  { label: "Esportes", to: "/esportes", icon: Cup },
-  { label: "Ao vivo agora", to: "/esportes", icon: Radio, cat: "live" },
-];
-
-const extras: Item[] = [
-  { label: "Torneios", to: "/torneios", icon: Trophy },
-  { label: "Promoções", to: "/promocoes", icon: Gift },
-];
-
-function Row({ item, active, collapsed }: { item: Item; active: boolean; collapsed: boolean }) {
+function NavRow({ item, active, collapsed }: { item: Item; active: boolean; collapsed: boolean }) {
   const Icon = item.icon;
   return (
     <Link
       to={item.to}
-      search={item.cat ? ({ cat: item.cat } as never) : undefined}
-      title={item.label}
+      search={item.search as never}
+      title={collapsed ? item.label : undefined}
+      aria-current={active ? "page" : undefined}
       className={cn(
-        "slick group relative flex h-10 items-center gap-3 rounded-lg px-3 text-[14px] font-semibold",
+        "relative flex h-10 items-center gap-3 rounded-[8px] px-3 text-[14.5px] font-medium transition-colors",
         collapsed && "justify-center px-0",
         active
           ? "bg-surface-2 text-foreground"
-          : "text-foreground/70 hover:bg-surface/70 hover:text-foreground",
+          : "text-foreground/70 hover:bg-surface hover:text-foreground",
       )}
     >
-      <span
-        className={cn(
-          "hidden",
-          active ? "opacity-100" : "opacity-0",
-        )}
+      {active && !collapsed && (
+        <span className="absolute inset-y-2 left-0 w-[3px] rounded-r bg-primary" aria-hidden />
+      )}
+      <Icon
+        className={cn("size-[19px] shrink-0", active ? "text-primary" : "text-muted-foreground")}
       />
-      <Icon className={cn("size-[18px] shrink-0", active ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
       {!collapsed && <span className="truncate">{item.label}</span>}
     </Link>
   );
 }
 
-function Group({
-  title, items, path, collapsed,
-}: { title: string; items: Item[]; path: string; collapsed: boolean }) {
-  const [open, setOpen] = useState(true);
-  if (collapsed) {
+function WalletCard() {
+  const { user } = useAuth();
+  const { open } = useAuthDialog();
+  const wallet = useWallet();
+  if (!user) {
     return (
-      <div className="space-y-1 px-2 py-2">
-        {items.map((it) => (
-          <Row key={it.label} item={it} active={path === it.to && !it.cat} collapsed />
-        ))}
+      <div className="rounded-[12px] border border-border bg-surface p-3.5">
+        <p className="text-[14px] font-semibold">Crie sua conta</p>
+        <p className="mt-0.5 text-[13px] leading-snug text-muted-foreground">
+          Cadastro com CPF em menos de um minuto.
+        </p>
+        <button
+          type="button"
+          onClick={() => open("register")}
+          className="mt-3 h-9 w-full rounded-[8px] bg-primary text-[14px] font-bold text-primary-foreground hover:brightness-110"
+        >
+          Criar conta
+        </button>
       </div>
     );
   }
   return (
-    <div className="mx-2 my-2 rounded-lg bg-surface/60 p-1.5">
-      <Button variant="ghost"
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between px-1 py-2 font-display text-[12px] font-bold uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground"
-      >
-        <span>{title}</span>
-        <ChevronDown className={cn("size-3.5 transition-transform", !open && "-rotate-90")} strokeWidth={2} />
-      </Button>
-      {open && (
-        <div className="space-y-1 pb-1">
-          {items.map((it) => (
-            <Row key={it.label} item={it} active={path === it.to && !it.cat} collapsed={false} />
-          ))}
-        </div>
+    <div className="rounded-[12px] border border-border bg-surface p-3.5">
+      <p className="text-[12.5px] text-muted-foreground">Seu saldo</p>
+      <p className="num font-display text-[26px] font-bold leading-tight">
+        {wallet.data ? formatBRL(wallet.data.balance) : "–"}
+      </p>
+      {!!wallet.data?.held && (
+        <p className="num text-[12px] text-muted-foreground">
+          {formatBRL(wallet.data.held)} reservado em saque
+        </p>
       )}
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={() => open("deposit")}
+          className="flex h-9 items-center justify-center gap-1.5 rounded-[8px] bg-pix text-[13.5px] font-bold text-pix-foreground hover:brightness-110"
+        >
+          <ArrowDownToLine className="size-4" /> Depositar
+        </button>
+        <Link
+          to="/saque"
+          className="flex h-9 items-center justify-center gap-1.5 rounded-[8px] border border-border text-[13.5px] font-semibold text-foreground/85 hover:border-foreground/30 hover:text-foreground"
+        >
+          <ArrowUpFromLine className="size-4" /> Sacar
+        </Link>
+      </div>
     </div>
   );
 }
 
 export function AppSidebar() {
-  const { state, isMobile, toggleSidebar, setOpenMobile } = useSidebar();
+  const { state, isMobile, setOpenMobile } = useSidebar();
   const collapsed = !isMobile && state === "collapsed";
-  const path = useRouterState({ select: (s) => s.location.pathname });
-  const { open } = useAuthDialog();
-  // Close the mobile drawer after navigating so the page is visible again.
-  useEffect(() => { setOpenMobile(false); }, [path, setOpenMobile]);
+  const location = useRouterState({ select: (s) => s.location });
+  const path = location.pathname;
+  const search = (location.search ?? {}) as Record<string, unknown>;
+
+  // Fecha a gaveta do celular depois de navegar.
+  useEffect(() => {
+    setOpenMobile(false);
+  }, [path, setOpenMobile]);
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border">
-      <SidebarContent className="bg-sidebar text-sidebar-foreground custom-scrollbar">
-        <div className={cn("flex items-center px-3 pb-1 pt-3", collapsed ? "justify-center px-0" : "justify-between")}>
-          {!collapsed && (
-            <span className="text-[11px] font-semibold text-muted-foreground">Explorar</span>
-          )}
-          <Button variant="ghost"
-            onClick={toggleSidebar}
-            className="slick grid size-7 place-items-center rounded-md border border-border p-0 text-foreground/70 hover:border-primary hover:text-primary"
-            aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
-          >
-            <ChevronsLeft className={cn("size-4 transition-transform", collapsed && "rotate-180")} strokeWidth={1.75} />
-          </Button>
-        </div>
-
-        <div className="space-y-2 px-2 pt-2">
+      <SidebarContent className="thin-scrollbar gap-0 bg-sidebar text-sidebar-foreground">
+        {isMobile && (
+          <div className="px-4 pb-1 pt-4">
+            <Logo />
+          </div>
+        )}
+        <div className={cn("space-y-3 p-3", collapsed && "px-1.5")}>
           <ModeSwitch compact={collapsed} />
-          <Button variant="ghost"
-            onClick={() => { setOpenMobile(false); open("deposit"); }}
-            title="Depositar"
-            className={cn(
-              "relative flex h-10 w-full items-center gap-2 overflow-hidden rounded-[4px] bg-primary px-3 font-display text-[15px] font-extrabold uppercase tracking-wide text-primary-foreground hover:brightness-110",
-              collapsed && "justify-center px-0",
-            )}
-          >
-            <Wallet className="size-[18px] shrink-0" />
-            {!collapsed && <span>Depositar</span>}
-          </Button>
+          {!collapsed && <WalletCard />}
         </div>
 
-        <div className="mt-2">
-          <Group title="Jogar" items={jogar} path={path} collapsed={collapsed} />
-          <Group title="Esportes" items={esportes} path={path} collapsed={collapsed} />
-          <Group title="Mais" items={extras} path={path} collapsed={collapsed} />
-        </div>
+        <nav aria-label="Menu" className={cn("space-y-4 px-3 pb-4", collapsed && "px-1.5")}>
+          {groups.map((g) => (
+            <div key={g.title}>
+              {!collapsed && (
+                <p className="mb-1 px-3 text-[12.5px] font-semibold text-muted-foreground/80">
+                  {g.title}
+                </p>
+              )}
+              <div className="space-y-0.5">
+                {g.items.map((it) => (
+                  <NavRow
+                    key={it.label}
+                    item={it}
+                    active={it.match(path, search)}
+                    collapsed={collapsed}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </nav>
 
         {!collapsed && (
-          <div className="mt-auto border-t border-border p-3">
-            <Link to="/legal/jogo-responsavel" className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary"><ShieldCheck className="size-4" /> Jogo responsável · 18+</Link>
+          <div className="mt-auto space-y-1 border-t border-border p-3 text-[13px]">
+            <Link
+              to="/legal/jogo-responsavel"
+              className="flex items-center gap-2.5 rounded-[8px] px-3 py-2 text-muted-foreground hover:bg-surface hover:text-foreground"
+            >
+              <ShieldCheck className="size-4" /> Jogo responsável
+            </Link>
+            <Link
+              to="/legal/termos"
+              className="flex items-center gap-2.5 rounded-[8px] px-3 py-2 text-muted-foreground hover:bg-surface hover:text-foreground"
+            >
+              <LifeBuoy className="size-4" /> Ajuda e termos
+            </Link>
+            <p className="px-3 pt-2 text-[12px] leading-snug text-muted-foreground/80">
+              Proibido para menores de 18 anos.
+            </p>
           </div>
         )}
       </SidebarContent>

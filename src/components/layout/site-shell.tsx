@@ -4,21 +4,22 @@ import { Header } from "./header";
 import { Footer } from "./footer";
 import { MobileBottomNav } from "./mobile-bottom-nav";
 import { FreezeBanner } from "@/components/notifications/freeze-banner";
+import { PlatformStatusBar } from "@/components/notifications/platform-status-bar";
 import { useTransactionNotifications } from "@/hooks/use-transaction-notifications";
 
-export function SiteShell({ children }: { children: ReactNode }) {
+export function SiteShell({ children, bare = false }: { children: ReactNode; bare?: boolean }) {
   useTransactionNotifications();
   return (
     <div className="app-shell flex min-h-dvh w-full bg-background">
       <AppSidebar />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <PlatformStatusBar />
         <Header />
         <FreezeBanner />
-        <main className="app-main min-w-0 flex-1 pb-28 lg:pb-0">{children}</main>
-        <Footer />
+        <main className="app-main min-w-0 flex-1 lg:pb-0">{children}</main>
+        {!bare && <Footer />}
       </div>
       <MobileBottomNav />
     </div>
   );
 }
-

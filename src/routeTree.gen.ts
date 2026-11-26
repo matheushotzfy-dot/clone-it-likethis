@@ -36,6 +36,7 @@ import { Route as AdminPixelRouteImport } from './routes/admin/pixel'
 import { Route as AdminSaquesRouteImport } from './routes/admin/saques'
 import { Route as AdminTransacoesRouteImport } from './routes/admin/transacoes'
 import { Route as AdminUsuariosRouteImport } from './routes/admin/usuarios'
+import { Route as JogarGameIdRouteImport } from './routes/jogar.$gameId'
 import { Route as LegalJogoResponsavelRouteImport } from './routes/legal/jogo-responsavel'
 import { Route as LegalPrivacidadeRouteImport } from './routes/legal/privacidade'
 import { Route as LegalTermosRouteImport } from './routes/legal/termos'
@@ -45,6 +46,8 @@ import { Route as ApiPublicPlayfiversBalanceRouteImport } from './routes/api/pub
 import { Route as ApiPublicPlayfiversTransactionRouteImport } from './routes/api/public/playfivers-transaction'
 import { Route as ApiPublicPodpayWebhookRouteImport } from './routes/api/public/podpay-webhook'
 import { Route as ApiPublicVeopagWebhookRouteImport } from './routes/api/public/veopag-webhook'
+import { Route as ApiPublicPlayfiversTokenWebhookRouteImport } from './routes/api/public/playfivers.$token.webhook'
+import { Route as ApiPublicPlayfiversTokenApiWebhookRouteImport } from './routes/api/public/playfivers.$token.api.webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -180,6 +183,11 @@ const AdminUsuariosRoute = AdminUsuariosRouteImport.update({
   path: '/usuarios',
   getParentRoute: () => AdminRoute,
 } as any)
+const JogarGameIdRoute = JogarGameIdRouteImport.update({
+  id: '/jogar/$gameId',
+  path: '/jogar/$gameId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LegalJogoResponsavelRoute = LegalJogoResponsavelRouteImport.update({
   id: '/legal/jogo-responsavel',
   path: '/legal/jogo-responsavel',
@@ -227,6 +235,18 @@ const ApiPublicVeopagWebhookRoute = ApiPublicVeopagWebhookRouteImport.update({
   path: '/api/public/veopag-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPlayfiversTokenWebhookRoute =
+  ApiPublicPlayfiversTokenWebhookRouteImport.update({
+    id: '/api/public/playfivers/$token/webhook',
+    path: '/api/public/playfivers/$token/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPlayfiversTokenApiWebhookRoute =
+  ApiPublicPlayfiversTokenApiWebhookRouteImport.update({
+    id: '/api/public/playfivers/$token/api/webhook',
+    path: '/api/public/playfivers/$token/api/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -254,6 +274,7 @@ export interface FileRoutesByFullPath {
   '/admin/saques': typeof AdminSaquesRoute
   '/admin/transacoes': typeof AdminTransacoesRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
+  '/jogar/$gameId': typeof JogarGameIdRoute
   '/legal/jogo-responsavel': typeof LegalJogoResponsavelRoute
   '/legal/privacidade': typeof LegalPrivacidadeRoute
   '/legal/termos': typeof LegalTermosRoute
@@ -264,6 +285,8 @@ export interface FileRoutesByFullPath {
   '/api/public/playfivers-transaction': typeof ApiPublicPlayfiversTransactionRoute
   '/api/public/podpay-webhook': typeof ApiPublicPodpayWebhookRoute
   '/api/public/veopag-webhook': typeof ApiPublicVeopagWebhookRoute
+  '/api/public/playfivers/$token/webhook': typeof ApiPublicPlayfiversTokenWebhookRoute
+  '/api/public/playfivers/$token/api/webhook': typeof ApiPublicPlayfiversTokenApiWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -290,6 +313,7 @@ export interface FileRoutesByTo {
   '/admin/saques': typeof AdminSaquesRoute
   '/admin/transacoes': typeof AdminTransacoesRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
+  '/jogar/$gameId': typeof JogarGameIdRoute
   '/legal/jogo-responsavel': typeof LegalJogoResponsavelRoute
   '/legal/privacidade': typeof LegalPrivacidadeRoute
   '/legal/termos': typeof LegalTermosRoute
@@ -300,6 +324,8 @@ export interface FileRoutesByTo {
   '/api/public/playfivers-transaction': typeof ApiPublicPlayfiversTransactionRoute
   '/api/public/podpay-webhook': typeof ApiPublicPodpayWebhookRoute
   '/api/public/veopag-webhook': typeof ApiPublicVeopagWebhookRoute
+  '/api/public/playfivers/$token/webhook': typeof ApiPublicPlayfiversTokenWebhookRoute
+  '/api/public/playfivers/$token/api/webhook': typeof ApiPublicPlayfiversTokenApiWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -329,6 +355,7 @@ export interface FileRoutesById {
   '/admin/saques': typeof AdminSaquesRoute
   '/admin/transacoes': typeof AdminTransacoesRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
+  '/jogar/$gameId': typeof JogarGameIdRoute
   '/legal/jogo-responsavel': typeof LegalJogoResponsavelRoute
   '/legal/privacidade': typeof LegalPrivacidadeRoute
   '/legal/termos': typeof LegalTermosRoute
@@ -339,6 +366,8 @@ export interface FileRoutesById {
   '/api/public/playfivers-transaction': typeof ApiPublicPlayfiversTransactionRoute
   '/api/public/podpay-webhook': typeof ApiPublicPodpayWebhookRoute
   '/api/public/veopag-webhook': typeof ApiPublicVeopagWebhookRoute
+  '/api/public/playfivers/$token/webhook': typeof ApiPublicPlayfiversTokenWebhookRoute
+  '/api/public/playfivers/$token/api/webhook': typeof ApiPublicPlayfiversTokenApiWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -368,6 +397,7 @@ export interface FileRouteTypes {
     | '/admin/saques'
     | '/admin/transacoes'
     | '/admin/usuarios'
+    | '/jogar/$gameId'
     | '/legal/jogo-responsavel'
     | '/legal/privacidade'
     | '/legal/termos'
@@ -378,6 +408,8 @@ export interface FileRouteTypes {
     | '/api/public/playfivers-transaction'
     | '/api/public/podpay-webhook'
     | '/api/public/veopag-webhook'
+    | '/api/public/playfivers/$token/webhook'
+    | '/api/public/playfivers/$token/api/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -404,6 +436,7 @@ export interface FileRouteTypes {
     | '/admin/saques'
     | '/admin/transacoes'
     | '/admin/usuarios'
+    | '/jogar/$gameId'
     | '/legal/jogo-responsavel'
     | '/legal/privacidade'
     | '/legal/termos'
@@ -414,6 +447,8 @@ export interface FileRouteTypes {
     | '/api/public/playfivers-transaction'
     | '/api/public/podpay-webhook'
     | '/api/public/veopag-webhook'
+    | '/api/public/playfivers/$token/webhook'
+    | '/api/public/playfivers/$token/api/webhook'
   id:
     | '__root__'
     | '/'
@@ -442,6 +477,7 @@ export interface FileRouteTypes {
     | '/admin/saques'
     | '/admin/transacoes'
     | '/admin/usuarios'
+    | '/jogar/$gameId'
     | '/legal/jogo-responsavel'
     | '/legal/privacidade'
     | '/legal/termos'
@@ -452,6 +488,8 @@ export interface FileRouteTypes {
     | '/api/public/playfivers-transaction'
     | '/api/public/podpay-webhook'
     | '/api/public/veopag-webhook'
+    | '/api/public/playfivers/$token/webhook'
+    | '/api/public/playfivers/$token/api/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -467,6 +505,7 @@ export interface RootRouteChildren {
   RegistroRoute: typeof RegistroRoute
   SlotsRoute: typeof SlotsRoute
   TorneiosRoute: typeof TorneiosRoute
+  JogarGameIdRoute: typeof JogarGameIdRoute
   LegalJogoResponsavelRoute: typeof LegalJogoResponsavelRoute
   LegalPrivacidadeRoute: typeof LegalPrivacidadeRoute
   LegalTermosRoute: typeof LegalTermosRoute
@@ -475,6 +514,8 @@ export interface RootRouteChildren {
   ApiPublicPlayfiversTransactionRoute: typeof ApiPublicPlayfiversTransactionRoute
   ApiPublicPodpayWebhookRoute: typeof ApiPublicPodpayWebhookRoute
   ApiPublicVeopagWebhookRoute: typeof ApiPublicVeopagWebhookRoute
+  ApiPublicPlayfiversTokenWebhookRoute: typeof ApiPublicPlayfiversTokenWebhookRoute
+  ApiPublicPlayfiversTokenApiWebhookRoute: typeof ApiPublicPlayfiversTokenApiWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -668,6 +709,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsuariosRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/jogar/$gameId': {
+      id: '/jogar/$gameId'
+      path: '/jogar/$gameId'
+      fullPath: '/jogar/$gameId'
+      preLoaderRoute: typeof JogarGameIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/legal/jogo-responsavel': {
       id: '/legal/jogo-responsavel'
       path: '/legal/jogo-responsavel'
@@ -729,6 +777,20 @@ declare module '@tanstack/react-router' {
       path: '/api/public/veopag-webhook'
       fullPath: '/api/public/veopag-webhook'
       preLoaderRoute: typeof ApiPublicVeopagWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/playfivers/$token/webhook': {
+      id: '/api/public/playfivers/$token/webhook'
+      path: '/api/public/playfivers/$token/webhook'
+      fullPath: '/api/public/playfivers/$token/webhook'
+      preLoaderRoute: typeof ApiPublicPlayfiversTokenWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/playfivers/$token/api/webhook': {
+      id: '/api/public/playfivers/$token/api/webhook'
+      path: '/api/public/playfivers/$token/api/webhook'
+      fullPath: '/api/public/playfivers/$token/api/webhook'
+      preLoaderRoute: typeof ApiPublicPlayfiversTokenApiWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -797,6 +859,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegistroRoute: RegistroRoute,
   SlotsRoute: SlotsRoute,
   TorneiosRoute: TorneiosRoute,
+  JogarGameIdRoute: JogarGameIdRoute,
   LegalJogoResponsavelRoute: LegalJogoResponsavelRoute,
   LegalPrivacidadeRoute: LegalPrivacidadeRoute,
   LegalTermosRoute: LegalTermosRoute,
@@ -805,6 +868,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPlayfiversTransactionRoute: ApiPublicPlayfiversTransactionRoute,
   ApiPublicPodpayWebhookRoute: ApiPublicPodpayWebhookRoute,
   ApiPublicVeopagWebhookRoute: ApiPublicVeopagWebhookRoute,
+  ApiPublicPlayfiversTokenWebhookRoute: ApiPublicPlayfiversTokenWebhookRoute,
+  ApiPublicPlayfiversTokenApiWebhookRoute:
+    ApiPublicPlayfiversTokenApiWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

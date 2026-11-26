@@ -1,316 +1,320 @@
-import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { useAuthDialog } from "./auth-dialog-context";
-import { ArrowLeft, Copy, QrCode, CheckCircle2, ShieldCheck, Zap } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
+import { ArrowLeft, Check, Copy, Loader2 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
-import { useServerFn } from "@tanstack/react-start";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getMyProfile, listMyTransactions } from "@/lib/profile.functions";
+import { listMyTransactions } from "@/lib/profile.functions";
 import { createPodPayPixDeposit } from "@/lib/podpay.functions";
 import { createBSPayPixDeposit } from "@/lib/bspay.functions";
 import { createVeoPagPixDeposit, syncMyVeoPagDeposit } from "@/lib/veopag.functions";
-import { getSettings } from "@/lib/settings.functions";
-import { useAuth } from "@/hooks/use-auth";
-import { cn } from "@/lib/utils";
 import { canDismissDeposit } from "@/lib/deposit-navigation";
+import { formatBRL, parseBRL } from "@/lib/format";
+import { usePublicSettings, useRefreshMoney, useWallet } from "@/hooks/use-account";
+import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { useAuthDialog } from "./auth-dialog-context";
+import { AuthSheet } from "./auth-sheet";
 
-const presets = [30, 50, 100, 250, 500, 1000];
-const hots = new Set([50, 250, 1000]);
+const PRESETS = [30, 50, 100, 200, 500, 1000];
+
+/** Copia mesmo dentro de navegadores de app (Instagram, TikTok), onde a API de clipboard falha. */
+async function copyText(text: string) {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    /* cai no plano B */
+  }
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.cssText = "position:fixed;top:0;left:0;opacity:0";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch {
+    return false;
+  }
+}
 
 export function DepositDialog() {
   const { current, close, open: openDialog } = useAuthDialog();
   const { user, loading: authLoading } = useAuth();
-  const [amount, setAmount] = useState(0);
-  const [step, setStep] = useState<"form" | "pix">("form");
-  const [pix, setPix] = useState<{ qrCodeImage: string; copyPaste: string; transactionId: string } | null>(null);
-  const [pixCopied, setPixCopied] = useState(false);
-  const createPixPod = useServerFn(createPodPayPixDeposit);
-  const createPixBs = useServerFn(createBSPayPixDeposit);
-  const createPixVeo = useServerFn(createVeoPagPixDeposit);
-  const syncVeo = useServerFn(syncMyVeoPagDeposit);
-  const fetchSettings = useServerFn(getSettings);
-  const fetchProfile = useServerFn(getMyProfile);
-  const fetchTransactions = useServerFn(listMyTransactions);
-  const qc = useQueryClient();
-  const open = current === "deposit";
+  const isOpen = current === "deposit";
+  const settings = usePublicSettings();
+  const wallet = useWallet();
+  const refresh = useRefreshMoney();
 
-  // Gate: must be logged in to deposit
+  const [raw, setRaw] = useState("");
+  const [pix, setPix] = useState<{
+    copyPaste: string;
+    qrCodeImage: string;
+    transactionId: string;
+    amount: number;
+  } | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const createVeo = useServerFn(createVeoPagPixDeposit);
+  const createPod = useServerFn(createPodPayPixDeposit);
+  const createBs = useServerFn(createBSPayPixDeposit);
+  const syncVeo = useServerFn(syncMyVeoPagDeposit);
+  const fetchTxs = useServerFn(listMyTransactions);
+
   useEffect(() => {
-    if (open && !authLoading && !user) {
-      openDialog("register");
+    if (isOpen && !authLoading && !user) openDialog("register");
+  }, [isOpen, authLoading, user, openDialog]);
+  useEffect(() => {
+    if (isOpen) {
+      setPix(null);
+      setRaw("");
+      setCopied(false);
     }
-  }, [open, authLoading, user, openDialog]);
-  const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: () => fetchSettings(), enabled: !!user && open });
-  const { data: profile } = useQuery({
-    queryKey: ["my-profile"],
-    queryFn: () => fetchProfile(),
-    enabled: !!user && open,
-    refetchInterval: open ? 5000 : false,
-  });
-  const { data: txs } = useQuery({
-    queryKey: ["my-tx"],
+  }, [isOpen]);
+
+  const s = settings.data;
+  const min = s?.minDeposit ?? 30;
+  const max = s?.maxDeposit ?? 3000;
+  const amount = parseBRL(raw);
+  const blocked = wallet.data?.frozen || !!wallet.data?.selfExcludedUntil;
+
+  // Enquanto o QR está na tela, confere o pagamento a cada 3s.
+  const status = useQuery({
+    queryKey: ["deposit-status", pix?.transactionId],
     queryFn: async () => {
-      // Confirm with VeoPag directly in case the webhook is delayed.
-      if (pix?.transactionId) await syncVeo({ data: { transactionId: pix.transactionId } }).catch(() => null);
-      return fetchTransactions();
+      if (s?.activeGateway === "veopag" && pix)
+        await syncVeo({ data: { transactionId: pix.transactionId } }).catch(() => null);
+      const txs = await fetchTxs();
+      return txs.find((t: { id: string }) => t.id === pix?.transactionId)?.status ?? "pending";
     },
-    enabled: !!user && open && step === "pix" && !!pix,
+    enabled: isOpen && !!pix,
     refetchInterval: 3000,
   });
-  const min = settings?.min_deposit ?? 30;
-  const max = settings?.max_deposit ?? 3000;
-
-  // Auto-close on approval
-  useEffect(() => {
-    if (step !== "pix" || !pix || !txs) return;
-    const found = txs.find((t: { id: string; status: string }) => t.id === pix.transactionId);
-    if (found && found.status === "approved") {
-      toast.success("Pagamento confirmado! Saldo creditado.");
-      qc.invalidateQueries({ queryKey: ["my-profile"] });
-      qc.invalidateQueries({ queryKey: ["transactions"] });
-      close();
-    } else if (found && found.status === "rejected") {
-      toast.error("Pagamento recusado.");
-      close();
-    }
-  }, [txs, step, pix, qc, close]);
 
   useEffect(() => {
-    if (open) {
-      setStep("form");
+    if (!pix || !status.data) return;
+    if (status.data === "approved") {
+      toast.success(`Depósito de ${formatBRL(pix.amount)} confirmado`, {
+        description: "O valor já está no seu saldo.",
+      });
+      refresh();
+      close();
+    } else if (status.data === "rejected") {
+      toast.error("O Pix expirou ou foi recusado. Gere um novo.");
       setPix(null);
-      setPixCopied(false);
-      setAmount(0);
     }
-  }, [open, min]);
+  }, [status.data, pix, refresh, close]);
 
-  const mut = useMutation({
-    mutationFn: async (): Promise<{ transactionId: string; qrCodeImage: string; copyPaste: string }> => {
-      const g = settings?.active_gateway;
-      if (g === "bspay") return createPixBs({ data: { amount } });
-      if (g === "podpay") return createPixPod({ data: { amount } });
-      return createPixVeo({ data: { amount } });
+  const create = useMutation({
+    mutationFn: async () => {
+      const g = s?.activeGateway;
+      const res =
+        g === "bspay"
+          ? await createBs({ data: { amount } })
+          : g === "podpay"
+            ? await createPod({ data: { amount } })
+            : await createVeo({ data: { amount } });
+      return res as { transactionId: string; qrCodeImage: string; copyPaste: string };
     },
     onSuccess: (res) => {
       if (!res.copyPaste) {
-        toast.error("Falha ao gerar PIX. Tente novamente.");
+        toast.error("O Pix não foi gerado. Tente de novo.");
         return;
       }
-      setPix({ qrCodeImage: res.qrCodeImage, copyPaste: res.copyPaste, transactionId: res.transactionId });
-      setPixCopied(false);
-      toast.success("PIX gerado! Pague para creditar o saldo.");
-      qc.invalidateQueries({ queryKey: ["transactions"] });
-      qc.invalidateQueries({ queryKey: ["my-profile"] });
-      setStep("pix");
+      setPix({ ...res, amount });
+      refresh();
     },
-    onError: (e: Error) => toast.error(e.message || "Erro ao gerar PIX"),
+    onError: (e: Error) => toast.error(e.message || "Não foi possível gerar o Pix."),
   });
 
-  const showDialog = open && !!user;
+  const invalid = amount > 0 && (amount < min || amount > max);
+
   return (
-    <Dialog open={showDialog} onOpenChange={(o) => canDismissDeposit(o) && close()}>
-      <DialogContent className="auth-sheet deposit-sheet flex max-h-[92dvh] w-[calc(100vw-1.5rem)] max-w-[460px] flex-col overflow-hidden rounded-lg border-border bg-background p-0 text-foreground shadow-2xl sm:w-full">
-        <DialogTitle className="sr-only">Depósito via PIX</DialogTitle>
-        <DialogDescription className="sr-only">Gere um QR Code PIX para depositar na sua conta</DialogDescription>
-        <div className="relative flex flex-col min-h-0 flex-1">
-          <div className="flex shrink-0 items-center justify-between border-b border-border bg-surface/70 p-4 pr-16 sm:p-6 sm:pr-16">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <Button variant="ghost"
-                onClick={step === "pix" ? () => setStep("form") : close}
-                className="size-10 rounded-lg bg-surface hover:bg-surface-2 flex items-center justify-center transition-colors border border-border shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-                aria-label="Voltar"
+    <AuthSheet
+      open={isOpen && !!user}
+      onOpenChange={(o) => canDismissDeposit(o) && close()}
+      title={pix ? "Pague com Pix" : "Depositar"}
+      description={
+        pix
+          ? `Depósito de ${formatBRL(pix.amount)}. O saldo entra assim que o banco confirmar.`
+          : "Pix na hora, direto do app do seu banco."
+      }
+      width={440}
+    >
+      {s && !s.realMoney ? (
+        <div className="space-y-4">
+          <p className="rounded-[10px] border border-border bg-surface p-4 text-[14.5px] leading-relaxed">
+            A plataforma está em homologação e ainda não recebe depósitos com dinheiro real. Assim
+            que for liberada, esta tela gera o Pix normalmente.
+          </p>
+          <Button
+            variant="secondary"
+            className="h-11 w-full rounded-[10px] shadow-none"
+            onClick={close}
+          >
+            Entendi
+          </Button>
+        </div>
+      ) : blocked ? (
+        <div className="space-y-4">
+          <p className="rounded-[10px] border border-destructive/40 bg-destructive/10 p-4 text-[14.5px] leading-relaxed">
+            {wallet.data?.frozen
+              ? "Sua conta está suspensa e não pode receber depósitos. Fale com o suporte."
+              : "Sua autoexclusão está ativa. Depósitos voltam quando o período terminar."}
+          </p>
+          <Button
+            variant="secondary"
+            className="h-11 w-full rounded-[10px] shadow-none"
+            onClick={close}
+          >
+            Fechar
+          </Button>
+        </div>
+      ) : !pix ? (
+        <form
+          className="space-y-5"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (amount >= min && amount <= max) create.mutate();
+          }}
+        >
+          <label className="block">
+            <span className="mb-1.5 block text-[13.5px] font-semibold">Valor</span>
+            <span
+              className={cn(
+                "flex h-[68px] items-center rounded-[12px] border bg-surface px-4 transition-colors focus-within:border-pix",
+                invalid ? "border-destructive" : "border-input",
+              )}
+            >
+              <span className="mr-2 font-display text-[26px] font-bold text-muted-foreground">
+                R$
+              </span>
+              <input
+                value={raw}
+                onChange={(e) => setRaw(e.target.value.replace(/[^\d,]/g, ""))}
+                inputMode="decimal"
+                placeholder="0,00"
+                aria-describedby="deposit-limits"
+                className="num w-full min-w-0 bg-transparent font-display text-[38px] font-bold outline-none placeholder:text-muted-foreground/50"
+              />
+            </span>
+            <span
+              id="deposit-limits"
+              className={cn(
+                "mt-1.5 block text-[13px]",
+                invalid ? "text-destructive" : "text-muted-foreground",
+              )}
+            >
+              Mínimo {formatBRL(min)} e máximo {formatBRL(max)} por Pix.
+            </span>
+          </label>
+
+          <div className="grid grid-cols-3 gap-2">
+            {PRESETS.filter((v) => v >= min && v <= max).map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setRaw(String(v))}
+                data-active={amount === v}
+                className="num h-12 rounded-[10px] border border-border bg-surface font-display text-[19px] font-bold transition-colors hover:border-pix/60 data-[active=true]:border-pix data-[active=true]:bg-pix/10"
               >
-                <ArrowLeft className="size-5" />
-              </Button>
-              <div>
-                <h2 className="text-lg sm:text-xl font-black uppercase tracking-normal">Depositar</h2>
-                <div className="flex items-center gap-1.5 text-[10px] text-primary font-bold uppercase tracking-normal">
-                  <Zap className="size-3 fill-primary" />
-                  Processamento Instantâneo
-                </div>
-              </div>
-            </div>
+                {v.toLocaleString("pt-BR")}
+              </button>
+            ))}
           </div>
 
-          <div className="auth-sheet-scroll p-4 sm:p-6 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
-            {step === "form" ? (
-              <div className="space-y-5">
-                {profile?.is_frozen && (
-                  <div className="rounded-lg border-2 border-destructive/60 bg-destructive/15 p-4 text-left">
-                    <div className="font-black text-destructive uppercase text-xs tracking-normal">⚠️ Conta congelada</div>
-                    <p className="mt-1 text-sm text-destructive leading-snug">
-                      {profile.freeze_reason ? `Motivo: ${profile.freeze_reason}` : "Sua conta está bloqueada. Entre em contato com o suporte."}
-                    </p>
-                  </div>
-                )}
-                <div className="rounded-lg border border-primary/30 bg-primary/10 p-1">
-                  <div className="flex h-11 w-full items-center justify-center gap-2 rounded-md bg-primary text-xs font-black uppercase text-primary-foreground shadow-lg"><Zap className="size-4" /> PIX instantâneo</div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 bg-brand-2/40 rounded-lg border border-border">
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Mínimo</div>
-                    <div className="text-sm font-black text-foreground">R$ {min.toLocaleString("pt-BR")}</div>
-                  </div>
-                  <div className="p-3 bg-brand-2/40 rounded-lg border border-border">
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Máximo</div>
-                    <div className="text-sm font-black text-foreground">R$ {max.toLocaleString("pt-BR")}</div>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <label htmlFor="deposit-amount" className="text-xs font-bold text-muted-foreground uppercase tracking-normal ml-1">Valor do Depósito</label>
-                  <div className="relative group">
-                    <div className="relative flex h-20 items-center rounded-lg border-2 border-border bg-surface/70 px-6 transition-all group-focus-within:border-primary">
-                      <span className="text-2xl font-black text-primary mr-3">R$</span>
-                      <input
-                        id="deposit-amount"
-                        type="number"
-                        inputMode="decimal"
-                        value={amount || ""}
-                        onFocus={(e) => e.target.select()}
-                        onChange={(e) => setAmount(Number(e.target.value))}
-                        placeholder="0,00"
-                        className="min-w-0 w-full bg-transparent text-3xl sm:text-4xl font-black text-foreground focus:outline-none placeholder:text-muted-foreground"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                  {presets.map((v) => (
-                    <Button variant="ghost"
-                      key={v}
-                      aria-label={`R$ ${v}`}
-                      onClick={() => setAmount(v)}
-                      className={cn(
-                        "relative h-14 rounded-lg font-black text-sm transition-all border-2 flex items-center justify-center overflow-hidden",
-                        amount === v
-                          ? "border-primary bg-primary/10 text-primary shadow-lg shadow-primary/10"
-                          : "border-border bg-surface/60 text-muted-foreground hover:border-primary/50 hover:text-foreground",
-                      )}
-                    >
-                      R$ {v}
-                      {hots.has(v) && (
-                        <div className="absolute top-0 right-0">
-                          <div aria-hidden="true" className="bg-primary text-primary-foreground text-[8px] font-black px-2 py-0.5 rounded-bl-lg uppercase">
-                            PIX
-                          </div>
-                        </div>
-                      )}
-                    </Button>
-                  ))}
-                </div>
-
-                <div className="bg-primary/5 rounded-lg p-4 border border-primary/10 space-y-3">
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <CheckCircle2 className="size-4 text-primary shrink-0" />
-                    <span>Pagamento processado via <span className="font-bold text-foreground">PIX Seguro</span></span>
-                  </div>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <ShieldCheck className="size-4 text-primary shrink-0" />
-                    <span>Seus fundos estão protegidos pela <span className="font-bold text-foreground">apostamaxy</span></span>
-                  </div>
-                </div>
-
-                <Button variant="ghost"
-                  onClick={() => mut.mutate()}
-                  disabled={mut.isPending || amount < min || amount > max || !!profile?.is_frozen}
-                  className="w-full h-12 rounded-lg bg-primary text-primary-foreground font-black uppercase text-base tracking-normal hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 shadow-xl shadow-primary/20"
-                >
-                  {profile?.is_frozen ? "Conta congelada" : mut.isPending ? "Processando..." : `Gerar PIX de R$ ${amount.toLocaleString("pt-BR")}`}
-                </Button>
-              </div>
+          <button
+            type="submit"
+            disabled={create.isPending || amount < min || amount > max}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-pix text-[16px] font-bold text-pix-foreground transition-[filter] hover:brightness-110 disabled:opacity-50"
+          >
+            {create.isPending ? (
+              <Loader2 className="size-5 animate-spin" />
+            ) : amount > 0 ? (
+              `Gerar Pix de ${formatBRL(amount)}`
             ) : (
-              <div className="text-center space-y-5 py-2 sm:py-4">
-                <div className="space-y-2">
-                  <h3 className="text-2xl font-black text-foreground uppercase tracking-normal">Pagamento Pendente</h3>
-                  <p className="text-sm text-muted-foreground">Pague pelo QR Code ou pelo código PIX.</p>
-                </div>
-
-                <div className="relative inline-block group">
-                  <div className="relative bg-qr-paper rounded-lg p-4 sm:p-6 shadow-2xl">
-                    {pix?.qrCodeImage ? (
-                      <img src={pix.qrCodeImage} alt="QR Code PIX" className="size-48 sm:size-56" />
-                    ) : pix?.copyPaste ? (
-                      <QRCodeSVG value={pix.copyPaste} size={224} level="M" className="size-48 sm:size-56" />
-                    ) : (
-                      <QrCode className="size-48 sm:size-56 text-primary-foreground" strokeWidth={1.5} />
-                    )}
-                    <div className="absolute -top-3 -right-3 bg-primary text-primary-foreground size-12 rounded-full flex items-center justify-center shadow-lg border-4 border-brand">
-                      <Zap className="size-6 fill-current" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="text-[10px] uppercase font-black text-muted-foreground tracking-normal">Pix Copia e Cola</div>
-                  <div className="relative group">
-                    <div className="bg-brand-2 rounded-lg p-5 text-[11px] font-mono break-all text-left text-muted-foreground border border-border max-h-24 overflow-y-auto custom-scrollbar leading-relaxed">
-                      {pix?.copyPaste || "Gerando..."}
-                    </div>
-                    <Button variant="ghost"
-                      onClick={async () => {
-                        if (!pix?.copyPaste) return;
-                        const text = pix.copyPaste;
-                        let ok = false;
-                        try {
-                          if (navigator.clipboard?.writeText) {
-                            await navigator.clipboard.writeText(text);
-                            ok = true;
-                          }
-                        } catch {
-                          ok = false;
-                        }
-                        if (!ok) {
-                          // Fallback for in-app browsers (Instagram, TikTok, etc.)
-                          try {
-                            const ta = document.createElement("textarea");
-                            ta.value = text;
-                            ta.setAttribute("readonly", "");
-                            ta.style.position = "fixed";
-                            ta.style.top = "0";
-                            ta.style.left = "0";
-                            ta.style.opacity = "0";
-                            document.body.appendChild(ta);
-                            ta.focus();
-                            ta.select();
-                            ta.setSelectionRange(0, text.length);
-                            ok = document.execCommand("copy");
-                            document.body.removeChild(ta);
-                          } catch {
-                            ok = false;
-                          }
-                        }
-                        setPixCopied(true); // libera o fluxo de qualquer forma
-                        if (ok) {
-                          toast.success("PIX copia e cola copiado! Agora é só pagar.");
-                        } else {
-                          toast.warning("Não consegui copiar automaticamente. Segure o código acima e copie manualmente.");
-                        }
-                      }}
-                      className="mt-3 w-full min-h-12 rounded-lg bg-primary text-primary-foreground flex items-center justify-center gap-2 px-3 text-sm font-black tracking-normal hover:brightness-110 transition-all shadow-lg active:scale-[0.98]"
-                    >
-                      {pixCopied ? <CheckCircle2 className="size-5" /> : <Copy className="size-5" />}
-                      {pixCopied ? "PIX copiado" : "Copiar PIX copia e cola"}
-                    </Button>
-                  </div>
-                </div>
-
-                <p className="text-xs text-muted-foreground">Depois de copiar, pague no seu banco. A confirmação é automática.</p>
-                <Button variant="ghost"
-                  onClick={close}
-                  className="w-full h-14 rounded-lg bg-surface text-muted-foreground hover:text-foreground font-bold uppercase text-sm tracking-normal disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  Voltar ao cassino
-                </Button>
-              </div>
+              "Escolha um valor"
+            )}
+          </button>
+          <p className="text-center text-[12.5px] text-muted-foreground">
+            O Pix precisa sair de uma conta no seu CPF.{" "}
+            <Link
+              to="/perfil"
+              search={{ aba: "limites" } as never}
+              onClick={close}
+              className="underline"
+            >
+              Definir limite de depósito
+            </Link>
+          </p>
+        </form>
+      ) : (
+        <div className="space-y-5">
+          <div className="mx-auto w-fit rounded-[14px] bg-qr-paper p-4">
+            {pix.qrCodeImage ? (
+              <img src={pix.qrCodeImage} alt="QR Code do Pix" className="size-52" />
+            ) : (
+              <QRCodeSVG value={pix.copyPaste} size={208} level="M" />
             )}
           </div>
+
+          <div>
+            <p className="mb-1.5 text-[13.5px] font-semibold">Pix copia e cola</p>
+            <p className="thin-scrollbar max-h-20 overflow-y-auto break-all rounded-[10px] border border-border bg-surface p-3 font-mono text-[12px] leading-relaxed text-muted-foreground">
+              {pix.copyPaste}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={async () => {
+              const ok = await copyText(pix.copyPaste);
+              if (ok) {
+                setCopied(true);
+                toast.success("Código copiado. Cole no app do seu banco.");
+                setTimeout(() => setCopied(false), 3000);
+              } else toast.error("Não deu para copiar. Selecione o código e copie manualmente.");
+            }}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-pix text-[16px] font-bold text-pix-foreground hover:brightness-110"
+          >
+            {copied ? (
+              <>
+                <Check className="size-5" /> Copiado
+              </>
+            ) : (
+              <>
+                <Copy className="size-5" /> Copiar código
+              </>
+            )}
+          </button>
+
+          <div
+            className="flex items-center justify-center gap-2 text-[13.5px] text-muted-foreground"
+            role="status"
+          >
+            <Loader2 className="size-4 animate-spin" /> Aguardando o pagamento
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setPix(null)}
+            className="mx-auto flex items-center gap-1.5 text-[13.5px] text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="size-4" /> Mudar o valor
+          </button>
+          <p className="text-center text-[12.5px] text-muted-foreground">
+            Pode fechar esta janela: o saldo entra mesmo assim quando o pagamento cair. Saldo atual:{" "}
+            {formatBRL(wallet.data?.balance)}.
+          </p>
         </div>
-      </DialogContent>
-    </Dialog>
+      )}
+    </AuthSheet>
   );
 }

@@ -1,87 +1,77 @@
 import { Link } from "@tanstack/react-router";
 import { Logo } from "./logo";
 
-const cols = [
+const cols: { title: string; links: (readonly [string, string, string?])[] }[] = [
   {
-    title: "Jogar",
+    title: "Cassino",
     links: [
-      { to: "/cassino", label: "Cassino" },
-      { to: "/slots", label: "Slots" },
-      { to: "/ao-vivo", label: "Ao Vivo" },
-      { to: "/torneios", label: "Torneios" },
+      ["/cassino", "Todos os jogos"],
+      ["/slots", "Slots"],
+      ["/ao-vivo", "Cassino ao vivo"],
+      ["/esportes", "Esportes"],
     ],
   },
   {
-    title: "Conta",
+    title: "Sua conta",
     links: [
-      { to: "/login", label: "Entrar" },
-      { to: "/registro", label: "Cadastrar" },
-      { to: "/deposito", label: "Depósito" },
-      { to: "/saque", label: "Saque" },
+      ["/perfil", "Minha conta"],
+      ["/historico", "Extrato"],
+      ["/saque", "Sacar"],
+      ["/perfil", "Limites de jogo", "limites"],
     ],
   },
   {
-    title: "Legal",
+    title: "Informações",
     links: [
-      { to: "/legal/termos", label: "Termos de Uso" },
-      { to: "/legal/privacidade", label: "Privacidade" },
-      { to: "/legal/jogo-responsavel", label: "Jogo Responsável" },
+      ["/legal/termos", "Termos de uso"],
+      ["/legal/privacidade", "Privacidade"],
+      ["/legal/jogo-responsavel", "Jogo responsável"],
     ],
   },
-] as const;
+];
 
 export function Footer() {
   return (
-    <footer className="mt-8 border-t border-border bg-sidebar">
-      <div className="mx-auto max-w-[1600px] px-4 py-10 md:px-6">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-          {cols.map((c) => (
-            <div key={c.title}>
-              <h4 className="mb-3 text-[11px] font-semibold text-muted-foreground">
-                {c.title}
-              </h4>
-              <ul className="space-y-2 text-sm">
-                {c.links.map((l) => (
-                  <li key={l.to + l.label}>
-                    <Link to={l.to} className="text-foreground/70 transition-colors hover:text-primary">
-                      {l.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-          <div>
-            <h4 className="mb-3 text-[11px] font-semibold text-muted-foreground">
-              Suporte
-            </h4>
-            <ul className="space-y-2 text-sm text-foreground/70">
-              <li>Jogo responsável</li>
-              <li>Depósitos via PIX</li>
-              <li>Valores em reais</li>
+    <footer className="mt-12 border-t border-border bg-sidebar">
+      <div className="mx-auto grid max-w-[1600px] gap-10 px-4 py-10 md:grid-cols-[1.3fr_repeat(3,1fr)] md:px-6">
+        <div className="max-w-sm space-y-3">
+          <Logo />
+          <p className="text-[13px] leading-relaxed text-muted-foreground">
+            Apostas envolvem risco de perda financeira e não são investimento. Defina limites de
+            depósito e de perda na sua conta e pare quando quiser.
+          </p>
+          <div className="flex items-center gap-2 pt-1">
+            <span className="grid size-9 place-items-center rounded-full border-2 border-destructive font-display text-[15px] font-bold text-destructive">
+              18+
+            </span>
+            <span className="text-[12.5px] leading-snug text-muted-foreground">
+              Proibido para menores de 18 anos.
+            </span>
+          </div>
+        </div>
+        {cols.map((c) => (
+          <div key={c.title}>
+            <p className="mb-3 text-[13px] font-semibold text-foreground/90">{c.title}</p>
+            <ul className="space-y-2 text-[14px]">
+              {c.links.map(([to, label, aba]) => (
+                <li key={label}>
+                  <Link
+                    to={to}
+                    search={(aba ? { aba } : undefined) as never}
+                    className="text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    {label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
-        </div>
-
-        <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-6">
-          <div className="flex items-center gap-2">
-            {["PIX", "+18", "SSL", "RNG"].map((b) => (
-              <div
-                key={b}
-                className={
-                  b === "+18"
-                    ? "rounded-md bg-destructive px-3 py-1.5 text-xs font-bold text-destructive-foreground"
-                    : "rounded-md border border-border bg-surface px-3 py-1.5 text-xs font-bold text-foreground/80"
-                }
-              >
-                {b}
-              </div>
-            ))}
-          </div>
-          <Logo />
-        </div>
-        <p className="mt-4 text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} apostamaxy — Jogue com responsabilidade. Proibido para menores de 18 anos.
+        ))}
+      </div>
+      <div className="border-t border-border">
+        <p className="mx-auto max-w-[1600px] px-4 py-5 text-[12.5px] text-muted-foreground md:px-6">
+          © {new Date().getFullYear()} apostamaxy. Se o jogo deixou de ser diversão, procure ajuda:
+          o CVV atende pelo 188, todos os dias.
         </p>
       </div>
     </footer>

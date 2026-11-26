@@ -1,64 +1,35 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { SiteShell } from "@/components/layout/site-shell";
-import { CategoryNav } from "@/components/casino/category-nav";
-import { CatalogHeader, GameGrid, LoadMore, InlineSpinner } from "@/components/casino/catalog-grid";
-import { usePFGames, usePFLaunch } from "@/hooks/use-pf-launch";
-import { splitPFGamesByCategory } from "@/lib/pf-game-classification";
+import {
+  CatalogPage,
+  parseCatalogSearch,
+  type CatalogSearch,
+} from "@/components/casino/catalog-page";
+import { pageMeta } from "@/lib/page-meta";
 
 export const Route = createFileRoute("/ao-vivo")({
+  validateSearch: (search: Record<string, unknown>): CatalogSearch => parseCatalogSearch(search),
   head: () => ({
-    meta: [
-      { title: "Cassino Ao Vivo — Mesas com crupiês reais | apostamaxy" },
-      { name: "description", content: "Roleta, blackjack, bacará e game shows ao vivo com crupiês reais transmitidos em alta definição." },
-      { property: "og:title", content: "Cassino Ao Vivo | apostamaxy" },
-      { property: "og:description", content: "Mesas ao vivo com crupiês reais em alta definição." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
+    meta: pageMeta(
+      "Cassino ao vivo | apostamaxy",
+      "Roleta brasileira, Bac Bo, Crazy Time e mesas com crupiê ao vivo.",
+    ),
   }),
   component: Page,
 });
 
 function Page() {
-  const [q, setQ] = useState("");
-  const [visibleCount, setVisibleCount] = useState(60);
-  const gamesQ = usePFGames(undefined, { limit: 900 });
-  const { play, launchingCode } = usePFLaunch();
-
-  const live = useMemo(() => {
-    const list = splitPFGamesByCategory(gamesQ.data ?? []).live;
-    const term = q.trim().toLowerCase();
-    if (!term) return list;
-    return list.filter(
-      (g) => g.name.toLowerCase().includes(term) || g.provider.name.toLowerCase().includes(term),
-    );
-  }, [gamesQ.data, q]);
-
-  const visible = live.slice(0, visibleCount);
-  const remaining = live.length - visible.length;
-
+  const search = Route.useSearch();
+  const navigate = useNavigate({ from: "/ao-vivo" });
   return (
     <SiteShell>
-      <div className="aurora mx-auto max-w-[1600px] overflow-x-hidden space-y-4 px-2.5 py-3 md:space-y-6 md:px-6 md:py-6">
-        <CatalogHeader
-          title="Cassino Ao Vivo"
-          subtitle={gamesQ.isLoading ? "Carregando mesas…" : `${live.length} mesas com crupiês reais`}
-          q={q}
-          onQ={setQ}
-          placeholder="Buscar mesa ou provedor…"
-        />
-        <CategoryNav active="Ao Vivo" />
-        <GameGrid
-          games={visible}
-          loading={gamesQ.isLoading}
-          launchingCode={launchingCode}
-          onPlay={play}
-          emptyLabel="Nenhuma mesa encontrada."
-        />
-        {remaining > 0 && <LoadMore remaining={remaining} onClick={() => setVisibleCount((c) => c + 60)} />}
-        {gamesQ.isFetching && !gamesQ.isLoading && <InlineSpinner />}
-      </div>
+      <CatalogPage
+        title="Cassino ao vivo"
+        nav="aovivo"
+        fixedCategory="live"
+        search={search}
+        onSearch={(next) => navigate({ search: next, replace: true })}
+      />
     </SiteShell>
   );
 }
