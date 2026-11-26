@@ -9,6 +9,7 @@ export interface Payment {
   type: string;
   status: string;
   amount: number;
+  fee?: number;
   description: string | null;
   created_at: string;
   kyc_required?: boolean | null;
@@ -56,6 +57,11 @@ export function PaymentRow({ payment: p }: { payment: Payment }) {
         <div className="min-w-0 flex-1">
           <p className="text-[15px] font-semibold">{deposit ? "Depósito Pix" : "Saque Pix"}</p>
           <p className="text-[13px] text-muted-foreground">{formatWhen(p.created_at)}</p>
+          {!deposit && !!p.fee && p.fee > 0 && (
+            <p className="num text-[13px] text-muted-foreground">
+              Você recebe {formatBRL(p.amount - p.fee)} (taxa de {formatBRL(p.fee)})
+            </p>
+          )}
         </div>
         <div className="text-right">
           <p className="num font-display text-[19px] font-bold">

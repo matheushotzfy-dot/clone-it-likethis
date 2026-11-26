@@ -1,81 +1,71 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { assertAdmin } from "./admin-guard";
 
-const ALLOWED_KEYS = [
-  "veopag_client_id",
-  "veopag_client_secret",
-  "veopag_webhook_signature",
-] as const;
+const KEYS = ["veopag_client_id", "veopag_client_secret", "veopag_webhook_signature"] as const;
+type Key = (typeof KEYS)[number];
 
-type AllowedKey = (typeof ALLOWED_KEYS)[number];
-
-export type GatewayCredentials = Record<AllowedKey, string>;
-
-async function assertAdmin(supabase: {
-  from: (t: string) => {
-    select: (c: string) => {
-      eq: (k: string, v: string) => {
-        eq: (k: string, v: string) => {
-          maybeSingle: () => Promise<{ data: { role: string } | null }>;
-        };
-      };
-    };
-  };
-}, userId: string) {
-  const { data } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .eq("role", "admin")
-    .maybeSingle();
-  if (!data) throw new Error("Acesso negado");
+export interface CredentialStatus {
+  set: boolean;
+  hint: string;
 }
 
+/** Segredos nunca voltam inteiros para o navegador: só se existem e os 4 últimos caracteres. */
 export const getGatewayCredentials = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<GatewayCredentials> => {
-    const { supabase, userId } = context;
-    await assertAdmin(supabase as never, userId);
-    const { data } = await supabase
+  .handler(async ({ context }): Promise<Record<Key, CredentialStatus>> => {
+    await assertAdmin(context.supabase, context.userId);
+    const { data } = await context.supabase
       .from("gateway_credentials")
-      .select("key,value");
-    const out: GatewayCredentials = {
-      veopag_client_id: "",
-      veopag_client_secret: "",
-      veopag_webhook_signature: "",
-    };
-    for (const row of (data ?? []) as { key: string; value: string | null }[]) {
-      if ((ALLOWED_KEYS as readonly string[]).includes(row.key)) {
-        out[row.key as AllowedKey] = row.value ?? "";
-      }
+      .select("key,value")
+      .in("key", [...KEYS]);
+    const out = Object.fromEntries(KEYS.map((k) => [k, { set: false, hint: "" }])) as Record<
+      Key,
+      CredentialStatus
+    >;
+    for (const row of data ?? []) {
+      const v = row.value ?? "";
+      if (v)
+        out[row.key as Key] = {
+          set: true,
+          hint: row.key === "veopag_client_id" ? v : `…${v.slice(-4)}`,
+        };
     }
     return out;
   });
 
-const updateSchema = z
-  .object({
-    veopag_client_id: z.string().max(200).optional(),
-    veopag_client_secret: z.string().max(500).optional(),
-    veopag_webhook_signature: z.string().max(500).optional(),
-  })
-  .strict();
-
+/** Campo vazio = não mexe. Para apagar um valor, use clear. */
 export const updateGatewayCredentials = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => updateSchema.parse(d))
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        veopag_client_id: z.string().trim().max(200).optional(),
+        veopag_client_secret: z.string().trim().max(500).optional(),
+        veopag_webhook_signature: z.string().trim().max(500).optional(),
+        clear: z.array(z.enum(KEYS)).optional(),
+      })
+      .strict()
+      .parse(d),
+  )
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-    await assertAdmin(supabase as never, userId);
-    const rows = Object.entries(data).map(([key, value]) => ({
-      key,
-      value: (value ?? "") as string,
-      updated_at: new Date().toISOString(),
+    await assertAdmin(context.supabase, context.userId);
+    const now = new Date().toISOString();
+    const rows = KEYS.filter((k) => data[k]).map((k) => ({
+      key: k,
+      value: data[k] as string,
+      updated_at: now,
     }));
-    if (rows.length === 0) return { ok: true };
-    const { error } = await supabase
+    for (const k of data.clear ?? []) rows.push({ key: k, value: "", updated_at: now });
+    if (!rows.length) return { ok: true };
+    const { error } = await context.supabase
       .from("gateway_credentials")
       .upsert(rows, { onConflict: "key" });
     if (error) throw new Error(error.message);
+    await context.supabase.rpc("admin_log", {
+      p_action: "gateway.update",
+      p_details: { keys: rows.map((r) => r.key) } as never,
+    });
     return { ok: true };
   });

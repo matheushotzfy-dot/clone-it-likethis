@@ -46,7 +46,21 @@ export function formatDateTime(iso: string | null | undefined) {
   return iso ? dateTime.format(new Date(iso)) : "";
 }
 export function formatDate(iso: string | null | undefined) {
-  return iso ? dateOnly.format(new Date(iso)) : "";
+  if (!iso) return "";
+  // Data pura (ex.: nascimento) não tem fuso: converter para Date jogaria para o dia anterior no Brasil.
+  const pure = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (pure) return `${pure[3]}/${pure[2]}/${pure[1]}`;
+  return dateOnly.format(new Date(iso));
+}
+
+/** Idade completa hoje a partir de uma data AAAA-MM-DD. */
+export function ageOnClient(birth: string, ref = new Date()): number | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(birth);
+  if (!m) return null;
+  const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  let age = ref.getFullYear() - y;
+  if (ref.getMonth() + 1 < mo || (ref.getMonth() + 1 === mo && ref.getDate() < d)) age--;
+  return age;
 }
 export function formatTime(iso: string | null | undefined) {
   return iso ? timeOnly.format(new Date(iso)) : "";

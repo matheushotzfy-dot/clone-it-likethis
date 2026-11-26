@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { assertAdmin } from "./admin-guard";
 
 export type Banner = {
   id: string;
@@ -12,29 +13,25 @@ export type Banner = {
   created_at: string;
 };
 
-async function assertAdmin(supabase: any, userId: string) {
-  const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
-  if (!data) throw new Error("Acesso negado");
-}
-
-export const listBannersPublic = createServerFn({ method: "GET" })
-  .handler(async (): Promise<Banner[]> => {
+export const listBannersPublic = createServerFn({ method: "GET" }).handler(
+  async (): Promise<Banner[]> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await supabaseAdmin
       .from("banners")
       .select("*")
       .eq("active", true)
       .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(8);
     return (data ?? []) as Banner[];
-  });
+  },
+);
 
 export const listBannersAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<Banner[]> => {
-    const { supabase, userId } = context;
-    await assertAdmin(supabase, userId);
-    const { data, error } = await supabase
+    await assertAdmin(context.supabase, context.userId);
+    const { data, error } = await context.supabase
       .from("banners")
       .select("*")
       .order("sort_order", { ascending: true })
@@ -43,40 +40,53 @@ export const listBannersAdmin = createServerFn({ method: "GET" })
     return (data ?? []) as Banner[];
   });
 
-const upsertSchema = z.object({
-  id: z.string().uuid().optional(),
-  image_url: z.string().url().max(2000),
-  title: z.string().trim().max(120).optional().nullable(),
-  link_url: z.string().url().max(2000).optional().nullable(),
-  sort_order: z.number().int().min(0).max(9999).default(0),
-  active: z.boolean().default(true),
-});
+// Só https ou caminho do próprio site: evita link "javascript:" no carrossel.
+const httpsUrl = z
+  .string()
+  .trim()
+  .max(2000)
+  .regex(/^https:\/\/[^\s]+$/i, "Use um endereço que comece com https://");
+const linkUrl = z
+  .string()
+  .trim()
+  .max(2000)
+  .regex(
+    /^(https:\/\/[^\s]+|\/[^\s/][^\s]*|\/)$/i,
+    "Use um caminho do site (ex.: /cassino) ou um endereço https://",
+  );
 
 export const upsertBanner = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => upsertSchema.parse(d))
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid().optional(),
+        image_url: httpsUrl,
+        title: z.string().trim().max(120).optional().nullable(),
+        link_url: linkUrl.optional().nullable().or(z.literal("")),
+        sort_order: z.number().int().min(0).max(9999).default(0),
+        active: z.boolean().default(true),
+      })
+      .parse(d),
+  )
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-    await assertAdmin(supabase, userId);
-    if (data.id) {
-      const { error } = await supabase.from("banners").update({
-        image_url: data.image_url,
-        title: data.title ?? null,
-        link_url: data.link_url ?? null,
-        sort_order: data.sort_order,
-        active: data.active,
-      }).eq("id", data.id);
-      if (error) throw new Error(error.message);
-    } else {
-      const { error } = await supabase.from("banners").insert({
-        image_url: data.image_url,
-        title: data.title ?? null,
-        link_url: data.link_url ?? null,
-        sort_order: data.sort_order,
-        active: data.active,
-      });
-      if (error) throw new Error(error.message);
-    }
+    await assertAdmin(context.supabase, context.userId);
+    const row = {
+      image_url: data.image_url,
+      title: data.title || null,
+      link_url: data.link_url || null,
+      sort_order: data.sort_order,
+      active: data.active,
+    };
+    const { error } = data.id
+      ? await context.supabase.from("banners").update(row).eq("id", data.id)
+      : await context.supabase.from("banners").insert(row);
+    if (error) throw new Error(error.message);
+    await context.supabase.rpc("admin_log", {
+      p_action: data.id ? "banner.update" : "banner.create",
+      p_target_id: data.id,
+      p_details: { title: row.title, active: row.active } as never,
+    });
     return { ok: true };
   });
 
@@ -84,9 +94,9 @@ export const deleteBanner = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-    await assertAdmin(supabase, userId);
-    const { error } = await supabase.from("banners").delete().eq("id", data.id);
+    await assertAdmin(context.supabase, context.userId);
+    const { error } = await context.supabase.from("banners").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
+    await context.supabase.rpc("admin_log", { p_action: "banner.delete", p_target_id: data.id });
     return { ok: true };
   });

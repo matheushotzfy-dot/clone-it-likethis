@@ -1,181 +1,212 @@
-import { pageMeta } from "@/lib/page-meta";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { listUsers, deleteUsersBulkAdmin } from "@/lib/admin.functions";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "sonner";
-import { Trash2, ChevronRight } from "lucide-react";
+import { Search } from "lucide-react";
+import { listPlayers } from "@/lib/admin.functions";
+import {
+  Empty,
+  ErrorBox,
+  Money,
+  PageHeader,
+  Pager,
+  Panel,
+  Segmented,
+  StatusPill,
+  Table,
+  Td,
+} from "@/components/admin/ui";
+import { formatWhen } from "@/lib/format";
+import { maskCPF } from "@/lib/validations";
+
+type Filter = "all" | "balance" | "depositors" | "frozen" | "new";
+type Sort = "recent" | "balance" | "deposits" | "ggr" | "last_bet";
 
 export const Route = createFileRoute("/admin/usuarios")({
-  head: () => ({ meta: pageMeta('Usuários administrativos — apostamaxy', 'Usuários administrativos da apostamaxy. Área de gestão autorizada.') }), component: Page });
+  validateSearch: (
+    s: Record<string, unknown>,
+  ): { q?: string; filtro?: Filter; ordem?: Sort; pagina?: number } => ({
+    q: typeof s.q === "string" ? s.q : undefined,
+    filtro: (["balance", "depositors", "frozen", "new"].includes(String(s.filtro))
+      ? s.filtro
+      : undefined) as Filter | undefined,
+    ordem: (["balance", "deposits", "ggr", "last_bet"].includes(String(s.ordem))
+      ? s.ordem
+      : undefined) as Sort | undefined,
+    pagina: typeof s.pagina === "number" ? s.pagina : undefined,
+  }),
+  head: () => ({ meta: [{ title: "Jogadores | admin" }] }),
+  component: Page,
+});
 
 function Page() {
-  const [search, setSearch] = useState("");
-  const [pageSize, setPageSize] = useState<10 | 25 | 50 | "all">(25);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const fn = useServerFn(listUsers);
-  const delFn = useServerFn(deleteUsersBulkAdmin);
-  const qc = useQueryClient();
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["admin-users", search],
-    queryFn: () => fn({ data: { search: search || undefined } }),
-    staleTime: 10_000,
-    refetchOnWindowFocus: false,
+  const search = Route.useSearch();
+  const navigate = useNavigate({ from: "/admin/usuarios" });
+  const [term, setTerm] = useState(search.q ?? "");
+  const fetchPlayers = useServerFn(listPlayers);
+  const filter = search.filtro ?? "all";
+  const sort = search.ordem ?? "recent";
+  const page = search.pagina ?? 0;
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if ((search.q ?? "") !== term.trim())
+        navigate({
+          search: (s) => ({ ...s, q: term.trim() || undefined, pagina: undefined }),
+          replace: true,
+        });
+    }, 400);
+    return () => clearTimeout(t);
+  }, [term]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const q = useQuery({
+    queryKey: ["admin-players", search.q, filter, sort, page],
+    queryFn: () => fetchPlayers({ data: { q: search.q, filter, sort, page } }),
+    placeholderData: keepPreviousData,
   });
-
-  const allUsers = (data ?? []) as any[];
-  const users = pageSize === "all" ? allUsers : allUsers.slice(0, pageSize);
-  const allIds = useMemo(() => users.map((u) => u.id), [users]);
-  const allSelected = allIds.length > 0 && allIds.every((id) => selected.has(id));
-  const someSelected = selected.size > 0 && !allSelected;
-
-  const toggle = (id: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  };
-
-  const toggleAll = () => {
-    setSelected(allSelected ? new Set() : new Set(allIds));
-  };
-
-  const delMut = useMutation({
-    mutationFn: (ids: string[]) => delFn({ data: { userIds: ids } }),
-    onSuccess: (r) => {
-      toast.success(`${r.deleted} usuário(s) apagado(s)`);
-      setSelected(new Set());
-      qc.invalidateQueries({ queryKey: ["admin-users"] });
-      qc.invalidateQueries({ queryKey: ["admin-kpi"] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const onBulkDelete = () => {
-    if (!selected.size) return;
-    if (!confirm(`Apagar ${selected.size} usuário(s) selecionado(s)? Esta ação NÃO pode ser desfeita.`)) return;
-    delMut.mutate([...selected]);
-  };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h1 className="text-2xl font-bold">Usuários</h1>
-        <Input placeholder="Buscar por nome, usuário ou CPF" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm flex-1 min-w-[200px]" />
+    <div>
+      <PageHeader
+        title="Jogadores"
+        description="Busque por nome, usuário, CPF, celular, e-mail ou id. Clique no jogador para ver tudo o que ele fez."
+      />
+
+      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
+        <label className="relative block lg:w-[360px]">
+          <span className="sr-only">Buscar jogador</span>
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={term}
+            onChange={(e) => setTerm(e.target.value)}
+            placeholder="Nome, CPF, e-mail, celular…"
+            className="field-input h-11 pl-10"
+          />
+        </label>
+        <Segmented<Filter>
+          value={filter}
+          onChange={(v) =>
+            navigate({
+              search: (s) => ({ ...s, filtro: v === "all" ? undefined : v, pagina: undefined }),
+              replace: true,
+            })
+          }
+          options={[
+            { id: "all", label: "Todos" },
+            { id: "balance", label: "Com saldo" },
+            { id: "depositors", label: "Depositantes" },
+            { id: "new", label: "Novos (7 dias)" },
+            { id: "frozen", label: "Suspensos" },
+          ]}
+        />
+        <label className="lg:ml-auto">
+          <span className="sr-only">Ordenar</span>
+          <select
+            value={sort}
+            onChange={(e) =>
+              navigate({
+                search: (s) => ({
+                  ...s,
+                  ordem: e.target.value === "recent" ? undefined : (e.target.value as Sort),
+                  pagina: undefined,
+                }),
+                replace: true,
+              })
+            }
+            className="field-input h-11 lg:w-[220px]"
+          >
+            <option value="recent">Mais recentes</option>
+            <option value="balance">Maior saldo</option>
+            <option value="deposits">Mais depositou</option>
+            <option value="ggr">Maior GGR</option>
+            <option value="last_bet">Apostou por último</option>
+          </select>
+        </label>
       </div>
 
-      <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground flex-wrap">
-        <span>Mostrando <b className="text-foreground">{users.length}</b> de <b className="text-foreground">{allUsers.length}</b></span>
-        <div className="flex items-center gap-2">
-          <span className="font-bold uppercase">Por página:</span>
-          <div className="flex gap-1 bg-muted rounded-md p-1">
-            {([10, 25, 50, "all"] as const).map((n) => (
-              <button
-                key={String(n)}
-                onClick={() => setPageSize(n)}
-                className={`px-2.5 py-1 rounded text-[11px] font-bold uppercase ${pageSize === n ? "bg-primary text-primary-foreground" : "hover:text-foreground"}`}
-              >
-                {n === "all" ? "Todos" : n}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-
-      {selected.size > 0 && (
-        <div className="flex items-center justify-between gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm">
-          <span className="font-bold">{selected.size} selecionado(s)</span>
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => setSelected(new Set())}>Limpar</Button>
-            <Button size="sm" variant="destructive" disabled={delMut.isPending} onClick={onBulkDelete}>
-              <Trash2 className="size-4 mr-1" /> Apagar
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {error && <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">Erro: {(error as Error).message} <button onClick={() => refetch()} className="ml-2 font-bold underline">tentar novamente</button></div>}
-
-      {/* Desktop: table */}
-      <div className="hidden md:block bg-card border border-border rounded-xl overflow-x-auto shadow-lg shadow-background/20">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50 text-left">
-            <tr>
-              <th className="px-3 py-3 w-10">
-                <Checkbox checked={allSelected} onCheckedChange={toggleAll} aria-label="Selecionar todos" data-state={someSelected ? "indeterminate" : allSelected ? "checked" : "unchecked"} />
-              </th>
-              <th className="px-4 py-3">Usuário</th>
-              <th className="px-4 py-3">Email</th>
-              <th className="px-4 py-3">Nome</th>
-              <th className="px-4 py-3">CPF</th>
-              <th className="px-4 py-3">Telefone</th>
-              <th className="px-4 py-3">Saldo</th>
-              <th className="px-4 py-3">KYC</th>
-              <th className="px-4 py-3">Cadastro</th>
-              <th className="px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading && (<tr><td colSpan={10} className="text-center py-8 text-muted-foreground">Carregando usuários...</td></tr>)}
-            {!isLoading && users.length === 0 && (<tr><td colSpan={10} className="text-center py-8 text-muted-foreground">Nenhum usuário</td></tr>)}
-            {users.map((u: any) => (
-              <tr key={u.id} className={`border-t border-border hover:bg-muted/30 ${selected.has(u.id) ? "bg-primary/5" : ""}`}>
-                <td className="px-3 py-3">
-                  <Checkbox checked={selected.has(u.id)} onCheckedChange={() => toggle(u.id)} aria-label="Selecionar" />
-                </td>
-                <td className="px-4 py-3 font-mono">{u.username ?? "—"}</td>
-                <td className="px-4 py-3 text-xs">{u.email || "—"}</td>
-                <td className="px-4 py-3">{u.full_name ?? "—"}</td>
-                <td className="px-4 py-3 font-mono text-xs">{u.cpf ?? "—"}</td>
-                <td className="px-4 py-3 font-mono text-xs">{u.phone ?? "—"}</td>
-                <td className="px-4 py-3 font-bold text-primary">R$ {Number(u.balance).toFixed(2).replace(".", ",")}</td>
-                <td className="px-4 py-3"><span className={`text-xs uppercase font-bold ${u.kyc_status === "approved" ? "text-success" : "text-muted-foreground"}`}>{u.kyc_status}</span></td>
-                <td className="px-4 py-3 text-muted-foreground">{new Date(u.created_at).toLocaleDateString("pt-BR")}</td>
-                <td className="px-4 py-3 text-right">
-                  <Link to="/admin/usuarios/$id" params={{ id: u.id }} className="text-primary font-bold hover:underline">Ver</Link>
-                </td>
+      {q.error ? (
+        <ErrorBox error={q.error} onRetry={() => q.refetch()} />
+      ) : (
+        <Panel
+          flush
+          title={q.data ? `${q.data.total.toLocaleString("pt-BR")} jogadores` : "Jogadores"}
+        >
+          <Table
+            loading={q.isLoading}
+            head={[
+              "Jogador",
+              "Contato",
+              "Saldo",
+              "Depositado",
+              "Sacado",
+              "GGR",
+              "Última aposta",
+              "Situação",
+            ]}
+            empty={
+              q.data && q.data.players.length === 0 ? (
+                <Empty>Nenhum jogador com esses filtros.</Empty>
+              ) : null
+            }
+          >
+            {q.data?.players.map((p) => (
+              <tr key={p.user_id} className="hover:bg-surface-2/40">
+                <Td>
+                  <Link
+                    to="/admin/usuarios/$id"
+                    params={{ id: p.user_id! }}
+                    className="group block max-w-[240px]"
+                  >
+                    <span className="block truncate font-semibold group-hover:text-primary">
+                      {p.full_name || p.username}
+                    </span>
+                    <span className="num block truncate text-[12.5px] text-muted-foreground">
+                      {p.cpf ? maskCPF(p.cpf) : "sem CPF"}, desde {formatWhen(p.created_at)}
+                    </span>
+                  </Link>
+                </Td>
+                <Td>
+                  <span className="block max-w-[200px] truncate text-[13px]">{p.email}</span>
+                  <span className="num block text-[12.5px] text-muted-foreground">{p.phone}</span>
+                </Td>
+                <Td right>
+                  <Money value={p.balance} className="font-semibold" />
+                </Td>
+                <Td right>
+                  <Money value={p.deposits} />
+                </Td>
+                <Td right>
+                  <Money value={p.withdrawn} />
+                  {p.withdraw_pending > 0 && (
+                    <span className="num block text-[12px] text-gold">
+                      +{p.withdraw_pending.toLocaleString("pt-BR")} pendente
+                    </span>
+                  )}
+                </Td>
+                <Td right>
+                  <Money value={p.ggr} />
+                </Td>
+                <Td>
+                  <span className="text-[13px] text-muted-foreground">
+                    {p.last_bet_at ? formatWhen(p.last_bet_at) : "nunca"}
+                  </span>
+                </Td>
+                <Td>
+                  <StatusPill status={p.is_frozen ? "frozen" : "active"} />
+                </Td>
               </tr>
             ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Mobile: cards */}
-      <div className="md:hidden space-y-2">
-        {users.length > 0 && (
-          <label className="flex items-center gap-2 px-1 text-xs text-muted-foreground">
-            <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
-            Selecionar todos ({users.length})
-          </label>
-        )}
-        {isLoading && <div className="text-center py-8 text-muted-foreground text-sm">Carregando...</div>}
-        {!isLoading && users.length === 0 && <div className="text-center py-8 text-muted-foreground text-sm">Nenhum usuário</div>}
-        {users.map((u: any) => (
-          <div key={u.id} className={`rounded-xl border bg-card p-3 ${selected.has(u.id) ? "border-primary/50 bg-primary/5" : "border-border"}`}>
-            <div className="flex items-start gap-3">
-              <Checkbox className="mt-1" checked={selected.has(u.id)} onCheckedChange={() => toggle(u.id)} aria-label="Selecionar" />
-              <Link to="/admin/usuarios/$id" params={{ id: u.id }} className="flex-1 min-w-0 flex items-center gap-2">
-                <div className="flex-1 min-w-0">
-                  <div className="font-bold truncate">{u.full_name || u.username || "—"}</div>
-                  <div className="text-xs text-muted-foreground truncate">{u.email || u.username}</div>
-                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-                    <span className="font-bold text-primary">R$ {Number(u.balance).toFixed(2).replace(".", ",")}</span>
-                    <span className={`uppercase font-bold ${u.kyc_status === "approved" ? "text-success" : "text-muted-foreground"}`}>{u.kyc_status}</span>
-                    <span className="text-muted-foreground">{new Date(u.created_at).toLocaleDateString("pt-BR")}</span>
-                  </div>
-                </div>
-                <ChevronRight className="size-5 text-muted-foreground shrink-0" />
-              </Link>
-            </div>
-          </div>
-        ))}
-      </div>
+          </Table>
+          {q.data && (
+            <Pager
+              page={page}
+              pageSize={q.data.pageSize}
+              total={q.data.total}
+              onPage={(pg) => navigate({ search: (s) => ({ ...s, pagina: pg || undefined }) })}
+            />
+          )}
+        </Panel>
+      )}
     </div>
   );
 }

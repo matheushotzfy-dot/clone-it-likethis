@@ -1,299 +1,991 @@
-import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getUserDetail, adjustBalance, updateUserAdmin, deleteUserAdmin, setTransactionStatus } from "@/lib/admin.functions";
-import { useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { FileText, ShieldAlert, ShieldCheck, Snowflake, Trash2 } from "lucide-react";
+import {
+  adjustBalance,
+  deletePlayer,
+  getPlayer,
+  listPlayerActivity,
+  listPlayerBets,
+  listPlayerLedger,
+  listPlayerPayments,
+  listPlayerRounds,
+  setTransactionStatus,
+  updatePlayer,
+} from "@/lib/admin.functions";
+import { requestKycForTransaction } from "@/lib/kyc.functions";
+import {
+  Empty,
+  ErrorBox,
+  LoadMore,
+  Money,
+  Panel,
+  Segmented,
+  Stat,
+  StatusPill,
+  Table,
+  Td,
+} from "@/components/admin/ui";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import {
+  formatBRL,
+  formatDate,
+  formatDateTime,
+  formatWhen,
+  newRequestId,
+  parseBRL,
+} from "@/lib/format";
+import { maskCPF, maskPhone } from "@/lib/validations";
+import { cn } from "@/lib/utils";
+
+type Tab = "extrato" | "cassino" | "esportes" | "pagamentos" | "atividade" | "limites";
 
 export const Route = createFileRoute("/admin/usuarios_/$id")({
-  head: () => ({ meta: pageMeta('Detalhes do usuário — apostamaxy', 'Detalhes do usuário da apostamaxy. Área de gestão autorizada.') }), component: Page });
+  validateSearch: (s: Record<string, unknown>): { aba?: Tab } => ({
+    aba: typeof s.aba === "string" ? (s.aba as Tab) : undefined,
+  }),
+  head: () => ({ meta: [{ title: "Jogador | admin" }] }),
+  component: Page,
+});
+
+const KIND: Record<string, string> = {
+  opening: "Saldo inicial",
+  deposit: "Depósito",
+  withdrawal_hold: "Saque pedido (reserva)",
+  withdrawal_release: "Saque devolvido",
+  casino_bet: "Aposta cassino",
+  casino_win: "Ganho cassino",
+  casino_refund: "Estorno cassino",
+  sports_stake: "Aposta esportiva",
+  sports_payout: "Prêmio esportivo",
+  sports_refund: "Aposta anulada",
+  adjustment: "Ajuste manual",
+};
 
 function Page() {
   const { id } = Route.useParams();
-  const navigate = useNavigate();
-  const fn = useServerFn(getUserDetail);
-  const adjust = useServerFn(adjustBalance);
-  const updFn = useServerFn(updateUserAdmin);
-  const delFn = useServerFn(deleteUserAdmin);
-  const txStatusFn = useServerFn(setTransactionStatus);
-  const qc = useQueryClient();
-  const { data, isLoading, error, refetch } = useQuery({ queryKey: ["admin-user", id], queryFn: () => fn({ data: { id } }), staleTime: 10_000, refetchOnWindowFocus: false });
-
-  const [delta, setDelta] = useState("");
-  const [reason, setReason] = useState("");
-  const [form, setForm] = useState<any>(null);
-
-  useEffect(() => {
-    if (data?.profile) setForm({
-      full_name: data.profile.full_name ?? "",
-      username: data.profile.username ?? "",
-      cpf: data.profile.cpf ?? "",
-      phone: data.profile.phone ?? "",
-      kyc_status: data.profile.kyc_status ?? "pending",
-      is_frozen: !!data.profile.is_frozen,
-      freeze_reason: data.profile.freeze_reason ?? "",
-    });
-  }, [data?.profile]);
-
-  const adjustMut = useMutation({
-    mutationFn: () => adjust({ data: { userId: id, delta: Number(delta), reason } }),
-    onSuccess: () => { toast.success("Saldo ajustado"); setDelta(""); setReason(""); qc.invalidateQueries({ queryKey: ["admin-user", id] }); },
-    onError: (e: any) => toast.error(e.message),
+  const { aba = "extrato" } = Route.useSearch();
+  const navigate = useNavigate({ from: "/admin/usuarios/$id" });
+  const fetchPlayer = useServerFn(getPlayer);
+  const q = useQuery({
+    queryKey: ["admin-player", id],
+    queryFn: () => fetchPlayer({ data: { id } }),
   });
+  const [dialog, setDialog] = useState<null | "adjust" | "freeze" | "edit" | "delete">(null);
 
-  const saveMut = useMutation({
-    mutationFn: () => updFn({ data: { userId: id, ...form } }),
-    onSuccess: () => { toast.success("Dados atualizados"); qc.invalidateQueries({ queryKey: ["admin-user", id] }); },
-    onError: (e: any) => toast.error(e.message),
-  });
-
-  const freezeMut = useMutation({
-    mutationFn: (vars: { v: boolean; reason?: string }) => updFn({ data: { userId: id, is_frozen: vars.v, freeze_reason: vars.v ? (vars.reason ?? null) : null } }),
-    onSuccess: (_d, vars) => { toast.success(vars.v ? "Conta congelada" : "Conta descongelada"); qc.invalidateQueries({ queryKey: ["admin-user", id] }); },
-    onError: (e: any) => toast.error(e.message),
-  });
-
-  const delMut = useMutation({
-    mutationFn: () => delFn({ data: { userId: id } }),
-    onSuccess: () => { toast.success("Usuário apagado"); navigate({ to: "/admin/usuarios" }); },
-    onError: (e: any) => toast.error(e.message),
-  });
-
-  const txMut = useMutation({
-    mutationFn: (vars: { id: string; status: "approved" | "rejected"; reason?: string }) => txStatusFn({ data: vars }),
-    onSuccess: () => { toast.success("Transação atualizada"); qc.invalidateQueries({ queryKey: ["admin-user", id] }); },
-    onError: (e: any) => toast.error(e.message),
-  });
-
-  if (isLoading || !data || !form) return <div className="space-y-4">{[96, 280, 220].map((h) => <div key={h} style={{ height: h }} className="animate-pulse rounded-xl border border-border bg-card" />)}</div>;
-  if (error) return <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-5 text-sm text-destructive">Erro ao abrir detalhes: {(error as Error).message}<button onClick={() => refetch()} className="ml-2 font-bold underline">tentar novamente</button></div>;
-  const p = data.profile;
-  if (!p) return <div>Usuário não encontrado. <Link to="/admin/usuarios" className="text-primary">Voltar</Link></div>;
-
-  const txs: any[] = data.transactions ?? [];
-  const sumBy = (fn: (t: any) => boolean) => txs.filter(fn).reduce((a, t) => a + Number(t.amount), 0);
-  const countBy = (fn: (t: any) => boolean) => txs.filter(fn).length;
-  const totalDeposited = sumBy(t => t.type === "deposit" && t.status === "approved");
-  const totalWithdrawn = sumBy(t => t.type === "withdrawal" && t.status === "approved");
-  const pendingWithdrawals = sumBy(t => t.type === "withdrawal" && t.status === "pending");
-  const pendingDeposits = sumBy(t => t.type === "deposit" && t.status === "pending");
-  const rejectedWithdrawals = sumBy(t => t.type === "withdrawal" && t.status === "rejected");
-  const totalBonus = sumBy(t => t.type === "bonus" && t.status === "approved");
-  const depositCount = countBy(t => t.type === "deposit" && t.status === "approved");
-  const withdrawCount = countBy(t => t.type === "withdrawal" && t.status === "approved");
-  const lastDeposit = txs.find(t => t.type === "deposit" && t.status === "approved");
-  const lastWithdraw = txs.find(t => t.type === "withdrawal" && t.status === "approved");
-  const fmt = (v: number) => "R$ " + v.toFixed(2).replace(".", ",");
-  const net = totalDeposited - totalWithdrawn;
+  if (q.error) return <ErrorBox error={q.error} onRetry={() => q.refetch()} />;
+  if (!q.data)
+    return (
+      <div className="space-y-3">
+        <div className="skeleton h-28 rounded-[12px]" />
+        <div className="skeleton h-64 rounded-[12px]" />
+      </div>
+    );
+  const { profile: p, summary: s } = q.data;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <Link to="/admin/usuarios" className="text-sm text-primary">← Voltar</Link>
-        <div className="flex gap-2 flex-wrap">
-          <Button variant={form.is_frozen ? "default" : "outline"} onClick={() => {
-            if (form.is_frozen) {
-              freezeMut.mutate({ v: false });
-            } else {
-              const reason = window.prompt("Motivo do congelamento (será exibido para o usuário):", "");
-              if (reason === null) return;
-              const trimmed = reason.trim();
-              if (!trimmed) { toast.error("Informe um motivo"); return; }
-              freezeMut.mutate({ v: true, reason: trimmed });
-            }
-          }}>
-            <Snowflake className="size-4 mr-2" />
-            {form.is_frozen ? "Descongelar" : "Congelar (motivo livre)"}
-          </Button>
-          <Button variant="destructive" onClick={() => { if (confirm("Apagar definitivamente este usuário e todos os dados? Esta ação NÃO pode ser desfeita.")) delMut.mutate(); }}>
-            <Trash2 className="size-4 mr-2" /> Apagar usuário
-          </Button>
+    <div className="space-y-5">
+      <Link
+        to="/admin/usuarios"
+        className="inline-flex items-center gap-1.5 text-[13.5px] text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="size-4" /> Jogadores
+      </Link>
+
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <h1 className="text-[30px] md:text-[34px]">{p.full_name || p.username}</h1>
+            <StatusPill status={p.is_frozen ? "frozen" : "active"} />
+            {q.data.isAdmin && <StatusPill status="open" label="Administrador" />}
+            {p.kyc_verified && <StatusPill status="approved" label="Documento verificado" />}
+          </div>
+          <p className="num mt-1 text-[14px] text-muted-foreground">
+            @{p.username}, CPF {p.cpf ? maskCPF(p.cpf) : "não informado"},{" "}
+            {q.data.email || "sem e-mail"}
+            {q.data.emailConfirmed ? "" : " (não confirmado)"}
+          </p>
+          {p.is_frozen && p.freeze_reason && (
+            <p className="mt-2 max-w-2xl rounded-[8px] border border-destructive/40 bg-destructive/10 px-3 py-2 text-[13.5px]">
+              Motivo da suspensão: {p.freeze_reason}
+            </p>
+          )}
         </div>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            onClick={() => setDialog("adjust")}
+            className="h-10 rounded-[10px] font-bold shadow-none"
+          >
+            Ajustar saldo
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => setDialog("freeze")}
+            className="h-10 rounded-[10px] shadow-none"
+          >
+            {p.is_frozen ? "Reativar conta" : "Suspender conta"}
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => setDialog("edit")}
+            className="h-10 rounded-[10px] shadow-none"
+          >
+            Editar dados
+          </Button>
+          {(q.data.reconciliation.entries ?? 0) === 0 && (
+            <Button
+              variant="ghost"
+              onClick={() => setDialog("delete")}
+              className="h-10 rounded-[10px] text-destructive hover:text-destructive"
+            >
+              Apagar
+            </Button>
+          )}
+        </div>
+      </header>
+
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+        <Stat
+          value={formatBRL(p.balance)}
+          label="Saldo agora"
+          sub={
+            q.data.reconciliation.diff !== 0
+              ? `Diferença de ${formatBRL(q.data.reconciliation.diff)} no extrato`
+              : "Bate com o extrato"
+          }
+          tone={q.data.reconciliation.diff !== 0 ? "out" : undefined}
+        />
+        <Stat tone="in" value={formatBRL(s?.deposits ?? 0)} label="Depositou" />
+        <Stat
+          tone="out"
+          value={formatBRL(s?.withdrawn ?? 0)}
+          label="Sacou"
+          sub={s?.withdrawPending ? `${formatBRL(s.withdrawPending)} pendente` : undefined}
+        />
+        <Stat value={formatBRL(s?.ggr ?? 0)} label="GGR do jogador" sub="Apostou menos ganhou" />
+        <Stat
+          value={formatBRL((s?.casinoBets ?? 0) + (s?.sportsStakes ?? 0))}
+          label="Total apostado"
+          sub={`Cassino ${formatBRL(s?.casinoBets ?? 0)}`}
+        />
+        <Stat value={formatBRL(s?.adjustments ?? 0)} label="Ajustes manuais" />
       </div>
 
-      {p.is_frozen && (
-        <div className="relative overflow-hidden rounded-xl border-2 border-red-500/60 bg-gradient-to-br from-red-500/15 via-red-500/10 to-red-900/20 p-4">
-          <div className="flex items-start gap-3">
-            <div className="size-10 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center shrink-0">
-              <ShieldAlert className="size-5 text-red-400" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="font-black uppercase tracking-wider text-red-300 text-xs">Conta congelada</div>
-              <p className="text-sm text-red-100 leading-snug mt-1">Usuário não consegue depositar nem sacar.</p>
-              {p.freeze_reason && (
-                <div className="mt-3 rounded-lg bg-black/30 border border-red-500/30 p-3 text-xs text-red-100/90 leading-relaxed whitespace-pre-wrap">
-                  <span className="font-bold uppercase tracking-wider text-red-400">Mensagem exibida ao usuário:</span>
-                  <br />{p.freeze_reason}
+      <Panel title="Cadastro">
+        <dl className="grid gap-x-6 gap-y-3 text-[14px] sm:grid-cols-2 xl:grid-cols-4">
+          <Info
+            label="Nascimento"
+            value={p.birth_date ? formatDate(`${p.birth_date}T12:00:00Z`) : "não informado"}
+          />
+          <Info label="Celular" value={p.phone ? maskPhone(p.phone) : "não informado"} />
+          <Info label="Cadastro" value={formatDateTime(p.created_at)} />
+          <Info
+            label="Último login"
+            value={q.data.lastSignIn ? formatDateTime(q.data.lastSignIn) : "nunca"}
+          />
+          <Info
+            label="Última aposta"
+            value={s?.lastBetAt ? formatDateTime(s.lastBetAt) : "nunca"}
+          />
+          <Info
+            label="Origem"
+            value={[p.utm_source, p.utm_campaign].filter(Boolean).join(", ") || "direto"}
+          />
+          <Info label="IP do cadastro" value={p.signup_ip ?? "não registrado"} />
+          <Info label="Id" value={p.id} mono />
+        </dl>
+      </Panel>
+
+      <Segmented<Tab>
+        value={aba}
+        onChange={(v) =>
+          navigate({ search: { aba: v === "extrato" ? undefined : v }, replace: true })
+        }
+        options={[
+          { id: "extrato", label: "Extrato" },
+          { id: "cassino", label: "Cassino" },
+          { id: "esportes", label: "Esportes" },
+          { id: "pagamentos", label: "Depósitos e saques" },
+          { id: "atividade", label: "Atividade e documentos" },
+          { id: "limites", label: "Jogo responsável" },
+        ]}
+      />
+
+      {aba === "extrato" && <LedgerTab id={id} />}
+      {aba === "cassino" && <RoundsTab id={id} />}
+      {aba === "esportes" && <BetsTab id={id} />}
+      {aba === "pagamentos" && <PaymentsTab id={id} />}
+      {aba === "atividade" && <ActivityTab id={id} />}
+      {aba === "limites" && <LimitsTab limits={q.data.limits} />}
+
+      <AdjustDialog
+        open={dialog === "adjust"}
+        onClose={() => setDialog(null)}
+        userId={id}
+        balance={p.balance}
+      />
+      <FreezeDialog
+        open={dialog === "freeze"}
+        onClose={() => setDialog(null)}
+        userId={id}
+        frozen={!!p.is_frozen}
+      />
+      <EditDialog
+        open={dialog === "edit"}
+        onClose={() => setDialog(null)}
+        userId={id}
+        profile={p}
+      />
+      <DeleteDialog
+        open={dialog === "delete"}
+        onClose={() => setDialog(null)}
+        userId={id}
+        name={p.full_name || p.username || "este jogador"}
+      />
+    </div>
+  );
+}
+
+function Info({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-[12.5px] text-muted-foreground">{label}</dt>
+      <dd className={cn("truncate", mono ? "font-mono text-[12.5px]" : "num")}>{value}</dd>
+    </div>
+  );
+}
+
+function useRefreshPlayer(id: string) {
+  const qc = useQueryClient();
+  return () => {
+    for (const k of [
+      "admin-player",
+      "admin-player-ledger",
+      "admin-player-payments",
+      "admin-player-activity",
+    ])
+      qc.invalidateQueries({ queryKey: [k, id] });
+    qc.invalidateQueries({ queryKey: ["admin-overview"] });
+    qc.invalidateQueries({ queryKey: ["admin-players"] });
+  };
+}
+
+function LedgerTab({ id }: { id: string }) {
+  const fetchLedger = useServerFn(listPlayerLedger);
+  const q = useInfiniteQuery({
+    queryKey: ["admin-player-ledger", id],
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam }) => fetchLedger({ data: { id, before: pageParam } }),
+    getNextPageParam: (last) => (last.length === 50 ? String(last[last.length - 1].id) : undefined),
+  });
+  const rows = q.data?.pages.flat() ?? [];
+  return (
+    <Panel flush>
+      <Table
+        loading={q.isLoading}
+        head={["Quando", "Movimentação", "Detalhe", "Valor", "Antes", "Depois"]}
+        empty={!q.isLoading && !rows.length ? <Empty>Nenhuma movimentação.</Empty> : null}
+      >
+        {rows.map((r) => (
+          <tr key={r.id}>
+            <Td>
+              <span className="num whitespace-nowrap text-[13px] text-muted-foreground">
+                {formatDateTime(r.created_at)}
+              </span>
+            </Td>
+            <Td>
+              <span className="font-medium">{KIND[r.kind] ?? r.kind}</span>
+            </Td>
+            <Td>
+              <span className="block max-w-[320px] truncate text-[13px] text-muted-foreground">
+                {r.description}
+                {r.createdByName ? ` (por ${r.createdByName})` : ""}
+              </span>
+            </Td>
+            <Td right>
+              <Money value={r.amount} signed className="font-semibold" />
+            </Td>
+            <Td right>
+              <Money value={r.balance_before} className="text-muted-foreground" />
+            </Td>
+            <Td right>
+              <Money value={r.balance_after} />
+            </Td>
+          </tr>
+        ))}
+      </Table>
+      <LoadMore
+        show={!!q.hasNextPage}
+        loading={q.isFetchingNextPage}
+        onClick={() => q.fetchNextPage()}
+      />
+    </Panel>
+  );
+}
+
+function RoundsTab({ id }: { id: string }) {
+  const fetchRounds = useServerFn(listPlayerRounds);
+  const q = useInfiniteQuery({
+    queryKey: ["admin-player-rounds", id],
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam }) => fetchRounds({ data: { id, before: pageParam } }),
+    getNextPageParam: (last) => (last.length === 50 ? last[last.length - 1].created_at : undefined),
+  });
+  const rows = q.data?.pages.flat() ?? [];
+  return (
+    <Panel flush>
+      <Table
+        loading={q.isLoading}
+        head={["Quando", "Jogo", "Rodada", "Aposta", "Ganho", "Saldo depois", "Situação"]}
+        empty={!q.isLoading && !rows.length ? <Empty>Nenhuma rodada de cassino.</Empty> : null}
+      >
+        {rows.map((r) => (
+          <tr key={r.id}>
+            <Td>
+              <span className="num whitespace-nowrap text-[13px] text-muted-foreground">
+                {formatDateTime(r.created_at)}
+              </span>
+            </Td>
+            <Td>
+              <span className="block max-w-[220px] truncate font-medium">
+                {r.game?.name ?? r.game_code}
+              </span>
+              <span className="text-[12px] text-muted-foreground">{r.provider}</span>
+            </Td>
+            <Td>
+              <span className="block max-w-[160px] truncate font-mono text-[12px] text-muted-foreground">
+                {r.round_id || r.txn_id}
+              </span>
+            </Td>
+            <Td right>
+              <Money value={Number(r.bet)} />
+            </Td>
+            <Td right>
+              <Money
+                value={Number(r.win)}
+                className={Number(r.win) > 0 ? "font-semibold text-gold" : ""}
+              />
+            </Td>
+            <Td right>
+              <Money value={Number(r.after_balance ?? 0)} />
+            </Td>
+            <Td>
+              <StatusPill status={r.status} />
+            </Td>
+          </tr>
+        ))}
+      </Table>
+      <LoadMore
+        show={!!q.hasNextPage}
+        loading={q.isFetchingNextPage}
+        onClick={() => q.fetchNextPage()}
+      />
+    </Panel>
+  );
+}
+
+const PICK: Record<string, string> = { home: "Casa", draw: "Empate", away: "Fora" };
+
+function BetsTab({ id }: { id: string }) {
+  const fetchBets = useServerFn(listPlayerBets);
+  const q = useQuery({
+    queryKey: ["admin-player-bets", id],
+    queryFn: () => fetchBets({ data: { id } }),
+  });
+  return (
+    <Panel flush>
+      <Table
+        loading={q.isLoading}
+        head={["Feita em", "Jogo", "Palpite", "Aposta", "Retorno", "Situação"]}
+        empty={q.data && !q.data.length ? <Empty>Nenhuma aposta esportiva.</Empty> : null}
+      >
+        {q.data?.map((b) => (
+          <tr key={b.id}>
+            <Td>
+              <span className="num whitespace-nowrap text-[13px] text-muted-foreground">
+                {formatDateTime(b.created_at)}
+              </span>
+            </Td>
+            <Td>
+              <span className="block max-w-[260px] truncate font-medium">
+                {b.home} x {b.away}
+              </span>
+              <span className="text-[12px] text-muted-foreground">
+                {b.league_name}, {formatWhen(b.starts_at)}
+              </span>
+            </Td>
+            <Td>
+              {PICK[b.pick]} <span className="num text-muted-foreground">@{b.odd.toFixed(2)}</span>
+            </Td>
+            <Td right>
+              <Money value={b.stake} />
+            </Td>
+            <Td right>
+              <Money
+                value={b.status === "void" ? b.stake : b.potential_payout}
+                className={b.status === "won" ? "font-semibold text-gold" : ""}
+              />
+            </Td>
+            <Td>
+              <StatusPill status={b.status} />
+              {b.score_home !== null && (
+                <span className="num ml-2 text-[12.5px] text-muted-foreground">
+                  {b.score_home}x{b.score_away}
+                </span>
+              )}
+            </Td>
+          </tr>
+        ))}
+      </Table>
+    </Panel>
+  );
+}
+
+function PaymentsTab({ id }: { id: string }) {
+  const fetchPayments = useServerFn(listPlayerPayments);
+  const setStatus = useServerFn(setTransactionStatus);
+  const requestKyc = useServerFn(requestKycForTransaction);
+  const refresh = useRefreshPlayer(id);
+  const q = useQuery({
+    queryKey: ["admin-player-payments", id],
+    queryFn: () => fetchPayments({ data: { id } }),
+  });
+  const [reject, setReject] = useState<string | null>(null);
+  const [reason, setReason] = useState("");
+  const decide = useMutation({
+    mutationFn: (v: { id: string; status: "approved" | "rejected"; reason?: string }) =>
+      setStatus({ data: v }),
+    onSuccess: () => {
+      toast.success("Decisão registrada.");
+      setReject(null);
+      setReason("");
+      refresh();
+      q.refetch();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const kyc = useMutation({
+    mutationFn: (txId: string) => requestKyc({ data: { transactionId: txId } }),
+    onSuccess: () => {
+      toast.success("Pedido de documentos enviado ao jogador.");
+      q.refetch();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  return (
+    <Panel flush>
+      <Table
+        loading={q.isLoading}
+        head={["Quando", "Tipo", "Valor", "Detalhe", "Situação", ""]}
+        empty={q.data && !q.data.length ? <Empty>Nenhum depósito ou saque.</Empty> : null}
+      >
+        {q.data?.map((t) => (
+          <tr key={t.id}>
+            <Td>
+              <span className="num whitespace-nowrap text-[13px] text-muted-foreground">
+                {formatDateTime(t.created_at)}
+              </span>
+            </Td>
+            <Td>{t.type === "deposit" ? "Depósito" : "Saque"}</Td>
+            <Td right>
+              <Money value={t.amount} className="font-semibold" />
+            </Td>
+            <Td>
+              <span className="block max-w-[280px] truncate text-[13px] text-muted-foreground">
+                {t.pix_key ? `${t.pix_key}, ` : ""}
+                {t.description}
+              </span>
+            </Td>
+            <Td>
+              <StatusPill status={t.status} />
+              {t.kyc_required && t.status === "pending" && (
+                <span className="ml-1.5 text-[12px] text-gold">documentos</span>
+              )}
+            </Td>
+            <Td right>
+              {t.type === "withdrawal" && t.status === "pending" && (
+                <div className="flex justify-end gap-1.5">
+                  <Button
+                    size="sm"
+                    className="shadow-none"
+                    disabled={decide.isPending}
+                    onClick={() => decide.mutate({ id: t.id, status: "approved" })}
+                  >
+                    Aprovar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="shadow-none"
+                    onClick={() => setReject(t.id)}
+                  >
+                    Recusar
+                  </Button>
+                  {!t.kyc_required && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={kyc.isPending}
+                      onClick={() => kyc.mutate(t.id)}
+                    >
+                      Pedir documento
+                    </Button>
+                  )}
                 </div>
               )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-card border border-border rounded-xl p-5 md:col-span-2 space-y-4">
-          <h2 className="text-xl font-bold">Dados do usuário</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-            <Field label="Email (somente leitura)"><Input value={p.email || "—"} readOnly className="bg-muted/30" /></Field>
-            <Field label="Nome completo"><Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></Field>
-            <Field label="Username"><Input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} /></Field>
-            <Field label="CPF"><Input value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value })} /></Field>
-            <Field label="Telefone"><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
-            <Field label="KYC">
-              <select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={form.kyc_status} onChange={(e) => setForm({ ...form, kyc_status: e.target.value })}>
-                <option value="pending">Pendente</option>
-                <option value="approved">Aprovado</option>
-                <option value="rejected">Rejeitado</option>
-              </select>
-            </Field>
-          </div>
-          <Button onClick={() => saveMut.mutate()} disabled={saveMut.isPending}>
-            {saveMut.isPending ? "Salvando..." : "Salvar alterações"}
+            </Td>
+          </tr>
+        ))}
+      </Table>
+      <Dialog open={!!reject} onOpenChange={(o) => !o && setReject(null)}>
+        <DialogContent className="rounded-[14px] border-border bg-background">
+          <DialogTitle className="text-[24px]">Recusar saque</DialogTitle>
+          <DialogDescription>
+            O valor volta para o saldo do jogador. Ele vê o motivo.
+          </DialogDescription>
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            rows={3}
+            className="field-input h-auto py-2.5"
+            placeholder="Ex.: chave Pix não pertence ao titular"
+          />
+          <Button
+            disabled={reason.trim().length < 3 || decide.isPending}
+            onClick={() =>
+              reject && decide.mutate({ id: reject, status: "rejected", reason: reason.trim() })
+            }
+            className="shadow-none"
+          >
+            {decide.isPending ? <Loader2 className="animate-spin" /> : "Recusar e devolver o valor"}
           </Button>
+        </DialogContent>
+      </Dialog>
+    </Panel>
+  );
+}
 
-          <details className="text-xs text-muted-foreground">
-            <summary className="cursor-pointer font-bold uppercase tracking-wider mt-3">Tracking / origem</summary>
-            <dl className="grid grid-cols-2 gap-2 mt-3">
-              <div><dt>UTM Source</dt><dd>{p.utm_source ?? "—"}</dd></div>
-              <div><dt>UTM Medium</dt><dd>{p.utm_medium ?? "—"}</dd></div>
-              <div><dt>UTM Campaign</dt><dd>{p.utm_campaign ?? "—"}</dd></div>
-              <div><dt>UTM Content</dt><dd>{p.utm_content ?? "—"}</dd></div>
-              <div><dt>Referrer</dt><dd className="break-all">{p.referrer ?? "—"}</dd></div>
-              <div><dt>IP</dt><dd className="font-mono">{p.signup_ip ?? "—"}</dd></div>
-              <div className="col-span-2"><dt>User Agent</dt><dd className="break-all">{p.signup_user_agent ?? "—"}</dd></div>
-              <div><dt>fbp</dt><dd className="font-mono break-all">{p.fbp ?? "—"}</dd></div>
-              <div><dt>fbc</dt><dd className="font-mono break-all">{p.fbc ?? "—"}</dd></div>
-              <div><dt>Cadastro</dt><dd>{new Date(p.created_at).toLocaleString("pt-BR")}</dd></div>
-            </dl>
-          </details>
-        </div>
-        <div className="bg-card border border-border rounded-xl p-5 space-y-3">
-          <div>
-            <div className="text-xs uppercase font-bold text-muted-foreground">Saldo atual</div>
-            <div className="text-3xl font-black text-primary">R$ {Number(p.balance).toFixed(2).replace(".", ",")}</div>
-          </div>
-          <div className="text-xs text-muted-foreground">
-            Bônus: R$ {Number(p.bonus_balance).toFixed(2).replace(".", ",")} · {p.bonus_used ? "usado" : "disponível"}
-          </div>
-          <div className="space-y-2 border-t border-border pt-3">
-            <div className="text-xs uppercase font-bold text-muted-foreground">Ajustar saldo</div>
-            <Input placeholder="Valor (use - para debitar)" value={delta} onChange={(e) => setDelta(e.target.value)} />
-            <Input placeholder="Motivo" value={reason} onChange={(e) => setReason(e.target.value)} />
-            <Button className="w-full" disabled={!delta || !reason || adjustMut.isPending} onClick={() => adjustMut.mutate()}>
-              {adjustMut.isPending ? "Aplicando..." : "Aplicar ajuste"}
-            </Button>
-          </div>
-        </div>
-      </div>
+const ACTION: Record<string, string> = {
+  "wallet.adjust": "Ajustou o saldo",
+  "user.update": "Editou dados",
+  "user.freeze": "Suspendeu a conta",
+  "user.unfreeze": "Reativou a conta",
+  "withdrawal.approved": "Aprovou saque",
+  "withdrawal.rejected": "Recusou saque",
+  "deposit.approved": "Aprovou depósito manualmente",
+  "deposit.rejected": "Recusou depósito",
+  "sports_bet.settle": "Liquidou aposta manualmente",
+  "kyc.review": "Revisou documentos",
+};
 
-      <div className="bg-card border border-border rounded-xl p-5 space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <h3 className="font-bold flex items-center gap-2"><ShieldCheck className="size-5 text-primary" /> Histórico KYC</h3>
-          <Link to="/admin/kyc" className="text-sm font-bold text-primary hover:underline">Abrir fila KYC</Link>
-        </div>
-        {(data.kyc ?? []).length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhum documento enviado por este usuário.</p>
+function ActivityTab({ id }: { id: string }) {
+  const fetchActivity = useServerFn(listPlayerActivity);
+  const q = useQuery({
+    queryKey: ["admin-player-activity", id],
+    queryFn: () => fetchActivity({ data: { id } }),
+  });
+  if (!q.data) return <div className="skeleton h-48 rounded-[12px]" />;
+  return (
+    <div className="grid gap-4 xl:grid-cols-2">
+      <Panel title="Ações do admin nesta conta" flush>
+        {q.data.audit.length === 0 ? (
+          <Empty>Nenhuma ação registrada.</Empty>
         ) : (
-          <div className="grid gap-2 md:grid-cols-2">
-            {(data.kyc ?? []).map((k: any) => (
-              <div key={k.id} className="rounded-lg border border-border bg-surface p-3 text-sm">
-                <div className="flex items-center justify-between gap-2"><span className="font-bold"><FileText className="inline size-4 mr-1 text-primary" /> {k.document_type?.toUpperCase()}</span><StatusBadge s={k.status} /></div>
-                <p className="mt-1 text-xs text-muted-foreground">Enviado em {new Date(k.created_at).toLocaleString("pt-BR")}</p>
-                {k.rejection_reason && <p className="mt-2 text-xs text-destructive">{k.rejection_reason}</p>}
-              </div>
+          <ul className="divide-y divide-border">
+            {q.data.audit.map((a) => (
+              <li key={a.id} className="px-5 py-3 text-[14px]">
+                <p>
+                  <span className="font-semibold">{a.adminName}</span>{" "}
+                  {ACTION[a.action]?.toLowerCase() ?? a.action}
+                </p>
+                <p className="mt-0.5 text-[12.5px] text-muted-foreground">
+                  {formatDateTime(a.created_at)}
+                  {detail(a.details as Record<string, unknown>)}
+                </p>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Total depositado" value={fmt(totalDeposited)} sub={`${depositCount} depósitos`} tone="green" />
-        <StatCard label="Total sacado" value={fmt(totalWithdrawn)} sub={`${withdrawCount} saques`} tone="red" />
-        <StatCard label="Saldo líquido (dep - saq)" value={fmt(net)} sub={net >= 0 ? "GGR positivo" : "GGR negativo"} tone={net >= 0 ? "green" : "red"} />
-        <StatCard label="Bônus recebido" value={fmt(totalBonus)} sub={p.bonus_used ? "bônus usado" : "disponível"} tone="primary" />
-        <StatCard label="Saques pendentes" value={fmt(pendingWithdrawals)} sub={`${countBy(t => t.type === "withdrawal" && t.status === "pending")} pendentes`} tone="yellow" />
-        <StatCard label="Depósitos pendentes" value={fmt(pendingDeposits)} sub={`${countBy(t => t.type === "deposit" && t.status === "pending")} aguardando`} tone="yellow" />
-        <StatCard label="Saques recusados" value={fmt(rejectedWithdrawals)} sub={`${countBy(t => t.type === "withdrawal" && t.status === "rejected")} rejeitados`} tone="muted" />
-        <StatCard label="Última atividade" value={lastDeposit || lastWithdraw ? new Date((lastDeposit ?? lastWithdraw).created_at).toLocaleDateString("pt-BR") : "—"} sub={lastDeposit ? `Últ. depósito ${fmt(Number(lastDeposit.amount))}` : "sem depósitos"} tone="muted" />
-      </div>
-
-      <div className="bg-card border border-border rounded-xl overflow-x-auto">
-        <h3 className="font-bold p-4">Transações ({txs.length})</h3>
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50 text-left">
-            <tr><th className="px-4 py-2">Data</th><th className="px-4 py-2">Tipo</th><th className="px-4 py-2">Valor</th><th className="px-4 py-2">Status</th><th className="px-4 py-2">Descrição</th><th className="px-4 py-2 text-right">Ações</th></tr>
-          </thead>
-          <tbody>
-            {data.transactions.length === 0 && (<tr><td colSpan={6} className="text-center py-6 text-muted-foreground">Sem transações</td></tr>)}
-            {data.transactions.map((t: any) => (
-              <tr key={t.id} className="border-t border-border">
-                <td className="px-4 py-2 text-muted-foreground text-xs">{new Date(t.created_at).toLocaleString("pt-BR")}</td>
-                <td className="px-4 py-2 capitalize">{t.type}</td>
-                <td className="px-4 py-2 font-bold">R$ {Number(t.amount).toFixed(2).replace(".", ",")}</td>
-                <td className="px-4 py-2"><StatusBadge s={t.status} /></td>
-                <td className="px-4 py-2 text-muted-foreground text-xs">{t.description}</td>
-                <td className="px-4 py-2 text-right">
-                  {t.status === "pending" && (
-                    <div className="flex gap-1 justify-end">
-                      <Button size="sm" onClick={() => txMut.mutate({ id: t.id, status: "approved" })}>Aprovar</Button>
-                      <Button size="sm" variant="outline" onClick={() => {
-                        const reason = window.prompt("Motivo da rejeição (será exibido para o usuário):", "");
-                        if (reason === null) return;
-                        const trimmed = reason.trim();
-                        if (!trimmed) { toast.error("Informe um motivo"); return; }
-                        txMut.mutate({ id: t.id, status: "rejected", reason: trimmed });
-                      }}>Rejeitar</Button>
-                    </div>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      </Panel>
+      <div className="space-y-4">
+        <Panel title="Documentos enviados" flush>
+          {q.data.kyc.length === 0 ? (
+            <Empty>Nenhum documento enviado.</Empty>
+          ) : (
+            <ul className="divide-y divide-border">
+              {q.data.kyc.map((k) => (
+                <li key={k.id} className="flex items-center justify-between px-5 py-3 text-[14px]">
+                  <span>
+                    {k.document_type.toUpperCase()}, {formatDateTime(k.created_at)}
+                    {k.rejection_reason ? `, ${k.rejection_reason}` : ""}
+                  </span>
+                  <StatusPill status={k.status} />
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="border-t border-border px-5 py-3">
+            <Link
+              to="/admin/kyc"
+              className="text-[13px] font-semibold text-primary hover:underline"
+            >
+              Abrir fila de documentos
+            </Link>
+          </div>
+        </Panel>
+        <Panel title="Jogos abertos" flush>
+          {q.data.launches.length === 0 ? (
+            <Empty>Nunca abriu um jogo.</Empty>
+          ) : (
+            <ul className="divide-y divide-border">
+              {q.data.launches.map((l) => (
+                <li
+                  key={l.id}
+                  className="flex items-center justify-between gap-3 px-5 py-2.5 text-[14px]"
+                >
+                  <span className="min-w-0 truncate">{l.game_name ?? l.game_code}</span>
+                  <span className="num shrink-0 text-[12.5px] text-muted-foreground">
+                    {l.ok ? "" : "falhou, "}
+                    {formatWhen(l.created_at)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
       </div>
     </div>
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function detail(d: Record<string, unknown> | null) {
+  if (!d) return "";
+  const parts: string[] = [];
+  if (typeof d.delta === "number") parts.push(`${d.delta > 0 ? "+" : ""}${formatBRL(d.delta)}`);
+  if (typeof d.amount === "number") parts.push(formatBRL(d.amount));
+  if (typeof d.reason === "string" && d.reason) parts.push(`motivo: ${d.reason}`);
+  if (typeof d.freeze_reason === "string" && d.freeze_reason)
+    parts.push(`motivo: ${d.freeze_reason}`);
+  return parts.length ? `, ${parts.join(", ")}` : "";
+}
+
+function LimitsTab({ limits }: { limits: Record<string, unknown> | null }) {
+  const v = (k: string) =>
+    limits?.[k] === null || limits?.[k] === undefined ? "sem limite" : formatBRL(Number(limits[k]));
+  const until = limits?.self_excluded_until as string | null | undefined;
   return (
-    <div>
-      <label className="text-xs uppercase font-bold text-muted-foreground">{label}</label>
-      <div className="mt-1">{children}</div>
-    </div>
+    <Panel title="Limites definidos pelo jogador">
+      <dl className="grid gap-4 text-[14px] sm:grid-cols-2 xl:grid-cols-3">
+        <Info label="Depósito por dia" value={v("deposit_daily")} />
+        <Info label="Depósito por semana" value={v("deposit_weekly")} />
+        <Info label="Depósito por mês" value={v("deposit_monthly")} />
+        <Info label="Perda por dia" value={v("loss_daily")} />
+        <Info
+          label="Aviso de sessão"
+          value={limits?.session_minutes ? `${limits.session_minutes} min` : "sem aviso"}
+        />
+        <Info
+          label="Autoexclusão"
+          value={until && new Date(until) > new Date() ? `até ${formatDateTime(until)}` : "não"}
+        />
+      </dl>
+      <p className="mt-4 text-[13px] text-muted-foreground">
+        Esses limites são do jogador. O admin não reduz nem remove autoexclusão.
+      </p>
+    </Panel>
   );
 }
 
-function StatCard({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: "green" | "red" | "yellow" | "primary" | "muted" }) {
-  const toneMap: Record<string, string> = {
-    green: "text-green-400",
-    red: "text-red-400",
-    yellow: "text-yellow-400",
-    primary: "text-primary",
-    muted: "text-foreground",
-  };
+function AdjustDialog({
+  open,
+  onClose,
+  userId,
+  balance,
+}: {
+  open: boolean;
+  onClose: () => void;
+  userId: string;
+  balance: number;
+}) {
+  const adjust = useServerFn(adjustBalance);
+  const refresh = useRefreshPlayer(userId);
+  const [direction, setDirection] = useState<"credit" | "debit">("credit");
+  const [raw, setRaw] = useState("");
+  const [reason, setReason] = useState("");
+  const [requestId, setRequestId] = useState(newRequestId);
+  const amount = parseBRL(raw);
+  const delta = direction === "credit" ? amount : -amount;
+  const m = useMutation({
+    mutationFn: () => adjust({ data: { userId, delta, reason: reason.trim(), requestId } }),
+    onSuccess: (r) => {
+      toast.success(`Saldo ajustado. Novo saldo ${formatBRL(r.balance)}.`);
+      refresh();
+      setRaw("");
+      setReason("");
+      setRequestId(newRequestId());
+      onClose();
+    },
+    onError: (e: Error) => {
+      toast.error(e.message);
+      setRequestId(newRequestId());
+    },
+  });
   return (
-    <div className="bg-card border border-border rounded-xl p-4">
-      <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">{label}</div>
-      <div className={`text-lg font-black mt-1 ${toneMap[tone ?? "muted"]}`}>{value}</div>
-      {sub && <div className="text-[11px] text-muted-foreground mt-0.5">{sub}</div>}
-    </div>
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="rounded-[14px] border-border bg-background">
+        <DialogTitle className="text-[24px]">Ajustar saldo</DialogTitle>
+        <DialogDescription>
+          Fica registrado no extrato do jogador e na auditoria, com o seu usuário e o motivo. Saldo
+          atual {formatBRL(balance)}.
+        </DialogDescription>
+        <Segmented
+          value={direction}
+          onChange={setDirection}
+          options={[
+            { id: "credit", label: "Creditar" },
+            { id: "debit", label: "Debitar" },
+          ]}
+        />
+        <label className="block">
+          <span className="mb-1 block text-[13.5px] font-semibold">Valor</span>
+          <input
+            className="field-input num"
+            inputMode="decimal"
+            placeholder="0,00"
+            value={raw}
+            onChange={(e) => setRaw(e.target.value.replace(/[^\d,]/g, ""))}
+          />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-[13.5px] font-semibold">Motivo</span>
+          <input
+            className="field-input"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="Ex.: crédito de teste da homologação"
+          />
+        </label>
+        {amount > 0 && (
+          <p className="num text-[14px] text-muted-foreground">
+            Saldo depois: <strong className="text-foreground">{formatBRL(balance + delta)}</strong>
+          </p>
+        )}
+        <Button
+          disabled={amount <= 0 || reason.trim().length < 3 || balance + delta < 0 || m.isPending}
+          onClick={() => m.mutate()}
+          className="h-11 rounded-[10px] font-bold shadow-none"
+        >
+          {m.isPending ? (
+            <Loader2 className="animate-spin" />
+          ) : (
+            `${direction === "credit" ? "Creditar" : "Debitar"} ${formatBRL(amount)}`
+          )}
+        </Button>
+      </DialogContent>
+    </Dialog>
   );
 }
 
-function StatusBadge({ s }: { s: string }) {
-  const map: Record<string, string> = {
-    pending: "bg-yellow-500/20 text-yellow-400",
-    approved: "bg-green-500/20 text-green-400",
-    rejected: "bg-red-500/20 text-red-400",
-    completed: "bg-green-500/20 text-green-400",
-    failed: "bg-red-500/20 text-red-400",
+function FreezeDialog({
+  open,
+  onClose,
+  userId,
+  frozen,
+}: {
+  open: boolean;
+  onClose: () => void;
+  userId: string;
+  frozen: boolean;
+}) {
+  const update = useServerFn(updatePlayer);
+  const refresh = useRefreshPlayer(userId);
+  const [reason, setReason] = useState("");
+  const m = useMutation({
+    mutationFn: () =>
+      update({
+        data: frozen
+          ? { userId, is_frozen: false }
+          : { userId, is_frozen: true, freeze_reason: reason.trim() },
+      }),
+    onSuccess: () => {
+      toast.success(frozen ? "Conta reativada." : "Conta suspensa.");
+      refresh();
+      setReason("");
+      onClose();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="rounded-[14px] border-border bg-background">
+        <DialogTitle className="text-[24px]">
+          {frozen ? "Reativar conta" : "Suspender conta"}
+        </DialogTitle>
+        <DialogDescription>
+          {frozen
+            ? "O jogador volta a poder depositar e apostar."
+            : "O jogador não consegue depositar nem apostar. O saldo continua dele e o saque segue liberado."}
+        </DialogDescription>
+        {!frozen && (
+          <label className="block">
+            <span className="mb-1 block text-[13.5px] font-semibold">Motivo (o jogador vê)</span>
+            <textarea
+              rows={3}
+              className="field-input h-auto py-2.5"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Ex.: conta em análise por cadastro duplicado"
+            />
+          </label>
+        )}
+        <Button
+          variant={frozen ? "default" : "destructive"}
+          disabled={(!frozen && reason.trim().length < 5) || m.isPending}
+          onClick={() => m.mutate()}
+          className="h-11 rounded-[10px] font-bold shadow-none"
+        >
+          {m.isPending ? <Loader2 className="animate-spin" /> : frozen ? "Reativar" : "Suspender"}
+        </Button>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditDialog({
+  open,
+  onClose,
+  userId,
+  profile,
+}: {
+  open: boolean;
+  onClose: () => void;
+  userId: string;
+  profile: {
+    full_name: string | null;
+    phone: string | null;
+    birth_date: string | null;
+    kyc_verified: boolean | null;
   };
-  return <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${map[s] ?? "bg-muted"}`}>{s}</span>;
+}) {
+  const update = useServerFn(updatePlayer);
+  const refresh = useRefreshPlayer(userId);
+  const [name, setName] = useState(profile.full_name ?? "");
+  const [phone, setPhone] = useState(maskPhone(profile.phone ?? ""));
+  const [birth, setBirth] = useState(profile.birth_date ?? "");
+  const [verified, setVerified] = useState(!!profile.kyc_verified);
+  const m = useMutation({
+    mutationFn: () =>
+      update({
+        data: {
+          userId,
+          full_name: name.trim() && name.trim() !== profile.full_name ? name.trim() : undefined,
+          phone:
+            phone.replace(/\D/g, "") && phone.replace(/\D/g, "") !== profile.phone
+              ? phone.replace(/\D/g, "")
+              : undefined,
+          birth_date: birth && birth !== profile.birth_date ? birth : undefined,
+          kyc_verified: verified !== !!profile.kyc_verified ? verified : undefined,
+        },
+      }),
+    onSuccess: () => {
+      toast.success("Dados atualizados.");
+      refresh();
+      onClose();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="rounded-[14px] border-border bg-background">
+        <DialogTitle className="text-[24px]">Editar dados</DialogTitle>
+        <DialogDescription>
+          CPF não muda. Para outro CPF, o jogador precisa de uma conta nova.
+        </DialogDescription>
+        <label className="block">
+          <span className="mb-1 block text-[13.5px] font-semibold">Nome completo</span>
+          <input className="field-input" value={name} onChange={(e) => setName(e.target.value)} />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-[13.5px] font-semibold">Celular</span>
+          <input
+            className="field-input num"
+            value={phone}
+            onChange={(e) => setPhone(maskPhone(e.target.value))}
+          />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-[13.5px] font-semibold">Nascimento</span>
+          <input
+            type="date"
+            className="field-input"
+            value={birth}
+            onChange={(e) => setBirth(e.target.value)}
+          />
+        </label>
+        <label className="flex items-center gap-2.5 text-[14px]">
+          <input
+            type="checkbox"
+            checked={verified}
+            onChange={(e) => setVerified(e.target.checked)}
+            className="size-[18px] accent-[var(--primary)]"
+          />{" "}
+          Documento verificado
+        </label>
+        <Button
+          disabled={m.isPending}
+          onClick={() => m.mutate()}
+          className="h-11 rounded-[10px] font-bold shadow-none"
+        >
+          {m.isPending ? <Loader2 className="animate-spin" /> : "Salvar"}
+        </Button>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function DeleteDialog({
+  open,
+  onClose,
+  userId,
+  name,
+}: {
+  open: boolean;
+  onClose: () => void;
+  userId: string;
+  name: string;
+}) {
+  const del = useServerFn(deletePlayer);
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+  const m = useMutation({
+    mutationFn: () => del({ data: { userId } }),
+    onSuccess: () => {
+      toast.success("Conta apagada.");
+      qc.invalidateQueries({ queryKey: ["admin-players"] });
+      navigate({ to: "/admin/usuarios" });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="rounded-[14px] border-border bg-background">
+        <DialogTitle className="text-[24px]">Apagar {name}?</DialogTitle>
+        <DialogDescription>
+          Só é possível para contas sem nenhuma movimentação de saldo. Não dá para desfazer.
+        </DialogDescription>
+        <Button
+          variant="destructive"
+          disabled={m.isPending}
+          onClick={() => m.mutate()}
+          className="h-11 rounded-[10px] font-bold shadow-none"
+        >
+          {m.isPending ? <Loader2 className="animate-spin" /> : "Apagar conta"}
+        </Button>
+      </DialogContent>
+    </Dialog>
+  );
 }

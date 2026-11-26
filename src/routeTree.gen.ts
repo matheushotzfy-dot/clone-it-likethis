@@ -26,10 +26,13 @@ import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authentica
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedSaqueRouteImport } from './routes/_authenticated/saque'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminAuditoriaRouteImport } from './routes/admin/auditoria'
 import { Route as AdminBannersRouteImport } from './routes/admin/banners'
+import { Route as AdminCassinoRouteImport } from './routes/admin/cassino'
 import { Route as AdminCatalogoRouteImport } from './routes/admin/catalogo'
 import { Route as AdminConfiguracoesRouteImport } from './routes/admin/configuracoes'
 import { Route as AdminDepositosRouteImport } from './routes/admin/depositos'
+import { Route as AdminEsportesRouteImport } from './routes/admin/esportes'
 import { Route as AdminFinanceiroRouteImport } from './routes/admin/financeiro'
 import { Route as AdminKycRouteImport } from './routes/admin/kyc'
 import { Route as AdminPixelRouteImport } from './routes/admin/pixel'
@@ -133,9 +136,19 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAuditoriaRoute = AdminAuditoriaRouteImport.update({
+  id: '/auditoria',
+  path: '/auditoria',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminBannersRoute = AdminBannersRouteImport.update({
   id: '/banners',
   path: '/banners',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCassinoRoute = AdminCassinoRouteImport.update({
+  id: '/cassino',
+  path: '/cassino',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminCatalogoRoute = AdminCatalogoRouteImport.update({
@@ -151,6 +164,11 @@ const AdminConfiguracoesRoute = AdminConfiguracoesRouteImport.update({
 const AdminDepositosRoute = AdminDepositosRouteImport.update({
   id: '/depositos',
   path: '/depositos',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminEsportesRoute = AdminEsportesRouteImport.update({
+  id: '/esportes',
+  path: '/esportes',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminFinanceiroRoute = AdminFinanceiroRouteImport.update({
@@ -264,10 +282,13 @@ export interface FileRoutesByFullPath {
   '/historico': typeof AuthenticatedHistoricoRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/saque': typeof AuthenticatedSaqueRoute
+  '/admin/auditoria': typeof AdminAuditoriaRoute
   '/admin/banners': typeof AdminBannersRoute
+  '/admin/cassino': typeof AdminCassinoRoute
   '/admin/catalogo': typeof AdminCatalogoRoute
   '/admin/configuracoes': typeof AdminConfiguracoesRoute
   '/admin/depositos': typeof AdminDepositosRoute
+  '/admin/esportes': typeof AdminEsportesRoute
   '/admin/financeiro': typeof AdminFinanceiroRoute
   '/admin/kyc': typeof AdminKycRoute
   '/admin/pixel': typeof AdminPixelRoute
@@ -303,10 +324,13 @@ export interface FileRoutesByTo {
   '/historico': typeof AuthenticatedHistoricoRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/saque': typeof AuthenticatedSaqueRoute
+  '/admin/auditoria': typeof AdminAuditoriaRoute
   '/admin/banners': typeof AdminBannersRoute
+  '/admin/cassino': typeof AdminCassinoRoute
   '/admin/catalogo': typeof AdminCatalogoRoute
   '/admin/configuracoes': typeof AdminConfiguracoesRoute
   '/admin/depositos': typeof AdminDepositosRoute
+  '/admin/esportes': typeof AdminEsportesRoute
   '/admin/financeiro': typeof AdminFinanceiroRoute
   '/admin/kyc': typeof AdminKycRoute
   '/admin/pixel': typeof AdminPixelRoute
@@ -345,10 +369,13 @@ export interface FileRoutesById {
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/saque': typeof AuthenticatedSaqueRoute
+  '/admin/auditoria': typeof AdminAuditoriaRoute
   '/admin/banners': typeof AdminBannersRoute
+  '/admin/cassino': typeof AdminCassinoRoute
   '/admin/catalogo': typeof AdminCatalogoRoute
   '/admin/configuracoes': typeof AdminConfiguracoesRoute
   '/admin/depositos': typeof AdminDepositosRoute
+  '/admin/esportes': typeof AdminEsportesRoute
   '/admin/financeiro': typeof AdminFinanceiroRoute
   '/admin/kyc': typeof AdminKycRoute
   '/admin/pixel': typeof AdminPixelRoute
@@ -387,10 +414,13 @@ export interface FileRouteTypes {
     | '/historico'
     | '/perfil'
     | '/saque'
+    | '/admin/auditoria'
     | '/admin/banners'
+    | '/admin/cassino'
     | '/admin/catalogo'
     | '/admin/configuracoes'
     | '/admin/depositos'
+    | '/admin/esportes'
     | '/admin/financeiro'
     | '/admin/kyc'
     | '/admin/pixel'
@@ -426,10 +456,13 @@ export interface FileRouteTypes {
     | '/historico'
     | '/perfil'
     | '/saque'
+    | '/admin/auditoria'
     | '/admin/banners'
+    | '/admin/cassino'
     | '/admin/catalogo'
     | '/admin/configuracoes'
     | '/admin/depositos'
+    | '/admin/esportes'
     | '/admin/financeiro'
     | '/admin/kyc'
     | '/admin/pixel'
@@ -467,10 +500,13 @@ export interface FileRouteTypes {
     | '/_authenticated/historico'
     | '/_authenticated/perfil'
     | '/_authenticated/saque'
+    | '/admin/auditoria'
     | '/admin/banners'
+    | '/admin/cassino'
     | '/admin/catalogo'
     | '/admin/configuracoes'
     | '/admin/depositos'
+    | '/admin/esportes'
     | '/admin/financeiro'
     | '/admin/kyc'
     | '/admin/pixel'
@@ -639,11 +675,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/auditoria': {
+      id: '/admin/auditoria'
+      path: '/auditoria'
+      fullPath: '/admin/auditoria'
+      preLoaderRoute: typeof AdminAuditoriaRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/banners': {
       id: '/admin/banners'
       path: '/banners'
       fullPath: '/admin/banners'
       preLoaderRoute: typeof AdminBannersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/cassino': {
+      id: '/admin/cassino'
+      path: '/cassino'
+      fullPath: '/admin/cassino'
+      preLoaderRoute: typeof AdminCassinoRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/catalogo': {
@@ -665,6 +715,13 @@ declare module '@tanstack/react-router' {
       path: '/depositos'
       fullPath: '/admin/depositos'
       preLoaderRoute: typeof AdminDepositosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/esportes': {
+      id: '/admin/esportes'
+      path: '/esportes'
+      fullPath: '/admin/esportes'
+      preLoaderRoute: typeof AdminEsportesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/financeiro': {
@@ -815,10 +872,13 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 )
 
 interface AdminRouteChildren {
+  AdminAuditoriaRoute: typeof AdminAuditoriaRoute
   AdminBannersRoute: typeof AdminBannersRoute
+  AdminCassinoRoute: typeof AdminCassinoRoute
   AdminCatalogoRoute: typeof AdminCatalogoRoute
   AdminConfiguracoesRoute: typeof AdminConfiguracoesRoute
   AdminDepositosRoute: typeof AdminDepositosRoute
+  AdminEsportesRoute: typeof AdminEsportesRoute
   AdminFinanceiroRoute: typeof AdminFinanceiroRoute
   AdminKycRoute: typeof AdminKycRoute
   AdminPixelRoute: typeof AdminPixelRoute
@@ -830,10 +890,13 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAuditoriaRoute: AdminAuditoriaRoute,
   AdminBannersRoute: AdminBannersRoute,
+  AdminCassinoRoute: AdminCassinoRoute,
   AdminCatalogoRoute: AdminCatalogoRoute,
   AdminConfiguracoesRoute: AdminConfiguracoesRoute,
   AdminDepositosRoute: AdminDepositosRoute,
+  AdminEsportesRoute: AdminEsportesRoute,
   AdminFinanceiroRoute: AdminFinanceiroRoute,
   AdminKycRoute: AdminKycRoute,
   AdminPixelRoute: AdminPixelRoute,

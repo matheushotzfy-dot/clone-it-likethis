@@ -1,8 +1,7 @@
-import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute } from "@tanstack/react-router";
-import { TransactionsTable } from "@/components/admin/transactions-table";
+import { PaymentsPage } from "@/components/admin/payments-page";
 
 export const Route = createFileRoute("/admin/saques")({
-  head: () => ({ meta: pageMeta('Saques administrativos — apostamaxy', 'Saques administrativos da apostamaxy. Área de gestão autorizada.') }),
-  component: () => <TransactionsTable title="Saques" type="withdrawal" />,
+  head: () => ({ meta: [{ title: "Saques | admin" }] }),
+  component: () => <PaymentsPage type="withdrawal" />,
 });

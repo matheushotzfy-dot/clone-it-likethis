@@ -1,159 +1,298 @@
-import { pageMeta } from "@/lib/page-meta";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getDashboardKPIs } from "@/lib/admin.functions";
-import { ArrowDownCircle, ArrowUpCircle, Users, Wallet, Clock, ShieldCheck, Activity, TrendingUp } from "lucide-react";
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, PieChart, Pie, Cell, Legend } from "recharts";
+import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { getOverview } from "@/lib/admin.functions";
+import { ErrorBox, Money, PageHeader, Panel, Segmented, Stat } from "@/components/admin/ui";
+import { FlowChart, GgrChart } from "@/components/admin/flow-chart";
+import { formatBRL, formatWhen } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/")({
-  head: () => ({ meta: pageMeta('Visão geral administrativa — apostamaxy', 'Visão geral administrativa da apostamaxy. Área de gestão autorizada.') }),
+  head: () => ({ meta: [{ title: "Visão geral | admin" }] }),
   component: Dashboard,
 });
 
-const brl = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
-
-function Card({ icon: Icon, label, value, sub, accent }: { icon: any; label: string; value: string; sub?: string; accent?: string }) {
-  return (
-    <div className="rounded-xl border border-border bg-card/90 p-5 shadow-lg shadow-background/20">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-xs uppercase font-bold text-muted-foreground tracking-wide">{label}</span>
-        <Icon className={`size-5 ${accent ?? "text-primary"}`} />
-      </div>
-      <div className="text-2xl md:text-3xl font-black">{value}</div>
-      {sub && <div className="text-xs text-muted-foreground mt-1">{sub}</div>}
-    </div>
-  );
-}
+const KIND: Record<string, string> = {
+  opening: "Saldo inicial",
+  deposit: "Depósito",
+  withdrawal_hold: "Saque pedido",
+  withdrawal_release: "Saque devolvido",
+  casino_bet: "Aposta cassino",
+  casino_win: "Ganho cassino",
+  casino_refund: "Estorno cassino",
+  sports_stake: "Aposta esportiva",
+  sports_payout: "Prêmio esportivo",
+  sports_refund: "Aposta anulada",
+  adjustment: "Ajuste manual",
+};
 
 function Dashboard() {
-  const fn = useServerFn(getDashboardKPIs);
-  const { data, isLoading, error, refetch } = useQuery({ queryKey: ["admin-kpi"], queryFn: () => fn(), staleTime: 15_000, refetchOnWindowFocus: false });
+  const [days, setDays] = useState<"1" | "7" | "14" | "30">("14");
+  const fetchOverview = useServerFn(getOverview);
+  const q = useQuery({
+    queryKey: ["admin-overview", Number(days)],
+    queryFn: () => fetchOverview({ data: { days: Number(days) } }),
+    refetchInterval: 30_000,
+  });
 
-  if (error) return <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-5 text-sm text-destructive"><b>Erro ao carregar painel.</b><p className="mt-1">{(error as Error).message}</p><button onClick={() => refetch()} className="mt-3 rounded-md bg-primary px-4 py-2 font-bold text-primary-foreground">Tentar novamente</button></div>;
-  if (isLoading || !data) return <DashboardSkeleton />;
+  if (q.error) return <ErrorBox error={q.error} onRetry={() => q.refetch()} />;
+  const d = q.data;
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-border bg-gradient-to-br from-card to-surface p-5 md:p-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <div className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-wide text-primary"><Activity className="size-4" /> Operação em tempo real</div>
-            <h1 className="text-2xl md:text-4xl font-black">Painel administrativo</h1>
-            <p className="mt-2 text-sm text-muted-foreground">Resumo financeiro, filas pendentes e verificação dos usuários em um só lugar.</p>
-          </div>
-          <div className="rounded-xl bg-primary/10 px-4 py-3 text-sm">
-            <div className="text-xs font-bold uppercase text-muted-foreground">Resultado 7 dias</div>
-            <div className="text-2xl font-black text-primary">{brl(data.weeklyNet)}</div>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title="Visão geral"
+        description="Dinheiro que entrou e saiu, resultado da casa e o que está esperando decisão."
+        actions={
+          <Segmented
+            value={days}
+            onChange={setDays}
+            options={[
+              { id: "1", label: "Hoje" },
+              { id: "7", label: "7 dias" },
+              { id: "14", label: "14 dias" },
+              { id: "30", label: "30 dias" },
+            ]}
+          />
+        }
+      />
 
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 md:gap-4">
-        <Card icon={ArrowDownCircle} label="Depósitos hoje" value={brl(data.depositsToday)} sub={`${brl(data.depositsMonth)} no mês`} accent="text-success" />
-        <Card icon={ArrowDownCircle} label="Depósitos ontem" value={brl(data.depositsYesterday)} accent="text-success" />
-        <Card icon={ArrowUpCircle} label="Saques hoje" value={brl(data.withdrawalsToday)} sub={`${brl(data.withdrawalsMonth)} no mês`} accent="text-destructive" />
-        <Card icon={Users} label="Usuários" value={String(data.totalUsers)} />
-        <Card icon={Wallet} label="Saldo em conta" value={brl(data.totalBalance)} />
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 rounded-xl border border-border bg-card p-5">
-          <div className="mb-5 flex items-center justify-between gap-3">
-            <div>
-              <h2 className="font-black">Fluxo dos últimos 7 dias</h2>
-              <p className="text-xs text-muted-foreground">Depósitos e saques aprovados</p>
-            </div>
-            <TrendingUp className="size-5 text-primary" />
-          </div>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data.chart} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
-                <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
-                <XAxis dataKey="date" stroke="rgba(255,255,255,0.55)" tickLine={false} axisLine={false} fontSize={12} />
-                <YAxis stroke="rgba(255,255,255,0.55)" tickLine={false} axisLine={false} fontSize={12} width={54} tickFormatter={(v) => `R$${Number(v)}`} />
-                <Tooltip formatter={(v: number) => brl(Number(v))} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, color: "hsl(var(--foreground))" }} itemStyle={{ color: "hsl(var(--foreground))" }} labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 700 }} />
-                <Area type="monotone" dataKey="deposits" name="Depósitos" stroke="var(--success)" fill="var(--success)" fillOpacity={0.22} strokeWidth={2} />
-                <Area type="monotone" dataKey="withdrawals" name="Saques" stroke="var(--destructive)" fill="var(--destructive)" fillOpacity={0.18} strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+      {!d ? (
+        <div className="grid gap-3 md:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="skeleton h-[104px] rounded-[12px]" />
+          ))}
         </div>
-        <div className="grid gap-4">
-        <Card icon={Clock} label="Depósitos pendentes" value={String(data.pendingDeposits)} accent="text-primary" />
-        <Card icon={Clock} label="Saques pendentes" value={String(data.pendingWithdrawals)} accent="text-primary" />
-          <Card icon={ShieldCheck} label="KYC pendente" value={String(data.kycPending)} sub={`${data.kycRequested} saques aguardando verificação`} accent="text-primary" />
-        </div>
-      </div>
-
-      <DeviceBreakdown devices={data.devices} />
-    </div>
-  );
-}
-
-function DeviceBreakdown({ devices }: { devices: { android: number; ios: number; desktop: number; unknown: number; total: number; androidPct: number; iosPct: number; desktopPct: number; unknownPct: number; androidDeposits: number; iosDeposits: number; desktopDeposits: number; unknownDeposits: number } }) {
-  const COLORS = { android: "#34d399", ios: "#60a5fa", desktop: "#f59e0b", unknown: "#64748b" };
-  const pieData = [
-    { name: "Android", value: devices.android, pct: devices.androidPct, deposits: devices.androidDeposits, color: COLORS.android },
-    { name: "iOS", value: devices.ios, pct: devices.iosPct, deposits: devices.iosDeposits, color: COLORS.ios },
-    { name: "Desktop", value: devices.desktop, pct: devices.desktopPct, deposits: devices.desktopDeposits, color: COLORS.desktop },
-    { name: "Outro", value: devices.unknown, pct: devices.unknownPct, deposits: devices.unknownDeposits, color: COLORS.unknown },
-  ].filter(d => d.value > 0);
-  const tooltipStyle = { background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, color: "hsl(var(--foreground))" };
-  const itemStyle = { color: "hsl(var(--foreground))" };
-  const labelStyle = { color: "hsl(var(--foreground))", fontWeight: 700 };
-  const totalDeposits = devices.androidDeposits + devices.iosDeposits + devices.desktopDeposits + devices.unknownDeposits;
-
-  return (
-    <div className="rounded-xl border border-border bg-card p-5">
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h2 className="font-black">Dispositivos dos usuários</h2>
-          <p className="text-xs text-muted-foreground">Plataforma usada no cadastro ({devices.total} usuários · {brl(totalDeposits)} depositado)</p>
-        </div>
-      </div>
-      {devices.total === 0 ? (
-        <div className="text-sm text-muted-foreground py-8 text-center">Sem dados de dispositivo ainda.</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={95} paddingAngle={2} stroke="none">
-                  {pieData.map((d, i) => <Cell key={i} fill={d.color} />)}
-                </Pie>
-                <Tooltip
-                  contentStyle={tooltipStyle}
-                  itemStyle={itemStyle}
-                  labelStyle={labelStyle}
-                  formatter={(v: number, _n, entry: any) => {
-                    const dep = entry?.payload?.deposits ?? 0;
-                    return [`${v} usuários · ${brl(Number(dep))} depositado`, entry?.payload?.name];
-                  }}
+        <>
+          {(d.queues.withdrawals > 0 ||
+            d.queues.kyc > 0 ||
+            d.reconciliationIssues > 0 ||
+            d.pfProblems24h > 0) && (
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              {d.queues.withdrawals > 0 && (
+                <Stat
+                  to="/admin/saques"
+                  tone="warn"
+                  value={d.queues.withdrawals}
+                  label="Saques esperando decisão"
+                  sub={formatBRL(d.queues.withdrawalsAmount)}
                 />
-                <Legend wrapperStyle={{ color: "hsl(var(--foreground))" }} />
-              </PieChart>
-            </ResponsiveContainer>
+              )}
+              {d.queues.kyc > 0 && (
+                <Stat
+                  to="/admin/kyc"
+                  tone="warn"
+                  value={d.queues.kyc}
+                  label="Documentos para analisar"
+                />
+              )}
+              {d.reconciliationIssues > 0 && (
+                <Stat
+                  to="/admin/transacoes"
+                  tone="out"
+                  value={d.reconciliationIssues}
+                  label="Saldos fora do extrato"
+                  sub="Abra Movimentações > Reconciliação"
+                />
+              )}
+              {d.pfProblems24h > 0 && (
+                <Stat
+                  to="/admin/cassino"
+                  tone="warn"
+                  value={d.pfProblems24h}
+                  label="Avisos da PlayFivers em 24h"
+                />
+              )}
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+            <Stat
+              tone="in"
+              value={formatBRL(d.period.deposits)}
+              label="Depósitos"
+              sub={`${d.days.reduce((a, x) => a + x.depositsCount, 0)} Pix confirmados`}
+            />
+            <Stat
+              tone="out"
+              value={formatBRL(d.period.withdrawals)}
+              label="Saques pagos"
+              sub={`${d.days.reduce((a, x) => a + x.withdrawalsCount, 0)} saques`}
+            />
+            <Stat
+              value={formatBRL(d.period.deposits - d.period.withdrawals)}
+              label="Caixa líquido"
+              sub="Depósitos menos saques pagos"
+            />
+            <Stat
+              value={formatBRL(d.period.ggr)}
+              label="GGR"
+              sub="Apostado menos pago em prêmios"
+            />
           </div>
-          <div className="space-y-2">
-            {pieData.map((d) => (
-              <div key={d.name} className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2">
-                <span className="size-3 rounded-full" style={{ background: d.color }} />
-                <div className="flex-1 min-w-0">
-                  <div className="font-bold">{d.name}</div>
-                  <div className="text-xs text-muted-foreground">{brl(d.deposits)} depositado</div>
+
+          <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+            <Stat
+              value={formatBRL(d.liability)}
+              label="Saldo dos jogadores"
+              sub={`${d.playersWithBalance} contas com saldo`}
+            />
+            <Stat
+              value={d.playingNow}
+              label="Jogando agora"
+              sub="Abriram um jogo nos últimos 15 min"
+            />
+            <Stat
+              value={d.period.signups}
+              label="Cadastros"
+              sub={`${d.today?.signups ?? 0} hoje`}
+            />
+            <Stat
+              to="/admin/esportes"
+              value={formatBRL(d.openBets.maxPayout)}
+              label="Exposição em esportes"
+              sub={`${d.openBets.count} apostas abertas`}
+            />
+          </div>
+
+          <div className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
+            <Panel title="Entradas e saídas por dia">
+              <FlowChart
+                data={d.days.map((x) => ({
+                  day: x.day,
+                  deposits: x.deposits,
+                  withdrawals: x.withdrawals,
+                }))}
+              />
+            </Panel>
+            <Panel title="GGR por dia">
+              <GgrChart data={d.days.map((x) => ({ day: x.day, ggr: x.ggr }))} />
+              <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-border pt-4 text-[13.5px]">
+                <div>
+                  <dt className="text-muted-foreground">Apostado no cassino</dt>
+                  <dd className="num font-semibold">{formatBRL(d.period.casinoBets)}</dd>
                 </div>
-                <span className="text-sm text-muted-foreground">{d.value}</span>
-                <span className="font-black text-lg w-14 text-right">{d.pct}%</span>
-              </div>
-            ))}
+                <div>
+                  <dt className="text-muted-foreground">Apostado em esportes</dt>
+                  <dd className="num font-semibold">{formatBRL(d.period.sportsStakes)}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Ajustes manuais</dt>
+                  <dd className="num font-semibold">
+                    <Money value={d.period.adjustments} signed />
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Jogadores ativos hoje</dt>
+                  <dd className="num font-semibold">{d.today?.active ?? 0}</dd>
+                </div>
+              </dl>
+            </Panel>
           </div>
-        </div>
+
+          <div className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
+            <Panel
+              title="Últimas movimentações"
+              actions={
+                <Link
+                  to="/admin/transacoes"
+                  className="text-[13px] font-semibold text-primary hover:underline"
+                >
+                  Ver todas
+                </Link>
+              }
+              flush
+            >
+              {d.recent.length === 0 ? (
+                <p className="px-5 py-10 text-center text-[14px] text-muted-foreground">
+                  Nenhuma movimentação ainda.
+                </p>
+              ) : (
+                <ul className="divide-y divide-border">
+                  {d.recent.map((r) => (
+                    <li key={r.id} className="flex items-center gap-3 px-5 py-2.5">
+                      <div className="min-w-0 flex-1">
+                        <Link
+                          to="/admin/usuarios/$id"
+                          params={{ id: r.user_id }}
+                          className="block truncate text-[14px] font-semibold hover:text-primary"
+                        >
+                          {r.user?.full_name || r.user?.username || r.user_id.slice(0, 8)}
+                        </Link>
+                        <p className="text-[12.5px] text-muted-foreground">
+                          {KIND[r.kind] ?? r.kind}, {formatWhen(r.created_at)}
+                        </p>
+                      </div>
+                      <Money value={r.amount} signed className="font-semibold" />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Panel>
+
+            <Panel title="Saúde da plataforma">
+              <ul className="space-y-3 text-[14px]">
+                <Health
+                  ok={d.reconciliationIssues === 0}
+                  good="Todos os saldos batem com o extrato"
+                  bad={`${d.reconciliationIssues} saldo(s) fora do extrato`}
+                />
+                <Health
+                  ok={d.pfProblems24h === 0}
+                  good="Nenhum aviso da PlayFivers em 24h"
+                  bad={`${d.pfProblems24h} aviso(s) da PlayFivers em 24h`}
+                />
+                <Health
+                  ok={d.flags.realMoney}
+                  good="Dinheiro real ligado"
+                  bad="Homologação: dinheiro real desligado"
+                  neutral
+                />
+                <Health
+                  ok={!d.flags.maintenance}
+                  good="Site fora de manutenção"
+                  bad="Site em manutenção"
+                />
+                <Health ok={d.flags.casino} good="Cassino aberto" bad="Cassino fechado" neutral />
+                <Health
+                  ok={d.flags.sports}
+                  good="Esportes abertos"
+                  bad="Esportes fechados"
+                  neutral
+                />
+              </ul>
+            </Panel>
+          </div>
+        </>
       )}
     </div>
   );
 }
 
-
-function DashboardSkeleton() {
-  return <div className="space-y-4">{[96, 132, 320].map((h) => <div key={h} style={{ height: h }} className="animate-pulse rounded-xl border border-border bg-card/70" />)}</div>;
+function Health({
+  ok,
+  good,
+  bad,
+  neutral,
+}: {
+  ok: boolean;
+  good: string;
+  bad: string;
+  neutral?: boolean;
+}) {
+  return (
+    <li className="flex items-center gap-2.5">
+      {ok ? (
+        <CheckCircle2 className="size-[18px] shrink-0 text-live" />
+      ) : (
+        <AlertTriangle
+          className={cn("size-[18px] shrink-0", neutral ? "text-gold" : "text-destructive")}
+        />
+      )}
+      <span className={cn(!ok && !neutral && "font-semibold")}>{ok ? good : bad}</span>
+    </li>
+  );
 }

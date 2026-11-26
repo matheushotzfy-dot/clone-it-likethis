@@ -130,7 +130,7 @@ export const listMyPayments = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const { data, error } = await supabase
       .from("transactions")
-      .select("id,type,status,amount,description,pix_key,created_at,kyc_required")
+      .select("id,type,status,amount,fee,description,pix_key,created_at,kyc_required")
       .eq("user_id", userId)
       .in("type", ["deposit", "withdrawal"])
       .order("created_at", { ascending: false })
@@ -151,6 +151,7 @@ export const listMyPayments = createServerFn({ method: "GET" })
     return (data ?? []).map((t) => ({
       ...t,
       amount: Number(t.amount),
+      fee: Number(t.fee ?? 0),
       kyc_submission: latest.get(t.id) ?? null,
     }));
   });
@@ -264,12 +265,15 @@ export const requestWithdrawal = createServerFn({ method: "POST" })
       .maybeSingle();
     if (existing) return { ok: true, transactionId: existing.id, status: existing.status };
 
+    // A taxa fica gravada no pedido: o jogador recebe amount - fee, mesmo que a taxa mude depois.
+    const fee = Math.min(amount, m.roundMoney((amount * s.withdrawal_fee_pct) / 100));
     const { data: tx, error } = await admin
       .from("transactions")
       .insert({
         user_id: userId,
         type: "withdrawal",
         amount,
+        fee,
         status: "pending",
         pix_key: `cpf:${cpf}`,
         gateway_external_id: externalId,

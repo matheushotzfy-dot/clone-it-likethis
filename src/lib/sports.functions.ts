@@ -281,7 +281,6 @@ export async function runSettlement(): Promise<SettleReport> {
   return settling;
 }
 
-
 export const settleSportsNow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -315,5 +314,21 @@ export const settleSportsBetManual = createServerFn({ method: "POST" })
       p_note: data.note,
     });
     if (error) throw new Error(error.message);
+    const { data: bet } = await supabaseAdmin
+      .from("sports_bets")
+      .select("user_id,stake,potential_payout,home,away")
+      .eq("id", data.betId)
+      .maybeSingle();
+    await context.supabase.rpc("admin_log", {
+      p_action: "sports_bet.settle",
+      p_target_user: bet?.user_id,
+      p_target_id: data.betId,
+      p_details: {
+        resultado: data.status,
+        jogo: bet ? `${bet.home} x ${bet.away}` : null,
+        amount: bet ? Number(bet.stake) : null,
+        motivo: data.note,
+      } as never,
+    });
     return { result: result as string };
   });

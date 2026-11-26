@@ -1,149 +1,362 @@
-import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { listBannersAdmin, upsertBanner, deleteBanner, type Banner } from "@/lib/banners.functions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { supabase } from "@/integrations/supabase/client";
+import { Loader2, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
-import { ImagePlus, Trash2, Upload } from "lucide-react";
+import { deleteBanner, listBannersAdmin, upsertBanner, type Banner } from "@/lib/banners.functions";
+import { supabase } from "@/integrations/supabase/client";
+import { Empty, ErrorBox, PageHeader, Panel } from "@/components/admin/ui";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/banners")({
-  head: () => ({ meta: pageMeta('Banners administrativos — apostamaxy', 'Banners administrativos da apostamaxy. Área de gestão autorizada.') }), component: Page });
+  head: () => ({ meta: [{ title: "Banners | admin" }] }),
+  component: Page,
+});
+
+type Draft = Partial<Banner>;
+const MAX_MB = 3;
 
 function Page() {
+  const qc = useQueryClient();
   const listFn = useServerFn(listBannersAdmin);
   const upsertFn = useServerFn(upsertBanner);
   const delFn = useServerFn(deleteBanner);
-  const qc = useQueryClient();
-  const { data, isLoading } = useQuery({ queryKey: ["admin-banners"], queryFn: () => listFn(), staleTime: 30_000, refetchOnWindowFocus: false });
-
-  const [editing, setEditing] = useState<Partial<Banner> | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const q = useQuery({ queryKey: ["admin-banners"], queryFn: () => listFn() });
+  const [editing, setEditing] = useState<Draft | null>(null);
+  const [removing, setRemoving] = useState<Banner | null>(null);
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ["admin-banners"] });
+    qc.invalidateQueries({ queryKey: ["banners-public"] });
+  };
 
   const save = useMutation({
-    mutationFn: (b: Partial<Banner>) => upsertFn({ data: {
-      id: b.id,
-      image_url: b.image_url!,
-      title: b.title ?? null,
-      link_url: b.link_url ?? null,
-      sort_order: Number(b.sort_order ?? 0),
-      active: b.active ?? true,
-    } }),
+    mutationFn: (b: Draft) =>
+      upsertFn({
+        data: {
+          id: b.id,
+          image_url: b.image_url ?? "",
+          title: b.title ?? null,
+          link_url: b.link_url ?? null,
+          sort_order: Number(b.sort_order ?? 0),
+          active: b.active ?? true,
+        },
+      }),
     onSuccess: () => {
-      toast.success("Banner salvo");
-      qc.invalidateQueries({ queryKey: ["admin-banners"] });
-      qc.invalidateQueries({ queryKey: ["banners-public"] });
+      toast.success("Banner salvo.");
       setEditing(null);
+      refresh();
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: Error) =>
+      toast.error(e.message.includes("[") ? "Confira a imagem e o link." : e.message),
   });
-
+  const toggle = useMutation({
+    mutationFn: (b: Banner) => upsertFn({ data: { ...b, active: !b.active } }),
+    onSuccess: refresh,
+    onError: (e: Error) => toast.error(e.message),
+  });
   const remove = useMutation({
     mutationFn: (id: string) => delFn({ data: { id } }),
     onSuccess: () => {
-      toast.success("Banner removido");
-      qc.invalidateQueries({ queryKey: ["admin-banners"] });
-      qc.invalidateQueries({ queryKey: ["banners-public"] });
+      toast.success("Banner apagado.");
+      setRemoving(null);
+      refresh();
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: Error) => toast.error(e.message),
   });
 
-  async function uploadFile(file: File): Promise<string | null> {
+  const active = (q.data ?? []).filter((b) => b.active).length;
+  return (
+    <div className="max-w-5xl space-y-5">
+      <PageHeader
+        title="Banners da página inicial"
+        description={
+          active
+            ? `${active} ${active === 1 ? "banner aparece" : "banners aparecem"} no carrossel do início, na ordem abaixo.`
+            : "Sem banner ativo, o carrossel não aparece no início."
+        }
+        actions={
+          <Button
+            onClick={() =>
+              setEditing({
+                active: true,
+                sort_order: ((q.data ?? []).at(-1)?.sort_order ?? 0) + 10,
+              })
+            }
+            className="h-10 rounded-[10px] font-bold shadow-none"
+          >
+            Novo banner
+          </Button>
+        }
+      />
+      {q.error ? (
+        <ErrorBox error={q.error} onRetry={() => q.refetch()} />
+      ) : (
+        <Panel flush>
+          {q.isLoading ? (
+            <div className="skeleton m-5 h-24 rounded-[10px]" />
+          ) : !q.data?.length ? (
+            <Empty>Nenhum banner cadastrado.</Empty>
+          ) : (
+            <ul className="divide-y divide-border">
+              {q.data.map((b) => (
+                <li
+                  key={b.id}
+                  className={cn(
+                    "flex flex-wrap items-center gap-4 px-5 py-3.5",
+                    !b.active && "opacity-60",
+                  )}
+                >
+                  <img
+                    src={b.image_url}
+                    alt=""
+                    className="aspect-[3.6/1] w-44 rounded-[8px] border border-border object-cover"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[15px] font-semibold">{b.title || "Sem título"}</p>
+                    <p className="truncate text-[13px] text-muted-foreground">
+                      {b.link_url ? `Abre ${b.link_url}` : "Sem link"}
+                    </p>
+                    <p className="num text-[12.5px] text-muted-foreground">Ordem {b.sort_order}</p>
+                  </div>
+                  <label className="flex items-center gap-2 text-[13.5px]">
+                    <Switch
+                      checked={b.active}
+                      onCheckedChange={() => toggle.mutate(b)}
+                      aria-label={`Mostrar ${b.title || "banner"}`}
+                    />
+                    {b.active ? "No ar" : "Fora do ar"}
+                  </label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-[8px]"
+                    onClick={() => setEditing(b)}
+                  >
+                    Editar
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => setRemoving(b)}
+                    aria-label="Apagar banner"
+                    className="grid size-9 place-items-center rounded-[8px] text-muted-foreground hover:bg-surface-2 hover:text-destructive"
+                  >
+                    <Trash2 className="size-4" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
+      )}
+
+      <Editor
+        draft={editing}
+        onClose={() => setEditing(null)}
+        onSave={(d) => save.mutate(d)}
+        saving={save.isPending}
+      />
+
+      <Dialog open={!!removing} onOpenChange={(o) => !o && setRemoving(null)}>
+        <DialogContent className="rounded-[16px] border-border bg-background sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-[24px]">Apagar banner?</DialogTitle>
+          </DialogHeader>
+          <p className="text-[14px] text-muted-foreground">
+            Ele sai do carrossel na hora. Para tirar só por um tempo, use a chave No ar.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" className="rounded-[10px]" onClick={() => setRemoving(null)}>
+              Voltar
+            </Button>
+            <Button
+              variant="destructive"
+              className="rounded-[10px]"
+              disabled={remove.isPending}
+              onClick={() => removing && remove.mutate(removing.id)}
+            >
+              Apagar banner
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function Editor({
+  draft,
+  onClose,
+  onSave,
+  saving,
+}: {
+  draft: Draft | null;
+  onClose: () => void;
+  onSave: (d: Draft) => void;
+  saving: boolean;
+}) {
+  const [d, setD] = useState<Draft>({});
+  const [uploading, setUploading] = useState(false);
+  const [openFor, setOpenFor] = useState<Draft | null>(null);
+  if (draft !== openFor) {
+    setOpenFor(draft);
+    setD(draft ?? {});
+  }
+
+  async function upload(file: File) {
+    if (!file.type.startsWith("image/"))
+      return toast.error("Escolha uma imagem (JPG, PNG ou WebP).");
+    if (file.size > MAX_MB * 1024 * 1024)
+      return toast.error(`A imagem passa de ${MAX_MB} MB. Exporte menor.`);
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error } = await supabase.storage.from("banners").upload(path, file, { contentType: file.type });
-      if (error) { toast.error(error.message); return null; }
-      const { data: pub } = supabase.storage.from("banners").getPublicUrl(path);
-      return pub.publicUrl;
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+      const path = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+      const { error } = await supabase.storage
+        .from("banners")
+        .upload(path, file, { contentType: file.type, cacheControl: "31536000" });
+      if (error) return toast.error(error.message);
+      setD((cur) => ({
+        ...cur,
+        image_url: supabase.storage.from("banners").getPublicUrl(path).data.publicUrl,
+      }));
     } finally {
       setUploading(false);
     }
   }
 
   return (
-    <div className="space-y-6 max-w-5xl">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h1 className="text-2xl font-bold">Banners da Home</h1>
-        <Button onClick={() => setEditing({ active: true, sort_order: 0 })}>
-          <ImagePlus className="size-4 mr-2" /> Novo banner
-        </Button>
-      </div>
-
-      {editing && (
-        <div className="bg-card border border-border rounded-xl p-5 space-y-4">
-          <h2 className="font-bold">{editing.id ? "Editar banner" : "Novo banner"}</h2>
-          {editing.image_url && (
-            <img src={editing.image_url} alt="" className="w-full max-w-2xl aspect-[1280/280] object-cover rounded-lg border border-border" />
-          )}
+    <Dialog open={!!draft} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="rounded-[16px] border-border bg-background sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="text-[24px]">
+            {d.id ? "Editar banner" : "Novo banner"}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
           <div>
-            <label className="text-xs uppercase font-bold text-muted-foreground">Imagem (1280×280 recomendado)</label>
-            <div className="flex gap-2 mt-1">
-              <Input
+            <div className="relative aspect-[3.6/1] overflow-hidden rounded-[12px] border border-border bg-surface">
+              {d.image_url ? (
+                <img src={d.image_url} alt="" className="size-full object-cover" />
+              ) : (
+                <div className="grid size-full place-items-center text-[13.5px] text-muted-foreground">
+                  A imagem aparece aqui
+                </div>
+              )}
+              {d.image_url && (
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-y-0 left-1/2 w-[61%] -translate-x-1/2 border-x border-dashed border-white/50"
+                />
+              )}
+            </div>
+            <p className="mt-1.5 text-[12.5px] text-muted-foreground">
+              Use 1440×400 px. No celular o banner é cortado nas laterais: deixe texto e rosto
+              dentro da área tracejada.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <label
+              className={cn(
+                "inline-flex h-10 cursor-pointer items-center gap-2 rounded-[10px] border border-border px-4 text-[14px] font-semibold hover:border-primary/60",
+                uploading && "pointer-events-none opacity-60",
+              )}
+            >
+              {uploading ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Upload className="size-4" />
+              )}{" "}
+              {d.image_url ? "Trocar imagem" : "Enviar imagem"}
+              <input
                 type="file"
-                accept="image/*"
-                disabled={uploading}
-                onChange={async (e) => {
-                  const file = e.target.files?.[0]; if (!file) return;
-                  const url = await uploadFile(file);
-                  if (url) setEditing({ ...editing, image_url: url });
+                accept="image/jpeg,image/png,image/webp"
+                className="sr-only"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) upload(f);
+                  e.target.value = "";
                 }}
               />
-            </div>
-            <p className="text-[11px] text-muted-foreground mt-1">Ou cole uma URL pública abaixo</p>
-            <Input className="mt-2" placeholder="https://..." value={editing.image_url ?? ""} onChange={(e) => setEditing({ ...editing, image_url: e.target.value })} />
+            </label>
+            <span className="text-[13px] text-muted-foreground">ou cole o endereço</span>
+            <input
+              className="field-input h-10 min-w-[220px] flex-1"
+              placeholder="https://..."
+              value={d.image_url ?? ""}
+              onChange={(e) => setD({ ...d, image_url: e.target.value })}
+              aria-label="Endereço da imagem"
+            />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs uppercase font-bold text-muted-foreground">Título (opcional)</label>
-              <Input value={editing.title ?? ""} onChange={(e) => setEditing({ ...editing, title: e.target.value })} />
-            </div>
-            <div>
-              <label className="text-xs uppercase font-bold text-muted-foreground">Link ao clicar (opcional)</label>
-              <Input value={editing.link_url ?? ""} placeholder="https://..." onChange={(e) => setEditing({ ...editing, link_url: e.target.value })} />
-            </div>
-            <div>
-              <label className="text-xs uppercase font-bold text-muted-foreground">Ordem</label>
-              <Input type="number" value={editing.sort_order ?? 0} onChange={(e) => setEditing({ ...editing, sort_order: Number(e.target.value) })} />
-            </div>
-            <div className="flex items-center gap-3 mt-6">
-              <Switch checked={editing.active ?? true} onCheckedChange={(v) => setEditing({ ...editing, active: v })} />
-              <span className="text-sm font-bold">Ativo</span>
-            </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="block">
+              <span className="mb-1 block text-[13.5px] font-semibold">Texto alternativo</span>
+              <input
+                className="field-input"
+                maxLength={120}
+                value={d.title ?? ""}
+                onChange={(e) => setD({ ...d, title: e.target.value })}
+                placeholder="O que o banner diz, para leitor de tela"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-[13.5px] font-semibold">Abre ao clicar</span>
+              <input
+                className="field-input"
+                value={d.link_url ?? ""}
+                onChange={(e) => setD({ ...d, link_url: e.target.value })}
+                placeholder="/cassino ou https://..."
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-[13.5px] font-semibold">Ordem</span>
+              <input
+                className="field-input num"
+                inputMode="numeric"
+                value={String(d.sort_order ?? 0)}
+                onChange={(e) =>
+                  setD({
+                    ...d,
+                    sort_order: Number(e.target.value.replace(/\D/g, "").slice(0, 4)) || 0,
+                  })
+                }
+              />
+            </label>
+            <label className="flex items-center gap-3 self-end pb-2.5 text-[14px] font-semibold">
+              <Switch
+                checked={d.active ?? true}
+                onCheckedChange={(v) => setD({ ...d, active: v })}
+              />
+              No ar
+            </label>
           </div>
-          <div className="flex gap-2">
-            <Button disabled={!editing.image_url || save.isPending} onClick={() => save.mutate(editing)}>
-              {save.isPending ? "Salvando..." : "Salvar"}
-            </Button>
-            <Button variant="outline" onClick={() => setEditing(null)}>Cancelar</Button>
-          </div>
+          <p className="text-[12.5px] text-muted-foreground">
+            Banner de promoção só com a promoção cadastrada de verdade e as regras completas
+            publicadas.
+          </p>
         </div>
-      )}
-
-      <div className="bg-card border border-border rounded-xl overflow-hidden">
-        {isLoading && <div className="p-6 text-center text-muted-foreground">Carregando...</div>}
-        {!isLoading && (data ?? []).length === 0 && <div className="p-6 text-center text-muted-foreground">Nenhum banner cadastrado. Os banners padrão estão sendo exibidos.</div>}
-        <ul className="divide-y divide-border">
-          {(data ?? []).map((b) => (
-            <li key={b.id} className="p-3 flex items-center gap-3">
-              <img src={b.image_url} alt={b.title ?? ""} className="w-32 h-12 object-cover rounded border border-border" />
-              <div className="flex-1 min-w-0">
-                <div className="font-bold truncate">{b.title || <span className="text-muted-foreground italic">sem título</span>}</div>
-                <div className="text-xs text-muted-foreground truncate">{b.link_url || "sem link"} · ordem {b.sort_order} · {b.active ? "ativo" : "inativo"}</div>
-              </div>
-              <Button variant="outline" size="sm" onClick={() => setEditing(b)}>Editar</Button>
-              <Button variant="destructive" size="sm" onClick={() => { if (confirm("Apagar este banner?")) remove.mutate(b.id); }}>
-                <Trash2 className="size-4" />
-              </Button>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
+        <DialogFooter>
+          <Button variant="outline" className="rounded-[10px]" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button
+            className="rounded-[10px] font-bold shadow-none"
+            disabled={!d.image_url || saving || uploading}
+            onClick={() => onSave(d)}
+          >
+            {saving ? <Loader2 className="animate-spin" /> : "Salvar banner"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
