@@ -48,17 +48,17 @@ export function HeaderAccount() {
 
   if (!user) {
     return (
-      <div className="ml-auto flex shrink-0 items-center gap-2">
+      <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
         <Button
           variant="ghost"
           onClick={() => open("login")}
-          className="h-10 rounded-[10px] px-4 font-semibold text-foreground/85 hover:bg-surface-2 hover:text-foreground"
+          className="h-9 rounded-[10px] px-3 text-[14px] font-semibold text-foreground/85 hover:bg-surface-2 hover:text-foreground sm:h-10 sm:px-4"
         >
           Entrar
         </Button>
         <Button
           onClick={() => open("register")}
-          className="h-10 rounded-[10px] px-4 font-bold shadow-none"
+          className="h-9 rounded-[10px] px-3 text-[14px] font-bold shadow-none sm:h-10 sm:px-4"
         >
           Criar conta
         </Button>

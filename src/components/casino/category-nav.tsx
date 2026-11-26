@@ -4,17 +4,9 @@ import imgSlots from "@/assets/cat-slots.png";
 import imgCrash from "@/assets/cat-crash.png";
 import imgAoVivo from "@/assets/cat-aovivo.png";
 import imgTodos from "@/assets/cat-todos.png";
-import imgTorneios from "@/assets/cat-torneios.png";
 import imgPromocoes from "@/assets/cat-promocoes.png";
 
-export type CategoryKey =
-  | "inicio"
-  | "slots"
-  | "crash"
-  | "aovivo"
-  | "todos"
-  | "torneios"
-  | "promocoes";
+export type CategoryKey = "inicio" | "slots" | "crash" | "aovivo" | "todos" | "promocoes";
 
 const cats: {
   key: CategoryKey;
@@ -28,7 +20,6 @@ const cats: {
   { key: "crash", label: "Crash", to: "/cassino", img: imgCrash, search: { cat: "crash" } },
   { key: "aovivo", label: "Ao vivo", to: "/ao-vivo", img: imgAoVivo },
   { key: "todos", label: "Todos", to: "/cassino", img: imgTodos },
-  { key: "torneios", label: "Torneios", to: "/torneios", img: imgTorneios },
   { key: "promocoes", label: "Promoções", to: "/promocoes", img: imgPromocoes },
 ];
 

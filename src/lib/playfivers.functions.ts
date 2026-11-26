@@ -12,6 +12,7 @@ import {
   providerLabel,
 } from "./pf-catalog-rules";
 import { games as showcaseGames } from "./games";
+import { gameKind, kindOrFilter, type GameKind } from "./game-kinds";
 
 // ---------------------------------------------------------------------------
 // Tipos expostos para a interface
@@ -25,9 +26,44 @@ export interface LobbyGame {
   image_url: string | null;
   category: LobbyCategory;
   featured: boolean;
+  /** Roleta, game show, baccarat ou blackjack; null para o resto. */
+  kind: GameKind | null;
+  /** Entrou no catálogo nos últimos 14 dias (só no catálogo real). */
+  isNew: boolean;
   /** false = vitrine local enquanto o catálogo da PlayFivers não foi sincronizado. */
   launchable: boolean;
 }
+
+export interface LobbyProvider {
+  name: string;
+  games: number;
+  covers: string[];
+}
+
+const NEW_DAYS = 14;
+type GameRow = {
+  id: number;
+  name: string;
+  provider: string;
+  image_url: string | null;
+  category: string;
+  featured: boolean;
+  created_at?: string | null;
+};
+function toLobbyGame(g: GameRow): LobbyGame {
+  return {
+    id: g.id,
+    name: g.name,
+    provider: g.provider,
+    image_url: g.image_url,
+    category: g.category as LobbyCategory,
+    featured: g.featured,
+    kind: gameKind(g.name),
+    isNew: !!g.created_at && Date.now() - new Date(g.created_at).getTime() < NEW_DAYS * 86_400_000,
+    launchable: true,
+  };
+}
+const GAME_COLS = "id,name,provider,image_url,category,featured,created_at";
 
 // ---------------------------------------------------------------------------
 // Acesso à API da PlayFivers (sempre via resolvePFEndpoint por causa do IP fixo)
@@ -75,7 +111,6 @@ function pfCredentials() {
   return agentToken && secretKey ? { agentToken, secretKey } : null;
 }
 
-
 // ---------------------------------------------------------------------------
 // Lobby (público)
 // ---------------------------------------------------------------------------
@@ -85,88 +120,188 @@ function showcase(): LobbyGame[] {
     crash: "crash",
     live: "live",
     table: "table",
-    popular: "slot",
   };
-  return showcaseGames.map((g, i) => ({
-    id: -(i + 1),
-    name: g.name,
-    provider: g.provider,
-    image_url: g.image,
-    category: map[g.category] ?? "slot",
-    featured: i < FEATURED_COUNT,
-    launchable: false,
-  }));
+  return showcaseGames
+    .filter((g) => g.image)
+    .map((g, i) => ({
+      id: -(i + 1),
+      name: g.name,
+      provider: g.provider,
+      image_url: g.image,
+      category: map[g.category] ?? "slot",
+      featured: i < FEATURED_COUNT,
+      kind: gameKind(g.name),
+      isNew: false,
+      launchable: false,
+    }));
+}
+
+function plain(s: string) {
+  return s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
 }
 
 const lobbySchema = z.object({
   category: z.enum(["all", "slot", "live", "crash", "table", "other"]).default("all"),
+  kind: z.enum(["roulette", "gameshow", "baccarat", "blackjack"]).optional(),
   provider: z.string().trim().max(60).optional(),
   q: z.string().trim().max(80).optional(),
   featured: z.boolean().optional(),
+  sort: z.enum(["popular", "az"]).default("popular"),
   limit: z.number().int().min(1).max(2000).default(60),
   offset: z.number().int().min(0).default(0),
 });
+type LobbyQuery = z.infer<typeof lobbySchema>;
+
+function filterShowcase(data: LobbyQuery) {
+  let list = showcase();
+  // Mesa (blackjack de cartas) aparece junto do ao vivo, como no catálogo real.
+  if (data.category === "live")
+    list = list.filter((g) => g.category === "live" || g.category === "table");
+  else if (data.category !== "all") list = list.filter((g) => g.category === data.category);
+  if (data.kind) list = list.filter((g) => g.kind === data.kind);
+  if (data.provider) list = list.filter((g) => g.provider === data.provider);
+  if (data.featured) list = list.filter((g) => g.featured);
+  if (data.q) {
+    const t = plain(data.q);
+    list = list.filter((g) => plain(g.name).includes(t) || plain(g.provider).includes(t));
+  }
+  if (data.sort === "az") list = [...list].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+  return list;
+}
+
+let catalogEmptyCache: { at: number; empty: boolean } | null = null;
+async function catalogIsEmpty() {
+  if (catalogEmptyCache && Date.now() - catalogEmptyCache.at < 60_000)
+    return catalogEmptyCache.empty;
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { count } = await supabaseAdmin
+    .from("games")
+    .select("id", { count: "exact", head: true })
+    .eq("active", true);
+  catalogEmptyCache = { at: Date.now(), empty: !count };
+  return !count;
+}
 
 export const getLobbyGames = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => lobbySchema.parse(d ?? {}))
   .handler(async ({ data }) => {
+    // Catálogo ainda vazio (PlayFivers não configurada): vitrine local com os mesmos filtros.
+    if (await catalogIsEmpty()) {
+      const list = filterShowcase(data);
+      return {
+        games: list.slice(data.offset, data.offset + data.limit),
+        total: list.length,
+        showcase: true,
+      };
+    }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    let q = supabaseAdmin
-      .from("games")
-      .select("id,name,provider,image_url,category,featured", { count: "exact" })
-      .eq("active", true)
-      .order("featured", { ascending: false })
-      .order("sort_order", { ascending: true })
-      .order("name", { ascending: true })
-      .range(data.offset, data.offset + data.limit - 1);
-    if (data.category !== "all") q = q.eq("category", data.category);
+    let q = supabaseAdmin.from("games").select(GAME_COLS, { count: "exact" }).eq("active", true);
+    if (data.sort === "az") q = q.order("name", { ascending: true });
+    else
+      q = q
+        .order("featured", { ascending: false })
+        .order("sort_order", { ascending: true })
+        .order("name", { ascending: true });
+    if (data.category === "live") q = q.in("category", data.kind ? ["live", "table"] : ["live"]);
+    else if (data.category !== "all") q = q.eq("category", data.category);
+    if (data.kind) q = q.or(kindOrFilter(data.kind));
     if (data.provider) q = q.eq("provider", data.provider);
     if (data.featured) q = q.eq("featured", true);
-    if (data.q) q = q.ilike("name", `%${data.q.replace(/[%_]/g, "")}%`);
-    const { data: rows, count, error } = await q;
-    if (error) throw new Error("Não foi possível carregar os jogos");
-
-    // Catálogo ainda vazio (PlayFivers não configurada): mostra a vitrine local.
-    if (!count && !data.q && !data.provider) {
-      const { count: total } = await supabaseAdmin
-        .from("games")
-        .select("id", { count: "exact", head: true })
-        .eq("active", true);
-      if (!total) {
-        let list = showcase();
-        if (data.category !== "all") list = list.filter((g) => g.category === data.category);
-        if (data.featured) list = list.filter((g) => g.featured);
-        return {
-          games: list.slice(data.offset, data.offset + data.limit),
-          total: list.length,
-          showcase: true,
-        };
-      }
+    if (data.q) {
+      const t = data.q.replace(/[%_,()]/g, " ");
+      q = q.or(`name.ilike.%${t}%,provider.ilike.%${t}%`);
     }
-    const games: LobbyGame[] = (rows ?? []).map((g) => ({
-      ...g,
-      category: g.category as LobbyCategory,
-      launchable: true,
-    }));
+    const { data: rows, count, error } = await q.range(data.offset, data.offset + data.limit - 1);
+    if (error) throw new Error("Não foi possível carregar os jogos");
+    const games = (rows ?? []).map((g) => toLobbyGame(g as GameRow));
     return { games, total: count ?? games.length, showcase: false };
   });
 
-export const getLobbyProviders = createServerFn({ method: "GET" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin
-    .from("games")
-    .select("provider")
-    .eq("active", true)
-    .limit(10_000);
-  const counts = new Map<string, number>();
-  for (const row of data ?? []) counts.set(row.provider, (counts.get(row.provider) ?? 0) + 1);
-  if (counts.size === 0) {
-    for (const g of showcaseGames) counts.set(g.provider, (counts.get(g.provider) ?? 0) + 1);
-  }
-  return [...counts.entries()]
-    .map(([name, games]) => ({ name, games }))
-    .sort((a, b) => b.games - a.games || a.name.localeCompare(b.name));
-});
+export interface LobbyCounts {
+  all: number;
+  slot: number;
+  crash: number;
+  live: number;
+  kinds: Record<GameKind, number>;
+  showcase: boolean;
+}
+
+/** Quantos jogos há em cada categoria e tipo (sidebar e atalhos). */
+export const getLobbyCounts = createServerFn({ method: "GET" }).handler(
+  async (): Promise<LobbyCounts> => {
+    if (await catalogIsEmpty()) {
+      const list = showcase();
+      const kinds = { roulette: 0, gameshow: 0, baccarat: 0, blackjack: 0 } as Record<
+        GameKind,
+        number
+      >;
+      for (const g of list) if (g.kind) kinds[g.kind] += 1;
+      return {
+        all: list.length,
+        slot: list.filter((g) => g.category === "slot").length,
+        crash: list.filter((g) => g.category === "crash").length,
+        live: list.filter((g) => g.category === "live" || g.category === "table").length,
+        kinds,
+        showcase: true,
+      };
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const base = () =>
+      supabaseAdmin.from("games").select("id", { count: "exact", head: true }).eq("active", true);
+    const kindIds: GameKind[] = ["roulette", "gameshow", "baccarat", "blackjack"];
+    const [all, slot, crash, live, ...kindCounts] = await Promise.all([
+      base(),
+      base().eq("category", "slot"),
+      base().eq("category", "crash"),
+      base().in("category", ["live", "table"]),
+      ...kindIds.map((k) => base().in("category", ["live", "table"]).or(kindOrFilter(k))),
+    ]);
+    const kinds = Object.fromEntries(
+      kindIds.map((k, i) => [k, kindCounts[i].count ?? 0]),
+    ) as Record<GameKind, number>;
+    return {
+      all: all.count ?? 0,
+      slot: slot.count ?? 0,
+      crash: crash.count ?? 0,
+      live: live.count ?? 0,
+      kinds,
+      showcase: false,
+    };
+  },
+);
+
+export const getLobbyProviders = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) =>
+    z.object({ category: z.enum(["slot", "live", "crash", "table"]).optional() }).parse(d ?? {}),
+  )
+  .handler(async ({ data }): Promise<LobbyProvider[]> => {
+    if (await catalogIsEmpty()) {
+      const map = new Map<string, LobbyProvider>();
+      const inCat = (c: LobbyCategory) =>
+        !data.category ||
+        (data.category === "live" ? c === "live" || c === "table" : c === data.category);
+      for (const g of showcase().filter((x) => inCat(x.category))) {
+        const cur = map.get(g.provider) ?? { name: g.provider, games: 0, covers: [] };
+        cur.games += 1;
+        if (cur.covers.length < 3 && g.image_url) cur.covers.push(g.image_url);
+        map.set(g.provider, cur);
+      }
+      return [...map.values()].sort((a, b) => b.games - a.games || a.name.localeCompare(b.name));
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin.rpc("lobby_providers", {
+      p_category: data.category,
+    });
+    if (error) throw new Error("Não foi possível carregar os provedores");
+    return (rows ?? []).map((p) => ({
+      name: p.provider,
+      games: Number(p.games),
+      covers: p.covers ?? [],
+    }));
+  });
 
 // ---------------------------------------------------------------------------
 // Abrir jogo
@@ -542,66 +677,41 @@ export const getPFStatus = createServerFn({ method: "GET" })
  * Top 10: jogos com mais rodadas nos últimos 7 dias. Enquanto não há rodadas
  * suficientes, completa com os destaques do catálogo (e avisa via `ranked`).
  */
+/**
+ * Top 10 do lobby: mais jogados da semana (por número de jogadores) quando houver
+ * rodadas suficientes; senão, os destaques do catálogo (ordem do admin).
+ */
 export const getTopGames = createServerFn({ method: "GET" }).handler(async () => {
+  if (await catalogIsEmpty()) return { games: showcase().slice(0, 10), byPlays: false };
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const since = new Date(Date.now() - 7 * 86_400_000).toISOString();
-  const { data: rounds } = await supabaseAdmin
-    .from("game_rounds")
-    .select("provider,game_code")
-    .gte("created_at", since)
-    .gt("bet", 0)
-    .limit(50_000);
-  const counts = new Map<string, number>();
-  for (const r of rounds ?? []) {
-    if (!r.game_code) continue;
-    const key = `${r.provider ?? ""}::${r.game_code}`;
-    counts.set(key, (counts.get(key) ?? 0) + 1);
-  }
-  const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 30);
-
   const out: LobbyGame[] = [];
   const seen = new Set<number>();
-  if (ranked.length) {
-    const codes = ranked.map(([k]) => k.split("::")[1]);
-    const { data: rows } = await supabaseAdmin
-      .from("games")
-      .select("id,name,provider,provider_code,game_code,image_url,category,featured")
-      .eq("active", true)
-      .in("game_code", codes);
-    for (const [key] of ranked) {
-      const [, code] = key.split("::");
-      const g = (rows ?? []).find((x) => x.game_code === code);
-      if (g && !seen.has(g.id)) {
+  const { data: ranked } = await supabaseAdmin.rpc("lobby_top_games", { p_days: 7, p_limit: 20 });
+  const ids = (ranked ?? []).map((r) => Number(r.game_id));
+  if (ids.length) {
+    const { data: rows } = await supabaseAdmin.from("games").select(GAME_COLS).in("id", ids);
+    for (const id of ids) {
+      const g = (rows ?? []).find((x) => x.id === id);
+      if (g && g.image_url && !seen.has(g.id)) {
         seen.add(g.id);
-        out.push({
-          id: g.id,
-          name: g.name,
-          provider: g.provider,
-          image_url: g.image_url,
-          category: g.category as LobbyCategory,
-          featured: g.featured,
-          launchable: true,
-        });
+        out.push(toLobbyGame(g as GameRow));
       }
       if (out.length === 10) break;
     }
   }
   const byPlays = out.length >= 10;
-  if (out.length < 10) {
+  if (!byPlays) {
+    out.length = 0;
+    seen.clear();
     const { data: featured } = await supabaseAdmin
       .from("games")
-      .select("id,name,provider,image_url,category,featured")
+      .select(GAME_COLS)
       .eq("active", true)
+      .not("image_url", "is", null)
       .order("featured", { ascending: false })
       .order("sort_order", { ascending: true })
-      .limit(20);
-    for (const g of featured ?? []) {
-      if (out.length === 10) break;
-      if (seen.has(g.id)) continue;
-      seen.add(g.id);
-      out.push({ ...g, category: g.category as LobbyCategory, launchable: true });
-    }
-    if (!out.length) return { games: showcase().slice(0, 10), byPlays: false };
+      .limit(10);
+    for (const g of featured ?? []) out.push(toLobbyGame(g as GameRow));
   }
   return { games: out, byPlays };
 });

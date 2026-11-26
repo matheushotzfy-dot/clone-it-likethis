@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Play } from "lucide-react";
 import type { LobbyGame } from "@/hooks/use-games";
 
@@ -13,22 +13,35 @@ interface Props {
 /**
  * Capa de jogo. Se a arte não carregar, a capa some em vez de deixar um
  * buraco no grid (regra do projeto para imagens de jogo).
+ * Selos só com fato: "Ao vivo" para mesa com crupiê e "Novo" para jogo que
+ * entrou no catálogo há menos de 14 dias.
  */
 export function GameTile({ game, onPlay, priority, caption = true }: Props) {
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const img = useRef<HTMLImageElement>(null);
+  // A imagem pode terminar de carregar antes do React assumir a página (SSR/cache);
+  // nesse caso o onLoad não dispara, então confere o estado ao montar.
+  useEffect(() => {
+    const el = img.current;
+    if (!el || !el.complete) return;
+    if (el.naturalWidth > 0) setLoaded(true);
+    else setFailed(true);
+  }, [game.image_url]);
   if (!game.image_url || failed) return null;
+  const live = game.category === "live";
 
   return (
     <div className="min-w-0">
       <button
         type="button"
         onClick={() => onPlay(game)}
-        aria-label={`Jogar ${game.name}`}
+        aria-label={`Jogar ${game.name}, ${game.provider}`}
         className="game-tile w-full text-left"
       >
         {!loaded && <span className="skeleton absolute inset-0" aria-hidden />}
         <img
+          ref={img}
           src={game.image_url}
           alt=""
           width={300}
@@ -41,8 +54,21 @@ export function GameTile({ game, onPlay, priority, caption = true }: Props) {
           onError={() => setFailed(true)}
           className={loaded ? "opacity-100" : "opacity-0"}
         />
-        <span className="game-tile-play" aria-hidden>
-          <Play className="size-3.5 fill-current" /> Jogar
+        {(live || game.isNew) && (
+          <span className="game-tile-badges" aria-hidden>
+            {live && (
+              <span className="game-badge game-badge-live">
+                <span className="live-dot live-dot-sm" /> Ao vivo
+              </span>
+            )}
+            {game.isNew && <span className="game-badge game-badge-new">Novo</span>}
+          </span>
+        )}
+        <span className="game-tile-hover" aria-hidden>
+          <span className="game-tile-play-round">
+            <Play className="size-5 translate-x-[1px] fill-current" />
+          </span>
+          <span className="game-tile-provider">{game.provider}</span>
         </span>
       </button>
       {caption && (

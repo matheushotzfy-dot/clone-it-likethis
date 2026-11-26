@@ -20,12 +20,12 @@ export function Logo({
         alt=""
         width={64}
         height={64}
-        className="size-7 shrink-0 object-contain md:size-8"
+        className="size-6 shrink-0 object-contain sm:size-7 md:size-8"
         fetchPriority="high"
         decoding="async"
       />
       {!compact && (
-        <span className="whitespace-nowrap text-[19px] font-extrabold leading-none tracking-[-0.02em] md:text-[21px]">
+        <span className="whitespace-nowrap text-[17px] font-extrabold leading-none tracking-[-0.02em] sm:text-[19px] md:text-[21px]">
           aposta<span className="text-primary">maxy</span>
         </span>
       )}

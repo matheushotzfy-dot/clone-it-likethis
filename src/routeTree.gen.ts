@@ -18,6 +18,7 @@ import { Route as EsportesRouteImport } from './routes/esportes'
 import { Route as IndiqueAmigosRouteImport } from './routes/indique-amigos'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PromocoesRouteImport } from './routes/promocoes'
+import { Route as ProvedoresRouteImport } from './routes/provedores'
 import { Route as RegistroRouteImport } from './routes/registro'
 import { Route as SlotsRouteImport } from './routes/slots'
 import { Route as TorneiosRouteImport } from './routes/torneios'
@@ -94,6 +95,11 @@ const LoginRoute = LoginRouteImport.update({
 const PromocoesRoute = PromocoesRouteImport.update({
   id: '/promocoes',
   path: '/promocoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProvedoresRoute = ProvedoresRouteImport.update({
+  id: '/provedores',
+  path: '/provedores',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegistroRoute = RegistroRouteImport.update({
@@ -275,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/indique-amigos': typeof IndiqueAmigosRoute
   '/login': typeof LoginRoute
   '/promocoes': typeof PromocoesRoute
+  '/provedores': typeof ProvedoresRoute
   '/registro': typeof RegistroRoute
   '/slots': typeof SlotsRoute
   '/torneios': typeof TorneiosRoute
@@ -317,6 +324,7 @@ export interface FileRoutesByTo {
   '/indique-amigos': typeof IndiqueAmigosRoute
   '/login': typeof LoginRoute
   '/promocoes': typeof PromocoesRoute
+  '/provedores': typeof ProvedoresRoute
   '/registro': typeof RegistroRoute
   '/slots': typeof SlotsRoute
   '/torneios': typeof TorneiosRoute
@@ -362,6 +370,7 @@ export interface FileRoutesById {
   '/indique-amigos': typeof IndiqueAmigosRoute
   '/login': typeof LoginRoute
   '/promocoes': typeof PromocoesRoute
+  '/provedores': typeof ProvedoresRoute
   '/registro': typeof RegistroRoute
   '/slots': typeof SlotsRoute
   '/torneios': typeof TorneiosRoute
@@ -407,6 +416,7 @@ export interface FileRouteTypes {
     | '/indique-amigos'
     | '/login'
     | '/promocoes'
+    | '/provedores'
     | '/registro'
     | '/slots'
     | '/torneios'
@@ -449,6 +459,7 @@ export interface FileRouteTypes {
     | '/indique-amigos'
     | '/login'
     | '/promocoes'
+    | '/provedores'
     | '/registro'
     | '/slots'
     | '/torneios'
@@ -493,6 +504,7 @@ export interface FileRouteTypes {
     | '/indique-amigos'
     | '/login'
     | '/promocoes'
+    | '/provedores'
     | '/registro'
     | '/slots'
     | '/torneios'
@@ -538,6 +550,7 @@ export interface RootRouteChildren {
   IndiqueAmigosRoute: typeof IndiqueAmigosRoute
   LoginRoute: typeof LoginRoute
   PromocoesRoute: typeof PromocoesRoute
+  ProvedoresRoute: typeof ProvedoresRoute
   RegistroRoute: typeof RegistroRoute
   SlotsRoute: typeof SlotsRoute
   TorneiosRoute: typeof TorneiosRoute
@@ -617,6 +630,13 @@ declare module '@tanstack/react-router' {
       path: '/promocoes'
       fullPath: '/promocoes'
       preLoaderRoute: typeof PromocoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/provedores': {
+      id: '/provedores'
+      path: '/provedores'
+      fullPath: '/provedores'
+      preLoaderRoute: typeof ProvedoresRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/registro': {
@@ -919,6 +939,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndiqueAmigosRoute: IndiqueAmigosRoute,
   LoginRoute: LoginRoute,
   PromocoesRoute: PromocoesRoute,
+  ProvedoresRoute: ProvedoresRoute,
   RegistroRoute: RegistroRoute,
   SlotsRoute: SlotsRoute,
   TorneiosRoute: TorneiosRoute,

@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -11,7 +11,17 @@ import { BetSlip } from "@/components/sports/bet-slip";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
+type SportsSearch = { liga?: string; aba?: "ao-vivo" };
+
 export const Route = createFileRoute("/esportes")({
+  validateSearch: (s: Record<string, unknown>): SportsSearch => ({
+    liga:
+      typeof s.liga === "string" &&
+      (s.liga === "brasil" || s.liga === "basquete" || LEAGUES.some((l) => l.id === s.liga))
+        ? s.liga
+        : undefined,
+    aba: s.aba === "ao-vivo" ? "ao-vivo" : undefined,
+  }),
   head: () => ({
     meta: pageMeta(
       "Apostas esportivas | apostamaxy",
@@ -32,11 +42,20 @@ function Page() {
     refetchInterval: SPORTS_POLL_MS,
     staleTime: 4_000,
   });
-  const [tab, setTab] = useState<Tab>("next");
-  const [league, setLeague] = useState<string>("all");
+  const search = Route.useSearch();
+  const navigate = useNavigate({ from: "/esportes" });
+  const tab: Tab = search.aba === "ao-vivo" ? "live" : "next";
+  const league = search.liga ?? "all";
+  const setTab = (t: Tab) =>
+    navigate({
+      search: (prev) => ({ ...prev, aba: t === "live" ? "ao-vivo" : undefined }),
+      replace: true,
+    });
+  const setLeague = (l: string) =>
+    navigate({ search: (prev) => ({ ...prev, liga: l === "all" ? undefined : l }), replace: true });
   const [selection, setSelection] = useState<Selection | null>(null);
 
-  const all = q.data ?? [];
+  const all = useMemo(() => q.data ?? [], [q.data]);
   const liveCount = all.filter((e) => e.state === "in").length;
   const leaguesWithGames = useMemo(() => new Set(all.map((e) => e.league)), [all]);
   const events = useMemo(
@@ -45,7 +64,11 @@ function Page() {
         (e) =>
           (tab === "live" ? e.state === "in" : e.state === "pre") &&
           (league === "all" ||
-            (league === "brasil" ? e.league.startsWith("bra.") : e.league === league)),
+            (league === "brasil"
+              ? e.league.startsWith("bra.")
+              : league === "basquete"
+                ? e.sport === "basketball"
+                : e.league === league)),
       ),
     [all, tab, league],
   );

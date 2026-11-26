@@ -937,6 +937,27 @@ export type Database = {
         };
         Returns: boolean;
       };
+      lobby_providers: {
+        Args: {
+          p_category?: string;
+        };
+        Returns: {
+          provider: string;
+          games: number;
+          covers: string[] | null;
+        }[];
+      };
+      lobby_top_games: {
+        Args: {
+          p_days?: number;
+          p_limit?: number;
+        };
+        Returns: {
+          game_id: number;
+          rounds: number;
+          players: number;
+        }[];
+      };
       place_sports_bet: {
         Args: {
           p_away: string;

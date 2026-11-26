@@ -8,7 +8,7 @@ import { CategoryNav } from "@/components/casino/category-nav";
 import { GameRail, TopTenRail } from "@/components/casino/game-section";
 import { ProviderStrip } from "@/components/casino/provider-strip";
 import { LiveStrip } from "@/components/sports/live-strip";
-import { useLobby, usePlay, useTopGames } from "@/hooks/use-games";
+import { useLobby, usePlay, useTopGames, type LobbyFilter } from "@/hooks/use-games";
 import { pageMeta } from "@/lib/page-meta";
 
 export const Route = createFileRoute("/")({
@@ -21,18 +21,45 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
+/** Uma seção do lobby: filtro, título e para onde o "Ver todos" leva. */
+function LobbyRail({
+  title,
+  filter,
+  to,
+  search,
+  priority,
+}: {
+  title: string;
+  filter: LobbyFilter;
+  to: string;
+  search?: Record<string, string>;
+  priority?: boolean;
+}) {
+  const play = usePlay();
+  const q = useLobby(filter, 18);
+  return (
+    <GameRail
+      title={title}
+      games={q.data?.games ?? []}
+      count={q.data?.total}
+      loading={q.isLoading}
+      to={to}
+      search={search}
+      onPlay={play}
+      priority={priority}
+    />
+  );
+}
+
 function Home() {
   const play = usePlay();
   const navigate = useNavigate();
   const [term, setTerm] = useState("");
   const top = useTopGames();
-  const slots = useLobby({ category: "slot" }, 9);
-  const crash = useLobby({ category: "crash" }, 9);
-  const live = useLobby({ category: "live" }, 9);
 
   return (
     <SiteShell>
-      <div className="mx-auto max-w-[1600px] space-y-7 px-3 py-4 md:space-y-9 md:px-6 md:py-6">
+      <div className="mx-auto max-w-[1600px] space-y-7 px-3 py-4 md:space-y-10 md:px-6 md:py-6">
         <PromoBanners />
         <HubTiles />
 
@@ -60,38 +87,57 @@ function Home() {
 
         <TopTenRail
           title={top.data?.byPlays ? "Mais jogados da semana" : "Os favoritos do Brasil"}
+          note={top.data?.byPlays ? "Pelo número de jogadores nos últimos 7 dias" : undefined}
           games={top.data?.games ?? []}
           loading={top.isLoading}
           onPlay={play}
         />
 
-        <LiveStrip />
-
-        <GameRail
-          title="Slots"
-          games={slots.data?.games ?? []}
-          count={slots.data?.total}
-          loading={slots.isLoading}
-          to="/slots"
-          onPlay={play}
+        <LobbyRail
+          title="PG Soft"
+          filter={{ provider: "PG Soft", category: "slot" }}
+          to="/cassino"
+          search={{ provedor: "PG Soft" }}
           priority
         />
-        <GameRail
-          title="Crash"
-          games={crash.data?.games ?? []}
-          count={crash.data?.total}
-          loading={crash.isLoading}
+        <LobbyRail
+          title="Crash e jogos rápidos"
+          filter={{ category: "crash" }}
           to="/cassino"
           search={{ cat: "crash" }}
-          onPlay={play}
         />
-        <GameRail
-          title="Cassino ao vivo"
-          games={live.data?.games ?? []}
-          count={live.data?.total}
-          loading={live.isLoading}
+
+        <LiveStrip />
+
+        <LobbyRail
+          title="Roletas ao vivo"
+          filter={{ category: "live", kind: "roulette" }}
           to="/ao-vivo"
-          onPlay={play}
+          search={{ tipo: "roulette" }}
+        />
+        <LobbyRail
+          title="Pragmatic Play"
+          filter={{ provider: "Pragmatic Play" }}
+          to="/cassino"
+          search={{ provedor: "Pragmatic Play" }}
+        />
+        <LobbyRail
+          title="Game shows"
+          filter={{ category: "live", kind: "gameshow" }}
+          to="/ao-vivo"
+          search={{ tipo: "gameshow" }}
+        />
+        <LobbyRail
+          title="Baccarat e Bac Bo"
+          filter={{ category: "live", kind: "baccarat" }}
+          to="/ao-vivo"
+          search={{ tipo: "baccarat" }}
+        />
+        <LobbyRail
+          title="Slots de A a Z"
+          filter={{ category: "slot", sort: "az" }}
+          to="/slots"
+          search={{ ordem: "az" }}
         />
 
         <ProviderStrip />

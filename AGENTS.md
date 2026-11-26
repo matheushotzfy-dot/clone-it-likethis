@@ -28,15 +28,18 @@
 ## Interface
 - Cores com função fixa: `primary` (azul) ações de jogo e navegação, `pix` (verde-água) só dinheiro entrando, `gold` ganhos/prêmios/ranking, `live` evento acontecendo. Títulos em Barlow Condensed sem caixa alta; texto em Figtree; valores com `num` (algarismos tabulares).
 - Papéis visuais ficam em `src/styles.css`; não criar camadas de estilo novas por cima das existentes. Classes base que recebem ajuste por utilitário (como `.field-input`) ficam em `@layer components`.
+- Capas de jogo usam `GameTile`, que some se a arte falhar; wrappers de trilho usam `empty:hidden` para não deixar buraco.
+- Rotas folha usam `pageMeta` com título e descrição próprios.
+- Conteúdo de promoção, torneio ou indicação só aparece se existir de verdade, com regras completas.
+- Ajustes só de celular ficam em `max-width: 639px`, sem quebrar o desktop nem o zoom.
+- Lobby organizado por categoria (`slot`, `crash`, `live`, `table`) e por tipo de mesa (`src/lib/game-kinds.ts`: roleta, game show, baccarat, blackjack), derivado do nome. Contagens e provedores vêm de `getLobbyCounts` e `lobby_providers` (SQL), nunca somados no navegador.
+- Selos de capa só com fato: "Ao vivo" para mesa com crupiê, "Novo" para jogo com menos de 14 dias no catálogo.
+- A barra de navegação de baixo aparece até 1024px; `.app-column` reserva o espaço dela.
 
 ## Admin
 - Telas em `src/routes/admin/*` usam o kit `src/components/admin/ui.tsx`; funções em `admin.functions.ts` sempre chamam `assertAdmin`. Toda ação que muda dado grava `admin_log`.
 - Números de período vêm de funções SQL (`admin_daily_stats`, `admin_finance_summary`), nunca de somas no navegador (o PostgREST corta em 1000 linhas).
 - Segredos de gateway nunca voltam inteiros ao navegador.
-- Capas de jogo usam `GameTile`, que some se a arte falhar; wrappers de trilho usam `empty:hidden` para não deixar buraco.
-- Rotas folha usam `pageMeta` com título e descrição próprios.
-- Conteúdo de promoção, torneio ou indicação só aparece se existir de verdade, com regras completas.
-- Ajustes só de celular ficam em `max-width: 639px`, sem quebrar o desktop nem o zoom.
 
 ## VeoPag / gateways
 - Credite depósitos VeoPag só depois de reconsultar a API da VeoPag (o corpo do webhook não é assinado); essa lógica fica em `src/lib/veopag.server.ts`.

@@ -12,7 +12,7 @@ export function SiteShell({ children, bare = false }: { children: ReactNode; bar
   return (
     <div className="app-shell flex min-h-dvh w-full bg-background">
       <AppSidebar />
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="app-column flex min-w-0 flex-1 flex-col">
         <PlatformStatusBar />
         <Header />
         <FreezeBanner />

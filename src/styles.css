@@ -248,7 +248,8 @@
    Componentes do cassino
    ----------------------------------------------------------------------------- */
 
-/* Capa de jogo: arte 3:4, sobe 3px no hover, botão Jogar aparece por baixo. */
+/* Capa de jogo: arte 3:4. No hover a arte aproxima, escurece por baixo e
+   aparece o botão de jogar com o nome do provedor. */
 .game-tile {
   position: relative;
   display: block;
@@ -256,49 +257,232 @@
   overflow: hidden;
   border-radius: var(--radius-lg);
   background: var(--surface);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.04);
   transition: transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 .game-tile img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition:
+    opacity 0.25s ease,
+    transform 0.35s cubic-bezier(0.2, 0.7, 0.3, 1);
 }
-.game-tile .game-tile-play {
+.game-tile-hover {
   position: absolute;
-  inset: auto 8px 8px 8px;
-  height: 34px;
+  inset: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  border-radius: var(--radius-md);
+  gap: 10px;
+  background: linear-gradient(180deg, rgb(4 10 20 / 0.15) 0%, rgb(4 10 20 / 0.72) 100%);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+.game-tile-play-round {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
   background: var(--primary);
   color: var(--primary-foreground);
-  font-family: var(--font-display);
+  box-shadow: 0 6px 20px rgb(46 155 255 / 0.35);
+  transform: scale(0.85);
+  transition: transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.game-tile-provider {
+  position: absolute;
+  inset: auto 8px 8px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: rgb(232 239 249 / 0.85);
+}
+.game-tile-badges {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  right: 7px;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  pointer-events: none;
+}
+.game-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 6px;
+  font-size: 11px;
   font-weight: 700;
-  font-size: 16px;
-  opacity: 0;
-  transform: translateY(6px);
-  transition:
-    opacity 0.16s ease,
-    transform 0.16s ease;
+  line-height: 1;
+  white-space: nowrap;
+  backdrop-filter: blur(6px);
+}
+.game-badge-live {
+  background: rgb(5 12 22 / 0.72);
+  color: var(--foreground);
+}
+.game-badge-new {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+.live-dot-sm {
+  width: 6px;
+  height: 6px;
 }
 @media (hover: hover) {
   .game-tile:hover {
     transform: translateY(-3px);
   }
-  .game-tile:hover .game-tile-play {
+  .game-tile:hover img {
+    transform: scale(1.045);
+  }
+  .game-tile:hover .game-tile-hover {
     opacity: 1;
+  }
+  .game-tile:hover .game-tile-play-round {
     transform: none;
   }
 }
-.game-tile:focus-visible .game-tile-play,
-.game-tile[data-loading="true"] .game-tile-play {
+.game-tile:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.game-tile:focus-visible .game-tile-hover {
   opacity: 1;
-  transform: none;
 }
 .game-tile:active {
   transform: scale(0.98);
+}
+
+/* Trilho horizontal: rola no dedo e com as setas no computador. */
+.rail {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 12px;
+  scrollbar-width: none;
+  margin-inline: -12px;
+  padding: 2px 12px 6px;
+}
+.rail::-webkit-scrollbar {
+  display: none;
+}
+.rail > * {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+.rail-item {
+  width: calc((100% - 2 * 10px) / 3.25);
+}
+@media (min-width: 640px) {
+  .rail-item {
+    width: calc((100% - 4 * 10px) / 5.2);
+  }
+}
+@media (min-width: 768px) {
+  .rail {
+    margin-inline: 0;
+    padding-inline: 0;
+    scroll-padding-inline: 0;
+    gap: 12px;
+  }
+  .rail-item {
+    width: calc((100% - 5 * 12px) / 6);
+  }
+}
+@media (min-width: 1280px) {
+  .rail-item {
+    width: calc((100% - 6 * 12px) / 7);
+  }
+}
+@media (min-width: 1536px) {
+  .rail-item {
+    width: calc((100% - 8 * 12px) / 9);
+  }
+}
+.rail-arrow {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--foreground);
+  transition:
+    border-color 0.15s ease,
+    opacity 0.15s ease;
+}
+.rail-arrow:hover:not(:disabled) {
+  border-color: rgb(46 155 255 / 0.6);
+}
+.rail-arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* Cartão de provedor: três capas em leque e a contagem de jogos. */
+.provider-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 132px;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--line);
+  background: linear-gradient(160deg, var(--surface-2) 0%, var(--surface) 70%);
+  padding: 14px;
+  transition:
+    border-color 0.15s ease,
+    transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.provider-card:hover {
+  border-color: rgb(46 155 255 / 0.55);
+}
+.provider-fan {
+  position: absolute;
+  top: 12px;
+  right: 10px;
+  display: flex;
+}
+.provider-fan img {
+  width: 46px;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 7px;
+  border: 2px solid var(--surface);
+  box-shadow: 0 6px 14px rgb(0 0 0 / 0.35);
+  transition: transform 0.2s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.provider-fan img + img {
+  margin-left: -18px;
+}
+.provider-fan img:nth-child(1) {
+  transform: rotate(-9deg) translateY(4px);
+}
+.provider-fan img:nth-child(3) {
+  transform: rotate(9deg) translateY(4px);
+}
+@media (hover: hover) {
+  .provider-card:hover .provider-fan img:nth-child(1) {
+    transform: rotate(-14deg) translate(-4px, 4px);
+  }
+  .provider-card:hover .provider-fan img:nth-child(3) {
+    transform: rotate(14deg) translate(4px, 4px);
+  }
 }
 
 /* Top 10: numeral grande, vazado em dourado, atrás da capa. */
@@ -311,7 +495,7 @@
 }
 .rank-item .rank-num {
   position: absolute;
-  left: -4px;
+  left: 2px;
   bottom: -6px;
   z-index: 0;
   font-family: var(--font-display);
@@ -420,6 +604,121 @@
   color: var(--foreground);
   border-color: var(--primary);
   background: color-mix(in oklab, var(--primary) 16%, var(--surface));
+}
+
+/* Sidebar: linhas, subitens, contadores e miniaturas de provedor. */
+.side-group-title {
+  margin-bottom: 4px;
+  padding-inline: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgb(143 163 191 / 0.85);
+}
+.side-row {
+  position: relative;
+  display: flex;
+  height: 38px;
+  align-items: center;
+  gap: 11px;
+  border-radius: 8px;
+  padding-inline: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  transition:
+    background-color 0.14s ease,
+    color 0.14s ease;
+}
+.side-row-active {
+  background: var(--surface-2);
+  color: var(--foreground);
+}
+.side-row-bar {
+  position: absolute;
+  inset-block: 8px;
+  left: 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--primary);
+}
+.side-count {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: rgb(143 163 191 / 0.8);
+}
+.side-row-active .side-count {
+  color: var(--foreground);
+}
+.side-subs {
+  margin: 2px 0 4px 21px;
+  border-left: 1px solid var(--line);
+  padding-left: 8px;
+}
+.side-sub {
+  display: flex;
+  height: 32px;
+  align-items: center;
+  gap: 8px;
+  border-radius: 7px;
+  padding-inline: 8px;
+  font-size: 13.5px;
+  transition: color 0.14s ease;
+}
+.side-sub:hover {
+  background: var(--surface);
+}
+.side-sub-dot {
+  width: 5px;
+  height: 5px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--line);
+}
+.side-thumb {
+  width: 20px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  object-fit: cover;
+  background: var(--surface-2);
+}
+
+/* Linha de chips que rola na horizontal sem barra. */
+.chip-row {
+  display: flex;
+  min-width: 0;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-inline: -12px;
+  padding-inline: 12px;
+}
+.chip-row::-webkit-scrollbar {
+  display: none;
+}
+@media (min-width: 768px) {
+  .chip-row {
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+}
+
+/* Barra de filtros do catálogo: fica presa logo abaixo do topo. */
+.catalog-bar {
+  position: sticky;
+  top: 60px;
+  z-index: 20;
+  margin-inline: -12px;
+  padding: 10px 12px;
+  background: rgb(9 20 35 / 0.94);
+  backdrop-filter: blur(10px);
+}
+@media (min-width: 768px) {
+  .catalog-bar {
+    margin-inline: -24px;
+    padding-inline: 24px;
+  }
 }
 
 /* Cartão de evento esportivo. */
@@ -542,15 +841,20 @@
   .app-header {
     padding-top: env(safe-area-inset-top);
   }
-  .app-main {
-    padding-bottom: calc(76px + env(safe-area-inset-bottom));
-  }
   .app-shell {
     width: 100%;
     overflow-x: clip;
   }
   .app-shell :is(a, button, input, select, textarea) {
     touch-action: manipulation;
+  }
+}
+
+/* A barra de navegação de baixo aparece até 1024px: a coluna reserva o espaço dela,
+   assim o rodapé e o fim de cada página não ficam escondidos. */
+@media (max-width: 1023px) {
+  .app-column {
+    padding-bottom: calc(68px + env(safe-area-inset-bottom));
   }
 }
 
