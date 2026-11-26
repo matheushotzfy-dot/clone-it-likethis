@@ -2,7 +2,7 @@ import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getUserDetail, adjustBalance, updateUserAdmin, deleteUserAdmin, setTransactionStatus, freezeForExploit } from "@/lib/admin.functions";
+import { getUserDetail, adjustBalance, updateUserAdmin, deleteUserAdmin, setTransactionStatus } from "@/lib/admin.functions";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,6 @@ function Page() {
   const updFn = useServerFn(updateUserAdmin);
   const delFn = useServerFn(deleteUserAdmin);
   const txStatusFn = useServerFn(setTransactionStatus);
-  const exploitFn = useServerFn(freezeForExploit);
   const qc = useQueryClient();
   const { data, isLoading, error, refetch } = useQuery({ queryKey: ["admin-user", id], queryFn: () => fn({ data: { id } }), staleTime: 10_000, refetchOnWindowFocus: false });
 
@@ -71,15 +70,6 @@ function Page() {
     onError: (e: any) => toast.error(e.message),
   });
 
-  const exploitMut = useMutation({
-    mutationFn: () => exploitFn({ data: { userId: id } }),
-    onSuccess: (r) => {
-      toast.success(`Conta congelada por compliance. Reembolso pendente: R$ ${Number(r.depositsTotal).toFixed(2).replace(".", ",")}`);
-      qc.invalidateQueries({ queryKey: ["admin-user", id] });
-    },
-    onError: (e: any) => toast.error(e.message),
-  });
-
   if (isLoading || !data || !form) return <div className="space-y-4">{[96, 280, 220].map((h) => <div key={h} style={{ height: h }} className="animate-pulse rounded-xl border border-border bg-card" />)}</div>;
   if (error) return <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-5 text-sm text-destructive">Erro ao abrir detalhes: {(error as Error).message}<button onClick={() => refetch()} className="ml-2 font-bold underline">tentar novamente</button></div>;
   const p = data.profile;
@@ -106,17 +96,6 @@ function Page() {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <Link to="/admin/usuarios" className="text-sm text-primary">← Voltar</Link>
         <div className="flex gap-2 flex-wrap">
-          <Button
-            variant="destructive"
-            disabled={exploitMut.isPending}
-            onClick={() => {
-              if (!confirm("CONGELAR por exploração de falhas?\n\nIsto irá:\n• Congelar a conta com a mensagem de compliance\n• Zerar saldo e bônus\n• Cancelar todos os saques pendentes\n• Criar um saque de reembolso (total depositado, sem bônus) com status 'aguardando liberação 7 dias úteis'")) return;
-              exploitMut.mutate();
-            }}
-          >
-            <ShieldAlert className="size-4 mr-2" />
-            {exploitMut.isPending ? "Processando..." : "Congelar por exploração de falhas"}
-          </Button>
           <Button variant={form.is_frozen ? "default" : "outline"} onClick={() => {
             if (form.is_frozen) {
               freezeMut.mutate({ v: false });
