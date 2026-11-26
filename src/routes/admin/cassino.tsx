@@ -82,6 +82,7 @@ function Rounds({ bigWins }: { bigWins: boolean }) {
   return (
     <Panel flush>
       <Table
+        rightCols={[3, 4, 5]}
         loading={q.isLoading}
         head={["Quando", "Jogador", "Jogo", "Aposta", "Ganho", "Saldo depois", "Situação"]}
         empty={
@@ -156,6 +157,7 @@ function Games() {
       }
     >
       <Table
+        rightCols={[1, 2, 3, 4, 5, 6]}
         loading={q.isLoading}
         head={["Jogo", "Rodadas", "Jogadores", "Apostado", "Pago", "GGR", "Retorno real"]}
         empty={q.data && !q.data.length ? <Empty>Sem rodadas no período.</Empty> : null}
@@ -209,6 +211,7 @@ function PfLog() {
   return (
     <Panel flush title="Chamadas da PlayFivers que fugiram do normal">
       <Table
+        rightCols={[6, 7]}
         loading={q.isLoading}
         head={[
           "Quando",

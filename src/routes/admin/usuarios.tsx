@@ -16,7 +16,7 @@ import {
   Table,
   Td,
 } from "@/components/admin/ui";
-import { formatWhen } from "@/lib/format";
+import { formatBRL, formatWhen } from "@/lib/format";
 import { maskCPF } from "@/lib/validations";
 
 type Filter = "all" | "balance" | "depositors" | "frozen" | "new";
@@ -143,6 +143,7 @@ function Page() {
               "Última aposta",
               "Situação",
             ]}
+            rightCols={[2, 3, 4, 5]}
             empty={
               q.data && q.data.players.length === 0 ? (
                 <Empty>Nenhum jogador com esses filtros.</Empty>
@@ -155,13 +156,24 @@ function Page() {
                   <Link
                     to="/admin/usuarios/$id"
                     params={{ id: p.user_id! }}
-                    className="group block max-w-[240px]"
+                    className="group flex max-w-[280px] items-center gap-3"
                   >
-                    <span className="block truncate font-semibold group-hover:text-primary">
-                      {p.full_name || p.username}
-                    </span>
-                    <span className="num block truncate text-[12.5px] text-muted-foreground">
-                      {p.cpf ? maskCPF(p.cpf) : "sem CPF"}, desde {formatWhen(p.created_at)}
+                    <Avatar
+                      name={p.full_name || p.username || ""}
+                      online={isOnline(p.last_seen_at)}
+                    />
+                    <span className="min-w-0">
+                      <span className="block truncate font-semibold group-hover:text-primary">
+                        {p.full_name || p.username}
+                      </span>
+                      <span className="num block truncate text-[12.5px] text-muted-foreground">
+                        {p.cpf ? maskCPF(p.cpf) : "sem CPF"}, desde {formatWhen(p.created_at)}
+                      </span>
+                      {(p.utm_campaign || p.utm_source) && (
+                        <span className="mt-0.5 inline-block max-w-full truncate rounded-[5px] bg-surface-2 px-1.5 py-px text-[11px] text-muted-foreground">
+                          {p.utm_campaign || p.utm_source}
+                        </span>
+                      )}
                     </span>
                   </Link>
                 </Td>
@@ -178,8 +190,8 @@ function Page() {
                 <Td right>
                   <Money value={p.withdrawn} />
                   {p.withdraw_pending > 0 && (
-                    <span className="num block text-[12px] text-gold">
-                      +{p.withdraw_pending.toLocaleString("pt-BR")} pendente
+                    <span className="num block whitespace-nowrap text-[12px] text-gold">
+                      {formatBRL(p.withdraw_pending)} pendente
                     </span>
                   )}
                 </Td>
@@ -187,9 +199,12 @@ function Page() {
                   <Money value={p.ggr} />
                 </Td>
                 <Td>
-                  <span className="text-[13px] text-muted-foreground">
+                  <span className="block text-[13px] text-muted-foreground">
                     {p.last_bet_at ? formatWhen(p.last_bet_at) : "nunca"}
                   </span>
+                  {isOnline(p.last_seen_at) && (
+                    <span className="text-[12px] font-semibold text-live">online agora</span>
+                  )}
                 </Td>
                 <Td>
                   <StatusPill status={p.is_frozen ? "frozen" : "active"} />
@@ -208,5 +223,29 @@ function Page() {
         </Panel>
       )}
     </div>
+  );
+}
+
+const isOnline = (seen: string | null) =>
+  !!seen && Date.now() - new Date(seen).getTime() < 15 * 60_000;
+
+function Avatar({ name, online }: { name: string; online: boolean }) {
+  const initials =
+    name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w) => w[0]!.toUpperCase())
+      .join("") || "·";
+  return (
+    <span className="relative grid size-9 shrink-0 place-items-center rounded-full bg-primary/12 font-display text-[14px] font-bold text-primary">
+      {initials}
+      {online && (
+        <span
+          className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-surface bg-live"
+          aria-label="Online agora"
+        />
+      )}
+    </span>
   );
 }

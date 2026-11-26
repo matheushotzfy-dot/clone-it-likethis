@@ -174,11 +174,14 @@ export function Table({
   children,
   empty,
   loading,
+  rightCols = [],
 }: {
   head: ReactNode[];
   children: ReactNode;
   empty?: ReactNode;
   loading?: boolean;
+  /** Índices das colunas de valor, alinhadas à direita junto com os números. */
+  rightCols?: number[];
 }) {
   return (
     <div className="thin-scrollbar overflow-x-auto">
@@ -188,7 +191,10 @@ export function Table({
             {head.map((h, i) => (
               <th
                 key={i}
-                className="whitespace-nowrap px-4 py-2.5 font-semibold first:pl-5 last:pr-5"
+                className={cn(
+                  "whitespace-nowrap px-4 py-2.5 font-semibold first:pl-5 last:pr-5",
+                  rightCols.includes(i) && "text-right",
+                )}
               >
                 {h}
               </th>

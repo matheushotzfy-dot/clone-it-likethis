@@ -1,7 +1,71 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { ArrowDownToLine, ArrowUpFromLine, BadgeCheck } from "lucide-react";
 import { SiteShell } from "@/components/layout/site-shell";
+import { useAuthDialog } from "@/components/auth/auth-dialog-context";
+import { useProfile, useWallet } from "@/hooks/use-account";
+import { formatBRL } from "@/lib/format";
 import { cn } from "@/lib/utils";
+
+/** Cartão do titular no topo da área da conta: quem é, desde quando, saldo e atalhos. */
+function AccountHeader() {
+  const profile = useProfile();
+  const wallet = useWallet();
+  const { open } = useAuthDialog();
+  const p = profile.data;
+  const name = p?.full_name || p?.username || "";
+  const initials =
+    name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w) => w[0]!.toUpperCase())
+      .join("") || "·";
+  const since = p?.created_at
+    ? new Intl.DateTimeFormat("pt-BR", {
+        month: "long",
+        year: "numeric",
+        timeZone: "America/Sao_Paulo",
+      }).format(new Date(p.created_at))
+    : null;
+  return (
+    <div className="mb-5 flex flex-wrap items-center gap-4 rounded-[16px] border border-border bg-[linear-gradient(135deg,var(--surface-2),var(--surface)_60%)] p-4 md:p-5">
+      <span className="grid size-12 shrink-0 place-items-center rounded-full bg-primary/15 font-display text-[20px] font-bold text-primary md:size-14 md:text-[22px]">
+        {initials}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="flex items-center gap-1.5 truncate text-[17px] font-semibold">
+          {name ? `Olá, ${name.split(" ")[0]}` : "Sua conta"}
+          {p?.kyc_verified && (
+            <BadgeCheck className="size-4 shrink-0 text-live" aria-label="Documentos verificados" />
+          )}
+        </p>
+        {since && <p className="text-[13px] text-muted-foreground">Cliente desde {since}</p>}
+      </div>
+      <div className="flex w-full flex-wrap items-center gap-2.5 sm:w-auto sm:flex-nowrap sm:gap-3">
+        <div className="w-full sm:mr-2 sm:w-auto sm:text-right">
+          <p className="text-[12px] text-muted-foreground">Saldo</p>
+          <p className="num font-display text-[24px] font-bold leading-none">
+            {wallet.data ? formatBRL(wallet.data.balance) : "–"}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => open("deposit")}
+          className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-[10px] bg-pix px-3.5 text-[14px] font-bold text-pix-foreground hover:brightness-110 sm:flex-none"
+        >
+          <ArrowDownToLine className="size-4" /> Depositar
+        </button>
+        <Link
+          to="/saque"
+          className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-border px-3.5 text-[14px] font-semibold hover:border-foreground/30 sm:flex-none"
+        >
+          <ArrowUpFromLine className="size-4" /> Sacar
+        </Link>
+      </div>
+    </div>
+  );
+}
 
 const TABS = [
   { to: "/perfil", label: "Minha conta" },
@@ -23,6 +87,7 @@ export function AccountLayout({
   return (
     <SiteShell>
       <div className="mx-auto max-w-[1100px] px-3 py-5 md:px-6 md:py-8">
+        <AccountHeader />
         <nav
           aria-label="Seções da conta"
           className="no-scrollbar -mx-3 mb-6 flex gap-1 overflow-x-auto border-b border-border px-3 md:mx-0 md:px-0"

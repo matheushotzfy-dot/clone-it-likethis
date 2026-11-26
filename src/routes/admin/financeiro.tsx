@@ -365,6 +365,7 @@ function AdSpendPanel({ range }: { range: { from: string; to: string } }) {
         </Button>
       </form>
       <Table
+        rightCols={[3, 4]}
         loading={q.isLoading}
         head={["Dia", "Onde", "Campanha", "Valor", ""]}
         empty={q.data && !q.data.length ? <Empty>Nenhum gasto lançado nesse período.</Empty> : null}
@@ -480,6 +481,7 @@ function ReconPanel({ range }: { range: { from: string; to: string } }) {
         </Button>
       </form>
       <Table
+        rightCols={[4]}
         loading={q.isLoading}
         head={["Dia", "Entrou", "Taxas", "Observação", ""]}
         empty={q.data && !q.data.length ? <Empty>Nada lançado nesse período.</Empty> : null}

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
-import { getOverview } from "@/lib/admin.functions";
+import { getGameStats, getOverview, listPlayers } from "@/lib/admin.functions";
 import { ErrorBox, Money, PageHeader, Panel, Segmented, Stat } from "@/components/admin/ui";
 import { FlowChart, GgrChart } from "@/components/admin/flow-chart";
 import { formatBRL, formatWhen } from "@/lib/format";
@@ -193,6 +193,8 @@ function Dashboard() {
             </Panel>
           </div>
 
+          <Highlights days={Number(days)} />
+
           <div className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
             <Panel
               title="Últimas movimentações"
@@ -294,5 +296,162 @@ function Health({
       )}
       <span className={cn(!ok && !neutral && "font-semibold")}>{ok ? good : bad}</span>
     </li>
+  );
+}
+
+/** Três listas curtas com dado real: jogos que mais rendem, quem chegou e quem mais depositou. */
+function Highlights({ days }: { days: number }) {
+  const fetchGames = useServerFn(getGameStats);
+  const fetchPlayers = useServerFn(listPlayers);
+  const games = useQuery({
+    queryKey: ["admin-game-stats", Math.max(days, 1)],
+    queryFn: () => fetchGames({ data: { days: Math.max(days, 1) } }),
+  });
+  const newest = useQuery({
+    queryKey: ["admin-players", "dash-new"],
+    queryFn: () => fetchPlayers({ data: { sort: "recent", page: 0 } }),
+  });
+  const top = useQuery({
+    queryKey: ["admin-players", "dash-depositors"],
+    queryFn: () => fetchPlayers({ data: { sort: "deposits", filter: "depositors", page: 0 } }),
+  });
+  const empty = (text: string) => (
+    <p className="px-5 py-8 text-center text-[13.5px] text-muted-foreground">{text}</p>
+  );
+  const loading = (
+    <div className="space-y-2 p-4">
+      {[0, 1, 2, 3].map((i) => (
+        <div key={i} className="skeleton h-9 rounded-[8px]" />
+      ))}
+    </div>
+  );
+
+  return (
+    <div className="grid gap-4 xl:grid-cols-3">
+      <Panel
+        flush
+        title="Jogos que mais faturam"
+        actions={
+          <Link
+            to="/admin/cassino"
+            className="text-[13px] font-semibold text-primary hover:underline"
+          >
+            Cassino
+          </Link>
+        }
+      >
+        {games.isLoading ? (
+          loading
+        ) : !games.data?.length ? (
+          empty("Sem rodadas no período.")
+        ) : (
+          <ol className="divide-y divide-border">
+            {games.data.slice(0, 6).map((g, i) => (
+              <li
+                key={`${g.provider}-${g.game_code}`}
+                className="flex items-center gap-3 px-5 py-2.5"
+              >
+                <span className="num w-5 shrink-0 text-[13px] font-bold text-gold">{i + 1}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[14px] font-semibold">{g.game_name || g.game_code}</p>
+                  <p className="num text-[12px] text-muted-foreground">
+                    {Number(g.players)} jogadores, {Number(g.rounds).toLocaleString("pt-BR")}{" "}
+                    rodadas
+                  </p>
+                </div>
+                <Money value={g.ggr} signed className="text-[13.5px] font-semibold" />
+              </li>
+            ))}
+          </ol>
+        )}
+      </Panel>
+
+      <Panel
+        flush
+        title="Novos jogadores"
+        actions={
+          <Link
+            to="/admin/usuarios"
+            search={{ filtro: "new" }}
+            className="text-[13px] font-semibold text-primary hover:underline"
+          >
+            Ver todos
+          </Link>
+        }
+      >
+        {newest.isLoading ? (
+          loading
+        ) : !newest.data?.players.length ? (
+          empty("Ninguém se cadastrou ainda.")
+        ) : (
+          <ul className="divide-y divide-border">
+            {newest.data.players.slice(0, 6).map((p) => (
+              <li key={p.user_id} className="flex items-center gap-3 px-5 py-2.5">
+                <div className="min-w-0 flex-1">
+                  <NameLink id={p.user_id!} name={p.full_name || p.username} />
+                  <p className="text-[12px] text-muted-foreground">
+                    Cadastro {formatWhen(p.created_at)}
+                  </p>
+                </div>
+                {p.deposits > 0 ? (
+                  <Money value={p.deposits} className="text-[13px] font-semibold text-pix" />
+                ) : (
+                  <span className="text-[12px] text-muted-foreground">Sem depósito</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </Panel>
+
+      <Panel
+        flush
+        title="Quem mais depositou"
+        actions={
+          <Link
+            to="/admin/usuarios"
+            search={{ ordem: "deposits", filtro: "depositors" }}
+            className="text-[13px] font-semibold text-primary hover:underline"
+          >
+            Ver todos
+          </Link>
+        }
+      >
+        {top.isLoading ? (
+          loading
+        ) : !top.data?.players.length ? (
+          empty("Nenhum depósito ainda.")
+        ) : (
+          <ol className="divide-y divide-border">
+            {top.data.players.slice(0, 6).map((p, i) => (
+              <li key={p.user_id} className="flex items-center gap-3 px-5 py-2.5">
+                <span className="num w-5 shrink-0 text-[13px] font-bold text-muted-foreground">
+                  {i + 1}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <NameLink id={p.user_id!} name={p.full_name || p.username} />
+                  <p className="num truncate text-[12px] text-muted-foreground">
+                    Sacou {formatBRL(p.withdrawn)}
+                  </p>
+                </div>
+                <Money value={p.deposits} className="text-[13.5px] font-semibold" />
+              </li>
+            ))}
+          </ol>
+        )}
+      </Panel>
+    </div>
+  );
+}
+
+function NameLink({ id, name }: { id: string; name: string | null }) {
+  return (
+    <Link
+      to="/admin/usuarios/$id"
+      params={{ id }}
+      className="block truncate text-[14px] font-semibold hover:text-primary"
+    >
+      {name || id.slice(0, 8)}
+    </Link>
   );
 }

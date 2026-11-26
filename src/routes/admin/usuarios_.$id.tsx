@@ -286,6 +286,7 @@ function LedgerTab({ id }: { id: string }) {
   return (
     <Panel flush>
       <Table
+        rightCols={[3, 4, 5]}
         loading={q.isLoading}
         head={["Quando", "Movimentação", "Detalhe", "Valor", "Antes", "Depois"]}
         empty={!q.isLoading && !rows.length ? <Empty>Nenhuma movimentação.</Empty> : null}
@@ -339,6 +340,7 @@ function RoundsTab({ id }: { id: string }) {
   return (
     <Panel flush>
       <Table
+        rightCols={[3, 4, 5]}
         loading={q.isLoading}
         head={["Quando", "Jogo", "Rodada", "Aposta", "Ganho", "Saldo depois", "Situação"]}
         empty={!q.isLoading && !rows.length ? <Empty>Nenhuma rodada de cassino.</Empty> : null}
@@ -399,6 +401,7 @@ function BetsTab({ id }: { id: string }) {
   return (
     <Panel flush>
       <Table
+        rightCols={[3, 4]}
         loading={q.isLoading}
         head={["Feita em", "Jogo", "Palpite", "Aposta", "Retorno", "Situação"]}
         empty={q.data && !q.data.length ? <Empty>Nenhuma aposta esportiva.</Empty> : null}
@@ -479,6 +482,7 @@ function PaymentsTab({ id }: { id: string }) {
   return (
     <Panel flush>
       <Table
+        rightCols={[2, 5]}
         loading={q.isLoading}
         head={["Quando", "Tipo", "Valor", "Detalhe", "Situação", ""]}
         empty={q.data && !q.data.length ? <Empty>Nenhum depósito ou saque.</Empty> : null}

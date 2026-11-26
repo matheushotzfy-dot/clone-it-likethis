@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -21,11 +21,13 @@ import {
   X,
   Library,
   ExternalLink,
+  Search,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { getOverview } from "@/lib/admin.functions";
 import { Logo } from "@/components/layout/logo";
 import { cn } from "@/lib/utils";
+import { formatBRL } from "@/lib/format";
 
 type Item = {
   to: string;
@@ -230,8 +232,64 @@ export function AdminShell({ children }: { children: ReactNode }) {
             </Link>
           )}
         </header>
+        <header className="sticky top-0 z-30 hidden h-[60px] items-center gap-4 border-b border-border bg-background/90 px-8 backdrop-blur lg:flex">
+          <PlayerSearch />
+          <div className="ml-auto flex items-center gap-5 text-[13px]">
+            {overview.data && (
+              <>
+                <span className="flex items-center gap-2 text-muted-foreground">
+                  <span className="live-dot live-dot-sm" aria-hidden />
+                  <span className="num font-semibold text-foreground">
+                    {overview.data.playingNow}
+                  </span>{" "}
+                  jogando agora
+                </span>
+                <span className="text-muted-foreground">
+                  Saldo dos jogadores{" "}
+                  <span className="num font-semibold text-foreground">
+                    {formatBRL(overview.data.liability)}
+                  </span>
+                </span>
+              </>
+            )}
+            <Link
+              to="/"
+              className="flex items-center gap-1.5 font-semibold text-muted-foreground hover:text-foreground"
+            >
+              <ExternalLink className="size-4" /> Ver o site
+            </Link>
+          </div>
+        </header>
         <main className="min-w-0 flex-1 px-3 py-5 md:px-8 md:py-8">{children}</main>
       </div>
     </div>
+  );
+}
+
+/** Busca rápida: Enter abre a lista de jogadores já filtrada. */
+function PlayerSearch() {
+  const navigate = useNavigate();
+  const [term, setTerm] = useState("");
+  return (
+    <form
+      role="search"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const q = term.trim();
+        if (!q) return;
+        navigate({ to: "/admin/usuarios", search: { q } });
+        setTerm("");
+      }}
+      className="relative w-[360px]"
+    >
+      <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+      <input
+        value={term}
+        onChange={(e) => setTerm(e.target.value)}
+        placeholder="Buscar jogador por nome, CPF, e-mail ou celular"
+        aria-label="Buscar jogador"
+        className="h-10 w-full rounded-[10px] border border-border bg-surface pl-9 pr-3 text-[14px] outline-none placeholder:text-muted-foreground focus:border-primary"
+      />
+    </form>
   );
 }

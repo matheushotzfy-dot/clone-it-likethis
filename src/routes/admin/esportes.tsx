@@ -75,6 +75,7 @@ function Page() {
 
       <Panel flush title="Exposição por jogo (apostas abertas)">
         <Table
+          rightCols={[2, 3]}
           loading={exposure.isLoading}
           head={[
             "Jogo",
@@ -136,6 +137,7 @@ function Page() {
       ) : (
         <Panel flush>
           <Table
+            rightCols={[4, 5, 7]}
             loading={bets.isLoading}
             head={["Feita em", "Jogador", "Jogo", "Palpite", "Aposta", "Retorno", "Situação", ""]}
             empty={bets.data && !bets.data.length ? <Empty>Nenhuma aposta.</Empty> : null}

@@ -120,6 +120,7 @@ function Page() {
       ) : (
         <Panel flush>
           <Table
+            rightCols={[4, 5]}
             loading={q.isLoading}
             head={["Quando", "Jogador", "Movimentação", "Detalhe", "Valor", "Saldo depois"]}
             empty={!q.isLoading && !rows.length ? <Empty>Nenhuma movimentação.</Empty> : null}

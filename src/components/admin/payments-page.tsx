@@ -135,6 +135,7 @@ export function PaymentsPage({ type }: { type: "deposit" | "withdrawal" }) {
           }
         >
           <Table
+            rightCols={[2, 7]}
             loading={q.isLoading}
             head={
               isWd
