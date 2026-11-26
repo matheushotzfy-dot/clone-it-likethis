@@ -3,25 +3,6 @@ import { getRequestHost } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
-async function loadLimits(supabase: {
-  from: (t: string) => {
-    select: (c: string) => {
-      in: (k: string, v: string[]) => Promise<{ data: { key: string; value: unknown }[] | null }>;
-    };
-  };
-}) {
-  const { data } = await supabase
-    .from("app_settings")
-    .select("key,value")
-    .in("key", ["min_deposit", "max_deposit"]);
-  const out: Record<string, number> = { min_deposit: 30, max_deposit: 3000 };
-  for (const row of data ?? []) {
-    const n = Number(row.value);
-    if (Number.isFinite(n)) out[row.key] = n;
-  }
-  return out;
-}
-
 type DepositResponse = {
   message?: string;
   qrCodeResponse?: {
@@ -54,12 +35,16 @@ export const createVeoPagPixDeposit = createServerFn({ method: "POST" })
       }
       return adminClient;
     };
-    const limits = await loadLimits(supabase as never);
-    if (data.amount < limits.min_deposit || data.amount > limits.max_deposit) {
+    const m = await import("./money.server");
+    const settings = await m.assertRealMoney("deposit");
+    await m.assertActiveGateway("veopag");
+    await m.assertNotFrozen(userId);
+    if (data.amount < settings.min_deposit || data.amount > settings.max_deposit) {
       throw new Error(
-        `Depósito deve ser entre R$ ${limits.min_deposit} e R$ ${limits.max_deposit}`,
+        `Depósito deve ser entre R$ ${settings.min_deposit} e R$ ${settings.max_deposit}`,
       );
     }
+    await m.rgCheck(userId, "deposit", data.amount);
 
     // Reuse the active PIX or cancel a stuck placeholder before creating another one.
     const { data: existing } = await supabase
@@ -111,7 +96,9 @@ export const createVeoPagPixDeposit = createServerFn({ method: "POST" })
 
     const externalId = `dep-${userId.slice(0, 8)}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-    const { data: pendingTx, error: pendingError } = await supabase
+    const { data: pendingTx, error: pendingError } = await (
+      await getAdminClient()
+    )
       .from("transactions")
       .insert({
         user_id: userId,

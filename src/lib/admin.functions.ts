@@ -3,7 +3,12 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
 async function assertAdmin(supabase: any, userId: string) {
-  const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
+  const { data } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .maybeSingle();
   if (!data) throw new Error("Acesso negado");
 }
 
@@ -11,7 +16,12 @@ export const isAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
     return { isAdmin: !!data };
   });
 
@@ -24,15 +34,28 @@ export const getDashboardKPIs = createServerFn({ method: "GET" })
     const BR_OFFSET_MS = 3 * 60 * 60 * 1000;
     const nowBR = new Date(Date.now() - BR_OFFSET_MS);
     // Midnight BR expressed as a UTC instant
-    const today = new Date(Date.UTC(nowBR.getUTCFullYear(), nowBR.getUTCMonth(), nowBR.getUTCDate()) + BR_OFFSET_MS);
-    const monthStart = new Date(Date.UTC(nowBR.getUTCFullYear(), nowBR.getUTCMonth(), 1) + BR_OFFSET_MS);
+    const today = new Date(
+      Date.UTC(nowBR.getUTCFullYear(), nowBR.getUTCMonth(), nowBR.getUTCDate()) + BR_OFFSET_MS,
+    );
+    const monthStart = new Date(
+      Date.UTC(nowBR.getUTCFullYear(), nowBR.getUTCMonth(), 1) + BR_OFFSET_MS,
+    );
     const weekStart = new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000);
 
-    const [{ data: allTx, error: txError }, { count: userCount, error: usersError }, { data: balances, error: balanceError }, { count: kycPending }, { data: agents, error: agentsError }] = await Promise.all([
+    const [
+      { data: allTx, error: txError },
+      { count: userCount, error: usersError },
+      { data: balances, error: balanceError },
+      { count: kycPending },
+      { data: agents, error: agentsError },
+    ] = await Promise.all([
       supabase.from("transactions").select("user_id,type,amount,status,created_at,kyc_required"),
       supabase.from("profiles").select("*", { count: "exact", head: true }),
       supabase.from("profiles").select("balance"),
-      supabase.from("kyc_submissions").select("*", { count: "exact", head: true }).eq("status", "pending"),
+      supabase
+        .from("kyc_submissions")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending"),
       supabase.from("profiles").select("id,signup_user_agent"),
     ]);
     if (txError) throw new Error(txError.message);
@@ -49,7 +72,10 @@ export const getDashboardKPIs = createServerFn({ method: "GET" })
       return "unknown";
     };
     const userPlatform = new Map<string, "android" | "ios" | "desktop" | "unknown">();
-    let android = 0, ios = 0, desktop = 0, unknown = 0;
+    let android = 0,
+      ios = 0,
+      desktop = 0,
+      unknown = 0;
     for (const row of (agents ?? []) as any[]) {
       const p = platformOf(String(row?.signup_user_agent ?? ""));
       userPlatform.set(row.id, p);
@@ -59,8 +85,13 @@ export const getDashboardKPIs = createServerFn({ method: "GET" })
       else unknown++;
     }
     const deviceTotal = android + ios + desktop + unknown;
-    const pct = (n: number) => deviceTotal ? Math.round((n / deviceTotal) * 100) : 0;
-    const depByPlatform: Record<"android" | "ios" | "desktop" | "unknown", number> = { android: 0, ios: 0, desktop: 0, unknown: 0 };
+    const pct = (n: number) => (deviceTotal ? Math.round((n / deviceTotal) * 100) : 0);
+    const depByPlatform: Record<"android" | "ios" | "desktop" | "unknown", number> = {
+      android: 0,
+      ios: 0,
+      desktop: 0,
+      unknown: 0,
+    };
     for (const t of (allTx ?? []) as any[]) {
       if (t.type === "deposit" && t.status === "approved") {
         const p = userPlatform.get(t.user_id) ?? "unknown";
@@ -68,8 +99,15 @@ export const getDashboardKPIs = createServerFn({ method: "GET" })
       }
     }
     const devices = {
-      android, ios, desktop, unknown, total: deviceTotal,
-      androidPct: pct(android), iosPct: pct(ios), desktopPct: pct(desktop), unknownPct: pct(unknown),
+      android,
+      ios,
+      desktop,
+      unknown,
+      total: deviceTotal,
+      androidPct: pct(android),
+      iosPct: pct(ios),
+      desktopPct: pct(desktop),
+      unknownPct: pct(unknown),
       androidDeposits: depByPlatform.android,
       iosDeposits: depByPlatform.ios,
       desktopDeposits: depByPlatform.desktop,
@@ -77,7 +115,8 @@ export const getDashboardKPIs = createServerFn({ method: "GET" })
     };
 
     const tx = allTx ?? [];
-    const sum = (filter: (t: any) => boolean) => tx.filter(filter).reduce((a, t) => a + Number(t.amount), 0);
+    const sum = (filter: (t: any) => boolean) =>
+      tx.filter(filter).reduce((a, t) => a + Number(t.amount), 0);
     const todayIso = today.toISOString();
     const monthIso = monthStart.toISOString();
     const weekIso = weekStart.toISOString();
@@ -93,24 +132,53 @@ export const getDashboardKPIs = createServerFn({ method: "GET" })
       const mm = String(labelDate.getUTCMonth() + 1).padStart(2, "0");
       return {
         date: `${dd}/${mm}`,
-        deposits: sum(t => t.type === "deposit" && t.status === "approved" && t.created_at >= start && t.created_at < end),
-        withdrawals: sum(t => t.type === "withdrawal" && t.status === "approved" && t.created_at >= start && t.created_at < end),
+        deposits: sum(
+          (t) =>
+            t.type === "deposit" &&
+            t.status === "approved" &&
+            t.created_at >= start &&
+            t.created_at < end,
+        ),
+        withdrawals: sum(
+          (t) =>
+            t.type === "withdrawal" &&
+            t.status === "approved" &&
+            t.created_at >= start &&
+            t.created_at < end,
+        ),
       };
     });
 
     return {
-      depositsToday: sum(t => t.type === "deposit" && t.status === "approved" && t.created_at >= todayIso),
-      depositsYesterday: sum(t => t.type === "deposit" && t.status === "approved" && t.created_at >= yesterdayIso && t.created_at < todayIso),
-      depositsMonth: sum(t => t.type === "deposit" && t.status === "approved" && t.created_at >= monthIso),
-      withdrawalsToday: sum(t => t.type === "withdrawal" && t.status === "approved" && t.created_at >= todayIso),
-      withdrawalsMonth: sum(t => t.type === "withdrawal" && t.status === "approved" && t.created_at >= monthIso),
-      pendingDeposits: tx.filter(t => t.type === "deposit" && t.status === "pending").length,
-      pendingWithdrawals: tx.filter(t => t.type === "withdrawal" && t.status === "pending").length,
+      depositsToday: sum(
+        (t) => t.type === "deposit" && t.status === "approved" && t.created_at >= todayIso,
+      ),
+      depositsYesterday: sum(
+        (t) =>
+          t.type === "deposit" &&
+          t.status === "approved" &&
+          t.created_at >= yesterdayIso &&
+          t.created_at < todayIso,
+      ),
+      depositsMonth: sum(
+        (t) => t.type === "deposit" && t.status === "approved" && t.created_at >= monthIso,
+      ),
+      withdrawalsToday: sum(
+        (t) => t.type === "withdrawal" && t.status === "approved" && t.created_at >= todayIso,
+      ),
+      withdrawalsMonth: sum(
+        (t) => t.type === "withdrawal" && t.status === "approved" && t.created_at >= monthIso,
+      ),
+      pendingDeposits: tx.filter((t) => t.type === "deposit" && t.status === "pending").length,
+      pendingWithdrawals: tx.filter((t) => t.type === "withdrawal" && t.status === "pending")
+        .length,
       kycPending: kycPending ?? 0,
-      kycRequested: tx.filter(t => t.type === "withdrawal" && t.kyc_required).length,
+      kycRequested: tx.filter((t) => t.type === "withdrawal" && t.kyc_required).length,
       totalUsers: userCount ?? 0,
       totalBalance: (balances ?? []).reduce((a, p: any) => a + Number(p.balance), 0),
-      weeklyNet: sum(t => t.status === "approved" && t.created_at >= weekIso && t.type === "deposit") - sum(t => t.status === "approved" && t.created_at >= weekIso && t.type === "withdrawal"),
+      weeklyNet:
+        sum((t) => t.status === "approved" && t.created_at >= weekIso && t.type === "deposit") -
+        sum((t) => t.status === "approved" && t.created_at >= weekIso && t.type === "withdrawal"),
       chart: daily,
       devices,
     };
@@ -144,7 +212,11 @@ export const listUsers = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
-    let q = supabase.from("profiles").select("*").order("created_at", { ascending: false }).limit(5000);
+    let q = supabase
+      .from("profiles")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(5000);
     if (data.search) {
       const s = data.search.trim();
       q = q.or(`username.ilike.%${s}%,full_name.ilike.%${s}%,cpf.ilike.%${s}%`);
@@ -162,10 +234,24 @@ export const getUserDetail = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
-    const [{ data: profile, error: profileError }, { data: txs, error: txError }, { data: kyc, error: kycError }] = await Promise.all([
+    const [
+      { data: profile, error: profileError },
+      { data: txs, error: txError },
+      { data: kyc, error: kycError },
+    ] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", data.id).maybeSingle(),
-      supabase.from("transactions").select("*").eq("user_id", data.id).order("created_at", { ascending: false }).limit(100),
-      supabase.from("kyc_submissions").select("*").eq("user_id", data.id).order("created_at", { ascending: false }).limit(20),
+      supabase
+        .from("transactions")
+        .select("*")
+        .eq("user_id", data.id)
+        .order("created_at", { ascending: false })
+        .limit(100),
+      supabase
+        .from("kyc_submissions")
+        .select("*")
+        .eq("user_id", data.id)
+        .order("created_at", { ascending: false })
+        .limit(20),
     ]);
     if (profileError) throw new Error(profileError.message);
     if (txError) throw new Error(txError.message);
@@ -175,39 +261,53 @@ export const getUserDetail = createServerFn({ method: "POST" })
       const emails = await fetchEmailMap([data.id]);
       email = emails.get(data.id) ?? "";
     }
-    return { profile: profile ? { ...profile, email } : null, transactions: txs ?? [], kyc: kyc ?? [] };
+    return {
+      profile: profile ? { ...profile, email } : null,
+      transactions: txs ?? [],
+      kyc: kyc ?? [],
+    };
   });
 
 export const adjustBalance = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({
-    userId: z.string().uuid(),
-    delta: z.number().refine(v => v !== 0, "Valor não pode ser zero"),
-    reason: z.string().min(3).max(200),
-  }).parse(d))
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        userId: z.string().uuid(),
+        delta: z.number().refine((v) => v !== 0 && Math.abs(v) <= 1_000_000, "Valor inválido"),
+        reason: z.string().trim().min(3).max(200),
+        requestId: z.string().uuid(),
+      })
+      .parse(d),
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
-    const { data: profile } = await supabase.from("profiles").select("balance").eq("id", data.userId).maybeSingle();
-    if (!profile) throw new Error("Usuário não encontrado");
-    const next = Number(profile.balance) + data.delta;
-    if (next < 0) throw new Error("Saldo ficaria negativo");
-    // Insert as already-approved; the DB trigger credits/debits the balance automatically.
-    const { error } = await supabase.from("transactions").insert({
-      user_id: data.userId,
-      type: data.delta > 0 ? "deposit" : "withdrawal",
-      amount: Math.abs(data.delta),
-      status: "approved",
-      description: `Ajuste manual: ${data.reason}`,
+    // auth.uid() do admin vai junto: o banco confere o papel e grava auditoria.
+    const { data: balance, error } = await supabase.rpc("admin_adjust_balance", {
+      p_user_id: data.userId,
+      p_delta: data.delta,
+      p_reason: data.reason,
+      p_request_id: data.requestId,
     });
-    if (error) throw new Error(error.message);
-    return { ok: true, balance: next };
+    if (error) {
+      const { friendlyDbError } = await import("./money.server");
+      throw new Error(friendlyDbError(error.message, error.message));
+    }
+    return { ok: true, balance: Number(balance) };
   });
 
 const userUpdateSchema = z.object({
   userId: z.string().uuid(),
   full_name: z.string().trim().max(120).optional().nullable(),
-  username: z.string().trim().min(3).max(50).regex(/^[a-zA-Z0-9_]+$/).optional().nullable(),
+  username: z
+    .string()
+    .trim()
+    .min(3)
+    .max(50)
+    .regex(/^[a-zA-Z0-9_]+$/)
+    .optional()
+    .nullable(),
   cpf: z.string().trim().max(20).optional().nullable(),
   phone: z.string().trim().max(20).optional().nullable(),
   kyc_status: z.enum(["pending", "approved", "rejected"]).optional(),
@@ -228,12 +328,44 @@ export const updateUserAdmin = createServerFn({ method: "POST" })
     }
     if (Object.keys(cleaned).length === 0) return { ok: true };
     cleaned.updated_at = new Date().toISOString();
-    const { error } = await supabase.from("profiles").update(cleaned as never).eq("id", target);
+    const { error } = await supabase
+      .from("profiles")
+      .update(cleaned as never)
+      .eq("id", target);
     if (error) throw new Error(error.message);
+    const { updated_at: _u, ...changed } = cleaned;
+    await supabase.rpc("admin_log", {
+      p_action: "user.update",
+      p_target_user: target,
+      p_details: changed as never,
+    });
     return { ok: true };
   });
 
-async function purgeUserData(supabaseAdmin: { from: (t: string) => { delete: () => { eq: (c: string, v: string) => Promise<{ error: { message: string } | null }> } }; auth: { admin: { deleteUser: (id: string) => Promise<{ error: { message: string } | null }> } } }, id: string) {
+async function assertNoMoneyHistory(id: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { count } = await supabaseAdmin
+    .from("wallet_ledger")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", id);
+  if ((count ?? 0) > 0) {
+    throw new Error(
+      "Este jogador tem movimentação financeira e não pode ser apagado. Use suspender conta.",
+    );
+  }
+}
+
+async function purgeUserData(
+  supabaseAdmin: {
+    from: (t: string) => {
+      delete: () => {
+        eq: (c: string, v: string) => Promise<{ error: { message: string } | null }>;
+      };
+    };
+    auth: { admin: { deleteUser: (id: string) => Promise<{ error: { message: string } | null }> } };
+  },
+  id: string,
+) {
   // Apaga dados relacionados antes de remover o usuário do auth
   await supabaseAdmin.from("transactions").delete().eq("user_id", id);
   await supabaseAdmin.from("kyc_submissions").delete().eq("user_id", id);
@@ -250,14 +382,18 @@ export const deleteUserAdmin = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
     if (data.userId === userId) throw new Error("Você não pode apagar a própria conta");
+    await assertNoMoneyHistory(data.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await purgeUserData(supabaseAdmin as never, data.userId);
+    await supabase.rpc("admin_log", { p_action: "user.delete", p_target_id: data.userId });
     return { ok: true };
   });
 
 export const deleteUsersBulkAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ userIds: z.array(z.string().uuid()).min(1).max(200) }).parse(d))
+  .inputValidator((d: unknown) =>
+    z.object({ userIds: z.array(z.string().uuid()).min(1).max(200) }).parse(d),
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
@@ -267,7 +403,9 @@ export const deleteUsersBulkAdmin = createServerFn({ method: "POST" })
     const errors: string[] = [];
     for (const id of targets) {
       try {
+        await assertNoMoneyHistory(id);
         await purgeUserData(supabaseAdmin as never, id);
+        await supabase.rpc("admin_log", { p_action: "user.delete", p_target_id: id });
       } catch (e) {
         errors.push(`${id.slice(0, 8)}: ${(e as Error).message}`);
       }
@@ -276,38 +414,37 @@ export const deleteUsersBulkAdmin = createServerFn({ method: "POST" })
     return { ok: true, deleted: targets.length };
   });
 
-export const deleteTransactionsBulkAdmin = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ ids: z.array(z.string().uuid()).min(1).max(500) }).parse(d))
-  .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-    await assertAdmin(supabase, userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("transactions").delete().in("id", data.ids);
-    if (error) throw new Error(error.message);
-    return { ok: true, deleted: data.ids.length };
-  });
-
 export const listTransactions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({
-    type: z.enum(["all", "deposit", "withdrawal", "bet"]).default("all"),
-    status: z.enum(["all", "pending", "approved", "rejected"]).default("all"),
-  }).parse(d))
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        type: z.enum(["all", "deposit", "withdrawal", "bet"]).default("all"),
+        status: z.enum(["all", "pending", "approved", "rejected"]).default("all"),
+      })
+      .parse(d),
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
-    let q = supabase.from("transactions").select("*").order("created_at", { ascending: false }).limit(5000);
+    let q = supabase
+      .from("transactions")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(5000);
     if (data.type !== "all") q = q.eq("type", data.type);
     if (data.status !== "all") q = q.eq("status", data.status);
     const { data: tx, error } = await q;
     if (error) throw new Error(error.message);
     if (!tx?.length) return [];
-    const userIds = [...new Set(tx.map(t => t.user_id))];
-    const { data: users } = await supabase.from("profiles").select("id,username,full_name,cpf,phone").in("id", userIds);
+    const userIds = [...new Set(tx.map((t) => t.user_id))];
+    const { data: users } = await supabase
+      .from("profiles")
+      .select("id,username,full_name,cpf,phone")
+      .in("id", userIds);
     const map = new Map((users ?? []).map((u: any) => [u.id, u]));
     const emails = await fetchEmailMap(userIds);
-    return tx.map(t => {
+    return tx.map((t) => {
       const u: any = map.get(t.user_id) ?? null;
       const email = emails.get(t.user_id) ?? "";
       return { ...t, user: u ? { ...u, email } : { email } };
@@ -316,29 +453,46 @@ export const listTransactions = createServerFn({ method: "POST" })
 
 export const setTransactionStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({
-    id: z.string().uuid(),
-    status: z.enum(["approved", "rejected"]),
-    reason: z.string().trim().max(500).optional(),
-  }).parse(d))
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        status: z.enum(["approved", "rejected"]),
+        reason: z.string().trim().max(500).optional(),
+      })
+      .parse(d),
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
-    const { data: tx } = await supabase.from("transactions").select("*").eq("id", data.id).maybeSingle();
+    const { data: tx } = await supabase
+      .from("transactions")
+      .select("*")
+      .eq("id", data.id)
+      .maybeSingle();
     if (!tx) throw new Error("Transação não encontrada");
     if (tx.status !== "pending") throw new Error("Transação já foi processada");
-    // Pre-check withdrawal balance
-    if (data.status === "approved" && tx.type === "withdrawal") {
-      const { data: prof } = await supabase.from("profiles").select("balance").eq("id", tx.user_id).maybeSingle();
-      if (!prof || Number(prof.balance) < Number(tx.amount)) throw new Error("Saldo insuficiente do usuário");
-    }
+    // Saque: o valor já foi reservado na solicitação; aprovar não mexe no saldo e recusar devolve.
     const patch: Record<string, unknown> = { status: data.status };
     if (data.status === "rejected" && data.reason) {
       const base = (tx.description ?? "").split(" — Motivo:")[0];
       patch.description = `${base} — Motivo: ${data.reason}`;
     }
-    const { error } = await supabase.from("transactions").update(patch as never).eq("id", data.id);
-    if (error) throw new Error(error.message);
+    const { error } = await supabase
+      .from("transactions")
+      .update(patch as never)
+      .eq("id", data.id)
+      .eq("status", "pending");
+    if (error) {
+      const { friendlyDbError } = await import("./money.server");
+      throw new Error(friendlyDbError(error.message, error.message));
+    }
+    await supabase.rpc("admin_log", {
+      p_action: `${tx.type}.${data.status}`,
+      p_target_user: tx.user_id,
+      p_target_id: tx.id,
+      p_details: { amount: Number(tx.amount), reason: data.reason ?? null } as never,
+    });
     return { ok: true };
   });
 
@@ -373,7 +527,10 @@ export const listDepositorsPixel = createServerFn({ method: "GET" })
     // Fetch emails in chunks
     const emailMap = new Map<string, string>();
     for (let i = 0; i < ids.length; i += 200) {
-      const page = await supabaseAdmin.auth.admin.listUsers({ page: Math.floor(i / 200) + 1, perPage: 200 });
+      const page = await supabaseAdmin.auth.admin.listUsers({
+        page: Math.floor(i / 200) + 1,
+        perPage: 200,
+      });
       for (const u of page.data?.users ?? []) {
         emailMap.set(u.id, u.email ?? "");
       }

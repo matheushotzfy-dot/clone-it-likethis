@@ -12,11 +12,9 @@ type PodPayResponse<T> = {
 
 async function podpay<T>(
   path: string,
-  init: RequestInit & { idempotencyKey?: string } = {}
+  init: RequestInit & { idempotencyKey?: string } = {},
 ): Promise<T> {
-  const apiKey =
-    process.env.PODPAY_SECRET_KEY ||
-    process.env.PODPAY_API_KEY;
+  const apiKey = process.env.PODPAY_SECRET_KEY || process.env.PODPAY_API_KEY;
   if (!apiKey) throw new Error("PODPAY_SECRET_KEY não configurada");
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -39,19 +37,6 @@ const depositSchema = z.object({
   amount: z.number().positive().max(1000000),
 });
 
-async function loadLimits(supabase: { from: (t: string) => { select: (c: string) => { in: (k: string, v: string[]) => Promise<{ data: { key: string; value: unknown }[] | null }> } } }) {
-  const { data } = await supabase
-    .from("app_settings")
-    .select("key,value")
-    .in("key", ["min_deposit", "max_deposit", "min_withdraw", "max_withdraw"]);
-  const out: Record<string, number> = { min_deposit: 30, max_deposit: 3000, min_withdraw: 50, max_withdraw: 5000 };
-  for (const row of data ?? []) {
-    const n = Number(row.value);
-    if (Number.isFinite(n)) out[row.key] = n;
-  }
-  return out;
-}
-
 type PixTransaction = {
   id: string;
   status: string;
@@ -70,10 +55,16 @@ export const createPodPayPixDeposit = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId, claims } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const limits = await loadLimits(supabase as never);
-    if (data.amount < limits.min_deposit || data.amount > limits.max_deposit) {
-      throw new Error(`Depósito deve ser entre R$ ${limits.min_deposit} e R$ ${limits.max_deposit}`);
+    const m = await import("./money.server");
+    const settings = await m.assertRealMoney("deposit");
+    await m.assertActiveGateway("podpay");
+    await m.assertNotFrozen(userId);
+    if (data.amount < settings.min_deposit || data.amount > settings.max_deposit) {
+      throw new Error(
+        `Depósito deve ser entre R$ ${settings.min_deposit} e R$ ${settings.max_deposit}`,
+      );
     }
+    await m.rgCheck(userId, "deposit", data.amount);
     const { data: profile } = await supabase
       .from("profiles")
       .select("full_name,cpf,phone")
@@ -82,7 +73,6 @@ export const createPodPayPixDeposit = createServerFn({ method: "POST" })
     const cpf = (profile?.cpf || "").replace(/\D/g, "");
     if (!cpf || cpf.length !== 11)
       throw new Error("CPF não encontrado no cadastro. Atualize seu perfil.");
-
 
     const amountCents = Math.round(data.amount * 100);
     const idempotencyKey = crypto.randomUUID();
@@ -154,10 +144,8 @@ export const createPodPayPixDeposit = createServerFn({ method: "POST" })
     const fullName =
       (profile?.full_name && profile.full_name.trim().length > 2
         ? profile.full_name
-        : (claims as { email?: string } | undefined)?.email?.split("@")[0]) ||
-      "Cliente";
-    const email =
-      (claims as { email?: string } | undefined)?.email || "no-reply@example.com";
+        : (claims as { email?: string } | undefined)?.email?.split("@")[0]) || "Cliente";
+    const email = (claims as { email?: string } | undefined)?.email || "no-reply@example.com";
     const phone = (profile?.phone || "11999999999").replace(/\D/g, "");
 
     let result: PixTransaction;
@@ -220,44 +208,4 @@ export const createPodPayPixDeposit = createServerFn({ method: "POST" })
       qrCodeImage: result.pixQrCodeImage || "",
       copyPaste: result.pixQrCode || "",
     };
-  });
-
-const withdrawalSchema = z.object({
-  amount: z.number().positive().max(1000000),
-  pixKey: z.string().min(3).max(120),
-  pixKeyType: z.enum(["cpf", "email", "phone", "random"]),
-});
-
-export const createPodPayPixWithdrawal = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => withdrawalSchema.parse(d))
-  .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-    const limits = await loadLimits(supabase as never);
-    if (data.amount < limits.min_withdraw || data.amount > limits.max_withdraw) {
-      throw new Error(`Saque deve ser entre R$ ${limits.min_withdraw} e R$ ${limits.max_withdraw}`);
-    }
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("balance")
-      .eq("id", userId)
-      .maybeSingle();
-    if (!profile || Number(profile.balance) < data.amount)
-      throw new Error("Saldo insuficiente");
-
-    const { data: tx, error } = await supabase
-      .from("transactions")
-      .insert({
-        user_id: userId,
-        type: "withdrawal",
-        amount: data.amount,
-        status: "pending",
-        pix_key: `${data.pixKeyType}:${data.pixKey}`,
-        description: "Saque PIX via PodPay (aguardando aprovação)",
-      })
-      .select()
-      .single();
-    if (error) throw new Error(error.message);
-
-    return { ok: true, transactionId: tx.id };
   });

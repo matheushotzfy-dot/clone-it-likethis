@@ -12,7 +12,12 @@ export const getMyProfile = createServerFn({ method: "GET" })
       .eq("id", userId)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    const { data: role } = await supabase.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
+    const { data: role } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
     const { count: depCount } = await supabase
       .from("transactions")
       .select("*", { count: "exact", head: true })
@@ -23,82 +28,59 @@ export const getMyProfile = createServerFn({ method: "GET" })
   });
 
 const updateSchema = z.object({
-  full_name: z.string().trim().min(2).max(100).optional(),
-  username: z.string().trim().min(3).max(50).regex(/^[a-zA-Z0-9_]+$/).optional(),
-  phone: z.string().trim().max(20).optional(),
-  cpf: z.string().trim().max(20).optional(),
-  avatar_url: z.string().url().max(500).optional(),
+  username: z
+    .string()
+    .trim()
+    .min(3)
+    .max(30)
+    .regex(/^[a-zA-Z0-9_]+$/, "Use só letras, números e _")
+    .optional(),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^\d{10,11}$/, "Celular inválido")
+    .optional(),
+  full_name: z.string().trim().min(5).max(120).optional(),
 });
 
+/** Nome só pode ser preenchido uma vez (depois, só o suporte muda). CPF e nascimento ficam travados no banco. */
 export const updateMyProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => updateSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const patch: Record<string, string> = {};
+    if (data.username) patch.username = data.username.toLowerCase();
+    if (data.phone) patch.phone = data.phone;
+    if (data.full_name) {
+      const { data: me } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", userId)
+        .maybeSingle();
+      if (me?.full_name?.trim())
+        throw new Error("O nome já está cadastrado. Para corrigir, fale com o suporte.");
+      patch.full_name = data.full_name.replace(/\s+/g, " ");
+    }
+    if (!Object.keys(patch).length) return { ok: true };
+    if (patch.username) {
+      const { count } = await supabase
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .eq("username", patch.username)
+        .neq("id", userId);
+      if ((count ?? 0) > 0) throw new Error("Este nome de usuário já está em uso.");
+    }
     const { error } = await supabase
       .from("profiles")
-      .update({ ...data, updated_at: new Date().toISOString() })
+      .update({ ...patch, updated_at: new Date().toISOString() })
       .eq("id", userId);
-    if (error) throw new Error(error.message);
-    return { ok: true };
-  });
-
-const txSchema = z.object({
-  type: z.enum(["deposit", "withdrawal"]),
-  amount: z.number().min(1).max(100000),
-  pix_key: z.string().trim().min(1).max(200).optional(),
-});
-
-export const createTransaction = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => txSchema.parse(d))
-  .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-    // Load settings
-    const { data: settings } = await supabase.from("app_settings").select("key,value");
-    const s = Object.fromEntries((settings ?? []).map(r => [r.key, r.value as never])) as Record<string, number | boolean>;
-    if (s.maintenance_mode) throw new Error("Plataforma em manutenção");
-    // Block frozen accounts
-    const { data: me } = await supabase.from("profiles").select("is_frozen,freeze_reason").eq("id", userId).maybeSingle();
-    if (me?.is_frozen) throw new Error(me.freeze_reason ? `Conta congelada — Motivo: ${me.freeze_reason}` : "Conta congelada. Entre em contato com o suporte.");
-    if (data.type === "deposit") {
-      const min = Number(s.min_deposit ?? 30), max = Number(s.max_deposit ?? 3000);
-      if (data.amount < min) throw new Error(`Depósito mínimo: R$ ${min.toFixed(2)}`);
-      if (data.amount > max) throw new Error(`Depósito máximo: R$ ${max.toFixed(2)}`);
-    } else {
-      const min = Number(s.min_withdraw ?? 50), max = Number(s.max_withdraw ?? 5000);
-      if (data.amount < min) throw new Error(`Saque mínimo: R$ ${min.toFixed(2)}`);
-      if (data.amount > max) throw new Error(`Saque máximo: R$ ${max.toFixed(2)}`);
-      const { data: prof } = await supabase.from("profiles").select("balance").eq("id", userId).maybeSingle();
-      if (!prof) throw new Error("Perfil não encontrado");
-      // Reserve balance against other pending withdrawals to block spam-requests
-      const { data: pendings } = await supabase
-        .from("transactions")
-        .select("amount")
-        .eq("user_id", userId)
-        .eq("type", "withdrawal")
-        .eq("status", "pending");
-      const reserved = (pendings ?? []).reduce((sum, t: any) => sum + Number(t.amount), 0);
-      const available = Number(prof.balance) - reserved;
-      if (available < data.amount) {
-        throw new Error(
-          reserved > 0
-            ? `Você já tem R$ ${reserved.toFixed(2)} em saques pendentes. Saldo disponível: R$ ${Math.max(0, available).toFixed(2)}.`
-            : "Saldo insuficiente"
-        );
-      }
-      if (!data.pix_key) throw new Error("Chave PIX obrigatória");
-    }
-    const { error } = await supabase.from("transactions").insert({
-      user_id: userId,
-      type: data.type,
-      amount: data.amount,
-      pix_key: data.pix_key,
-      status: "pending",
-      kyc_required: false,
-      description: data.type === "deposit" ? "Depósito via PIX" : "Saque via PIX",
-    });
-    if (error) throw new Error(error.message);
+    if (error)
+      throw new Error(
+        error.message.includes("username")
+          ? "Este nome de usuário já está em uso."
+          : "Não foi possível salvar.",
+      );
     return { ok: true };
   });
 
@@ -117,7 +99,7 @@ export const listMyTransactions = createServerFn({ method: "GET" })
     // Attach the LATEST KYC submission per transaction (query by transaction_id, not
     // by tx.kyc_submission_id — users can't update transactions via RLS, so the FK
     // may point to a stale, already-rejected submission after a resubmit).
-    const txIds = txs.filter(t => t.type === "withdrawal" && t.kyc_required).map(t => t.id);
+    const txIds = txs.filter((t) => t.type === "withdrawal" && t.kyc_required).map((t) => t.id);
     let subByTx = new Map<string, any>();
     if (txIds.length) {
       const { data: subs } = await supabase
@@ -128,21 +110,6 @@ export const listMyTransactions = createServerFn({ method: "GET" })
       for (const s of subs ?? []) {
         if (s.transaction_id && !subByTx.has(s.transaction_id)) subByTx.set(s.transaction_id, s);
       }
-
     }
-    return txs.map(t => ({ ...t, kyc_submission: subByTx.get(t.id) ?? null }));
-
-  });
-
-
-// Self-promote to admin (only works if no admin exists yet — bootstrap)
-export const claimFirstAdmin = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { supabase, userId } = context;
-    const { count } = await supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "admin");
-    if ((count ?? 0) > 0) throw new Error("Já existe um administrador. Peça a ele para promover você.");
-    const { error } = await supabase.from("user_roles").update({ role: "admin" }).eq("user_id", userId);
-    if (error) throw new Error(error.message);
-    return { ok: true };
+    return txs.map((t) => ({ ...t, kyc_submission: subByTx.get(t.id) ?? null }));
   });

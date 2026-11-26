@@ -1,23 +1,37 @@
 # Project conventions
 
-- Keep game-funding access in the shared game-access predicate, separate from deposit history; refresh the profile before launching so manual credits and recent payments are recognized.
+## Dinheiro
+- `profiles.balance` só muda dentro de `public.wallet_apply()`; um trigger bloqueia qualquer UPDATE direto, inclusive da service role. Toda mudança gera uma linha imutável em `wallet_ledger` com chave de idempotência única.
+- Depósito credita quando a transação passa para `approved`. Saque reserva o valor na criação (`withdrawal_hold`), devolve se for recusado/cancelado (`withdrawal_release`) e não mexe no saldo ao aprovar.
+- Transação finalizada não muda de status; valor, tipo e dono nunca mudam; transação que movimentou saldo não pode ser apagada.
+- Ajuste manual do admin só via `admin_adjust_balance` (exige motivo e request id; grava auditoria).
+- `app_settings.real_money_enabled = false` (homologação) bloqueia no banco depósitos e saques de jogadores; só o admin lança crédito de teste.
+- Regras de checagem antes de falar com gateway/provedor ficam em `src/lib/money.server.ts` (configurações, conta suspensa, limites de jogo responsável, textos de erro).
+- `admin_wallet_reconciliation` compara saldo e soma do ledger; a diferença precisa ser zero.
 
-- Keep advertising attribution collection centralized in tracking.ts; its current disabled mode must not read browser identifiers or attach them to signup metadata, so all signup callers honor the same privacy choice.
+## PlayFivers
+- Só provedores oficiais (`OFICIAL - ...`) entram no catálogo; jogos `original`/clones nunca entram nem abrem. `user_rtp` nunca é enviado e o painel não altera RTP nem limite de ganho do agente.
+- O lobby lê a tabela `games` (sincronizada pelo admin); o jogo abre pelo `games.id`, nunca por provedor/código vindo do cliente.
+- URL de callback no painel da PlayFivers: `https://DOMINIO/api/public/playfivers/<PLAYFIVERS_CALLBACK_TOKEN>`. BALANCE vai para `/webhook`; WinBet e Refund para `/api/webhook` e exigem também as credenciais do agente.
+- Aposta e ganho aplicam no banco por `apply_playfivers_transaction` (idempotente por `txn_id`; a aposta precisa caber no saldo). Refund estorna a rodada original por `apply_playfivers_refund`. Casos fora do normal ficam em `pf_callback_log`.
+- Toda chamada à API da PlayFivers passa por `resolvePFEndpoint` (relay de IP fixo opcional).
 
-- Account dialogs share auth-sheet mobile sizing and internal scrolling so safe areas, close controls and keyboard navigation stay consistent; closing a deposit never cancels its pending payment.
+## Esportes
+- Aposta só pelo servidor (`placeSportsBet` revalida a odd na ESPN e chama `place_sports_bet` com a service role). Liquidação automática por `runSettlement` com a regra pura `settleMatchResult` (tempo normal; adiado/cancelado anula).
+- Parsing da ESPN e regras de preço ficam em `sports-data.ts`; placares são buscados por `sports.functions.ts` com cache e deduplicação.
 
-- PlayFivers callbacks must fail closed without validated agent credentials and nonnegative numeric amounts; never persist callback secrets. Refunds need a separately verified original-round reconciliation before they can be enabled.
+## Contas
+- Cadastro validado no banco (`handle_new_user`): CPF válido e sem conta, 18+ e cadastro aberto. Login por CPF acontece no servidor (`signInWithCpf`) e nunca devolve o e-mail ao navegador.
+- Limites e autoexclusão em `rg_limits`; `rg_check` roda antes de qualquer aposta ou depósito. Reduzir limite vale na hora; aumentar vale em 24h.
 
-- Public game tiles must use the shared game-image availability rule and disappear on artwork failure; grid wrappers must not leave empty cells.
+## Interface
+- Cores com função fixa: `primary` (azul) ações de jogo e navegação, `pix` (verde-água) só dinheiro entrando, `gold` ganhos/prêmios/ranking, `live` evento acontecendo. Títulos em Barlow Condensed sem caixa alta; texto em Figtree; valores com `num` (algarismos tabulares).
+- Papéis visuais ficam em `src/styles.css`; não criar camadas de estilo novas por cima das existentes.
+- Capas de jogo usam `GameTile`, que some se a arte falhar; wrappers de trilho usam `empty:hidden` para não deixar buraco.
+- Rotas folha usam `pageMeta` com título e descrição próprios.
+- Conteúdo de promoção, torneio ou indicação só aparece se existir de verdade, com regras completas.
+- Ajustes só de celular ficam em `max-width: 639px`, sem quebrar o desktop nem o zoom.
 
-- Keep the public casino presentation in the shared SiteShell and casino components so theme and navigation changes stay consistent across routes.
-- Define visual roles in src/styles.css and use the existing Button component for interactive controls to preserve theming and accessibility.
-- Keep banner artwork separate from HTML campaign text; preserve administrator-managed banners and use bundled branded artwork only as fallbacks.
-- Keep redesign work in presentation code; preserve game, authentication and payment integrations and their business rules.
-- Keep authenticated header controls in HeaderAccount so the shared Header stays focused on layout and public navigation.
-- Scope phone-density adjustments to the max-width: 639px styles and named presentation hooks; preserve desktop layout and native pinch zoom.
-- Use pageMeta for leaf routes that share the standard metadata shape, supplying a unique page-specific title and description.
-- Keep ESPN parsing and source-price rules in sports-data.ts; fetch scoreboards through sports.functions.ts with shared polling and request deduplication so every sports view uses the same real data.
-- Match alternative casino artwork by both game title and provider, never by generic game type, to avoid showing a different product's cover.- Credit VeoPag deposits only after re-checking status with the VeoPag API (webhook bodies are unsigned); keep that logic in src/lib/veopag.server.ts.
-
-- Send every PlayFivers API call through resolvePFEndpoint (optional fixed-IP relay configured by secrets), because the server outbound IP rotates while PlayFivers allow-lists IPs.
+## VeoPag / gateways
+- Credite depósitos VeoPag só depois de reconsultar a API da VeoPag (o corpo do webhook não é assinado); essa lógica fica em `src/lib/veopag.server.ts`.
+- Webhooks da BSPay e PodPay recusam qualquer chamada sem assinatura válida. Só o gateway ativo (`active_gateway`) gera Pix.

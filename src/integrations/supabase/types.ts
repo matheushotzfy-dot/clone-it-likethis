@@ -50,6 +50,36 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_id: string | null
+          created_at: string
+          details: Json
+          id: number
+          target_id: string | null
+          target_user: string | null
+        }
+        Insert: {
+          action: string
+          admin_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: never
+          target_id?: string | null
+          target_user?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: never
+          target_id?: string | null
+          target_user?: string | null
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           key: string
@@ -98,6 +128,50 @@ export type Database = {
         }
         Relationships: []
       }
+      game_launches: {
+        Row: {
+          balance: number | null
+          created_at: string
+          error: string | null
+          game_code: string
+          game_name: string | null
+          id: number
+          ok: boolean
+          provider_code: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number | null
+          created_at?: string
+          error?: string | null
+          game_code: string
+          game_name?: string | null
+          id?: never
+          ok: boolean
+          provider_code: string
+          user_id: string
+        }
+        Update: {
+          balance?: number | null
+          created_at?: string
+          error?: string | null
+          game_code?: string
+          game_name?: string | null
+          id?: never
+          ok?: boolean
+          provider_code?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_launches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_rounds: {
         Row: {
           after_balance: number | null
@@ -109,7 +183,9 @@ export type Database = {
           id: string
           payload: Json | null
           provider: string | null
+          refunded_at: string | null
           round_id: string | null
+          status: string
           txn_id: string
           txn_type: string | null
           user_id: string
@@ -125,7 +201,9 @@ export type Database = {
           id?: string
           payload?: Json | null
           provider?: string | null
+          refunded_at?: string | null
           round_id?: string | null
+          status?: string
           txn_id: string
           txn_type?: string | null
           user_id: string
@@ -141,11 +219,67 @@ export type Database = {
           id?: string
           payload?: Json | null
           provider?: string | null
+          refunded_at?: string | null
           round_id?: string | null
+          status?: string
           txn_id?: string
           txn_type?: string | null
           user_id?: string
           win?: number
+        }
+        Relationships: []
+      }
+      games: {
+        Row: {
+          active: boolean
+          category: string
+          created_at: string
+          featured: boolean
+          game_code: string
+          id: number
+          image_url: string | null
+          is_original: boolean
+          last_seen_at: string
+          name: string
+          provider: string
+          provider_code: string
+          sort_order: number
+          tags: string[]
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          featured?: boolean
+          game_code: string
+          id?: never
+          image_url?: string | null
+          is_original?: boolean
+          last_seen_at?: string
+          name: string
+          provider: string
+          provider_code: string
+          sort_order?: number
+          tags?: string[]
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          featured?: boolean
+          game_code?: string
+          id?: never
+          image_url?: string | null
+          is_original?: boolean
+          last_seen_at?: string
+          name?: string
+          provider?: string
+          provider_code?: string
+          sort_order?: number
+          tags?: string[]
+          updated_at?: string
         }
         Relationships: []
       }
@@ -248,10 +382,50 @@ export type Database = {
         }
         Relationships: []
       }
+      pf_callback_log: {
+        Row: {
+          balance: number | null
+          created_at: string
+          http_status: number
+          id: number
+          kind: string
+          payload: Json | null
+          provider_balance: number | null
+          result: string
+          txn_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          balance?: number | null
+          created_at?: string
+          http_status: number
+          id?: never
+          kind: string
+          payload?: Json | null
+          provider_balance?: number | null
+          result: string
+          txn_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          balance?: number | null
+          created_at?: string
+          http_status?: number
+          id?: never
+          kind?: string
+          payload?: Json | null
+          provider_balance?: number | null
+          result?: string
+          txn_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           balance: number
+          birth_date: string | null
           bonus_balance: number
           bonus_expires_at: string | null
           bonus_used: boolean
@@ -265,6 +439,7 @@ export type Database = {
           is_frozen: boolean
           kyc_status: string
           kyc_verified: boolean
+          last_seen_at: string | null
           phone: string | null
           referrer: string | null
           signup_ip: string | null
@@ -280,6 +455,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           balance?: number
+          birth_date?: string | null
           bonus_balance?: number
           bonus_expires_at?: string | null
           bonus_used?: boolean
@@ -293,6 +469,7 @@ export type Database = {
           is_frozen?: boolean
           kyc_status?: string
           kyc_verified?: boolean
+          last_seen_at?: string | null
           phone?: string | null
           referrer?: string | null
           signup_ip?: string | null
@@ -308,6 +485,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           balance?: number
+          birth_date?: string | null
           bonus_balance?: number
           bonus_expires_at?: string | null
           bonus_used?: boolean
@@ -321,6 +499,7 @@ export type Database = {
           is_frozen?: boolean
           kyc_status?: string
           kyc_verified?: boolean
+          last_seen_at?: string | null
           phone?: string | null
           referrer?: string | null
           signup_ip?: string | null
@@ -334,6 +513,130 @@ export type Database = {
           utm_term?: string | null
         }
         Relationships: []
+      }
+      rg_limits: {
+        Row: {
+          deposit_daily: number | null
+          deposit_monthly: number | null
+          deposit_weekly: number | null
+          loss_daily: number | null
+          pending: Json | null
+          pending_effective_at: string | null
+          self_excluded_reason: string | null
+          self_excluded_until: string | null
+          session_minutes: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          deposit_daily?: number | null
+          deposit_monthly?: number | null
+          deposit_weekly?: number | null
+          loss_daily?: number | null
+          pending?: Json | null
+          pending_effective_at?: string | null
+          self_excluded_reason?: string | null
+          self_excluded_until?: string | null
+          session_minutes?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          deposit_daily?: number | null
+          deposit_monthly?: number | null
+          deposit_weekly?: number | null
+          loss_daily?: number | null
+          pending?: Json | null
+          pending_effective_at?: string | null
+          self_excluded_reason?: string | null
+          self_excluded_until?: string | null
+          session_minutes?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rg_limits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sports_bets: {
+        Row: {
+          away: string
+          created_at: string
+          event_id: string
+          home: string
+          id: string
+          league: string
+          league_name: string | null
+          odd: number
+          pick: string
+          potential_payout: number
+          score_away: number | null
+          score_home: number | null
+          settle_note: string | null
+          settled_at: string | null
+          settled_by: string | null
+          stake: number
+          starts_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          away: string
+          created_at?: string
+          event_id: string
+          home: string
+          id?: string
+          league: string
+          league_name?: string | null
+          odd: number
+          pick: string
+          potential_payout: number
+          score_away?: number | null
+          score_home?: number | null
+          settle_note?: string | null
+          settled_at?: string | null
+          settled_by?: string | null
+          stake: number
+          starts_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          away?: string
+          created_at?: string
+          event_id?: string
+          home?: string
+          id?: string
+          league?: string
+          league_name?: string | null
+          odd?: number
+          pick?: string
+          potential_payout?: number
+          score_away?: number | null
+          score_home?: number | null
+          settle_note?: string | null
+          settled_at?: string | null
+          settled_by?: string | null
+          stake?: number
+          starts_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sports_bets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       transactions: {
         Row: {
@@ -401,11 +704,107 @@ export type Database = {
         }
         Relationships: []
       }
+      wallet_ledger: {
+        Row: {
+          amount: number
+          balance_after: number
+          balance_before: number
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: number
+          idempotency_key: string
+          kind: Database["public"]["Enums"]["ledger_kind"]
+          meta: Json
+          ref_id: string | null
+          ref_table: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          balance_before: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: never
+          idempotency_key: string
+          kind: Database["public"]["Enums"]["ledger_kind"]
+          meta?: Json
+          ref_id?: string | null
+          ref_table?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          balance_before?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: never
+          idempotency_key?: string
+          kind?: Database["public"]["Enums"]["ledger_kind"]
+          meta?: Json
+          ref_id?: string | null
+          ref_table?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_ledger_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
-      [_ in never]: never
+      admin_wallet_reconciliation: {
+        Row: {
+          balance: number | null
+          diff: number | null
+          entries: number | null
+          last_at: string | null
+          ledger_total: number | null
+          user_id: string | null
+          username: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      admin_adjust_balance: {
+        Args: {
+          p_delta: number
+          p_reason: string
+          p_request_id: string
+          p_user_id: string
+        }
+        Returns: number
+      }
+      admin_log: {
+        Args: {
+          p_action: string
+          p_details?: Json
+          p_target_id?: string
+          p_target_user?: string
+        }
+        Returns: undefined
+      }
+      apply_playfivers_refund: {
+        Args: {
+          p_payload: Json
+          p_txn_id: string
+          p_user_id: string
+        }
+        Returns: {
+            balance: number
+            result: string
+          }[]
+      }
       apply_playfivers_transaction: {
         Args: {
           p_bet: number
@@ -430,12 +829,75 @@ export type Database = {
       }
       place_sports_bet: {
         Args: {
-          p_description: string
-          p_match_id: string
+          p_away: string
+          p_event_id: string
+          p_home: string
+          p_league: string
+          p_league_name: string
           p_odd: number
           p_pick: string
           p_stake: number
+          p_starts_at: string
           p_user_id: string
+        }
+        Returns: {
+            bet_id: string
+            balance: number
+          }[]
+      }
+      rg_check: {
+        Args: {
+          p_action: string
+          p_amount: number
+          p_user: string
+        }
+        Returns: undefined
+      }
+      rg_promote_pending: {
+        Args: {
+          p_user: string
+        }
+        Returns: undefined
+      }
+      rg_self_exclude: {
+        Args: {
+          p_days: number
+          p_reason: string
+        }
+        Returns: string
+      }
+      rg_set_limits: {
+        Args: {
+          p_deposit_daily: number
+          p_deposit_monthly: number
+          p_deposit_weekly: number
+          p_loss_daily: number
+          p_session_minutes: number
+        }
+        Returns: Json
+      }
+      settle_sports_bet: {
+        Args: {
+          p_bet_id: string
+          p_note?: string
+          p_score_away: number
+          p_score_home: number
+          p_settled_by?: string
+          p_status: string
+        }
+        Returns: string
+      }
+      wallet_apply: {
+        Args: {
+          p_amount: number
+          p_created_by?: string
+          p_description?: string
+          p_key: string
+          p_kind: Database["public"]["Enums"]["ledger_kind"]
+          p_meta?: Json
+          p_ref_id?: string
+          p_ref_table?: string
+          p_user: string
         }
         Returns: number
       }
@@ -443,6 +905,18 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user"
       kyc_submission_status: "pending" | "approved" | "rejected"
+      ledger_kind:
+        | "opening"
+        | "deposit"
+        | "withdrawal_hold"
+        | "withdrawal_release"
+        | "casino_bet"
+        | "casino_win"
+        | "casino_refund"
+        | "sports_stake"
+        | "sports_payout"
+        | "sports_refund"
+        | "adjustment"
       transaction_status:
         | "pending"
         | "completed"
@@ -450,7 +924,12 @@ export type Database = {
         | "cancelled"
         | "approved"
         | "rejected"
-      transaction_type: "deposit" | "withdrawal" | "bet" | "win" | "bonus"
+      transaction_type:
+        | "deposit"
+        | "withdrawal"
+        | "bet"
+        | "win"
+        | "bonus"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -580,14 +1059,8 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user"],
       kyc_submission_status: ["pending", "approved", "rejected"],
-      transaction_status: [
-        "pending",
-        "completed",
-        "failed",
-        "cancelled",
-        "approved",
-        "rejected",
-      ],
+      ledger_kind: ["opening", "deposit", "withdrawal_hold", "withdrawal_release", "casino_bet", "casino_win", "casino_refund", "sports_stake", "sports_payout", "sports_refund", "adjustment"],
+      transaction_status: ["pending", "completed", "failed", "cancelled", "approved", "rejected"],
       transaction_type: ["deposit", "withdrawal", "bet", "win", "bonus"],
     },
   },

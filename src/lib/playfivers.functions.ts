@@ -1,54 +1,41 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { assertAdmin } from "./admin-guard";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { getPFGameCategory, sortPFSectionGames } from "./pf-game-classification";
-
 import { resolvePFEndpoint } from "./playfivers-endpoint";
+import {
+  FEATURED_COUNT,
+  catalogCategory,
+  defaultSortOrder,
+  hasArtwork,
+  isOfficialProvider,
+  providerLabel,
+} from "./pf-catalog-rules";
+import { games as showcaseGames } from "./games";
 
-interface PFProvider {
+// ---------------------------------------------------------------------------
+// Tipos expostos para a interface
+// ---------------------------------------------------------------------------
+export type LobbyCategory = "slot" | "live" | "crash" | "table" | "other";
+
+export interface LobbyGame {
   id: number;
   name: string;
-  image_url: string;
-  status: number;
-}
-interface PFGame {
-  name: string;
-  image_url: string;
-  rounds_free: boolean;
-  status: boolean;
-  original: boolean;
-  game_code: string;
-  provider: { name: string };
+  provider: string;
+  image_url: string | null;
+  category: LobbyCategory;
+  featured: boolean;
+  /** false = vitrine local enquanto o catálogo da PlayFivers não foi sincronizado. */
+  launchable: boolean;
 }
 
-const CURATED_FEATURED_GAMES: PFGame[] = [
-  { name: "Aviator", image_url: "https://imagensfivers.com/Games/Spribe/SPB_aviator.webp", rounds_free: false, status: true, original: false, game_code: "SPB_aviator", provider: { name: "OFICIAL - SPRIBE" } },
-  { name: "Aviator", image_url: "https://imagensfivers.com/Games/Spribe/Aviator.webp", rounds_free: false, status: true, original: true, game_code: "aviator", provider: { name: "SPRIBE" } },
-  { name: "Spaceman", image_url: "https://imagensfivers.com/Games/Pragmatic-Play/PP_1301.webp", rounds_free: false, status: true, original: false, game_code: "PP_1301", provider: { name: "OFICIAL - PRAGMATIC SLOTS" } },
-  { name: "JETX", image_url: "https://imagensfivers.com/Games/jetx/8891.webp", rounds_free: false, status: true, original: true, game_code: "8891", provider: { name: "JETX ORIGINAL" } },
-  { name: "JETX3", image_url: "https://imagensfivers.com/Games/jetx/8892.webp", rounds_free: false, status: true, original: true, game_code: "8892", provider: { name: "JETX ORIGINAL" } },
-  { name: "Crash", image_url: "https://imagensfivers.com/Games/Galaxsys/Crash.webp", rounds_free: false, status: true, original: true, game_code: "12493", provider: { name: "GALAXSYS ORIGINAL" } },
-  { name: "Ninja Crash", image_url: "https://imagensfivers.com/Games/Galaxsys/Ninja-Crash.webp", rounds_free: false, status: true, original: true, game_code: "12526", provider: { name: "GALAXSYS ORIGINAL" } },
-  { name: "Mines", image_url: "https://imagensfivers.com/Games/Spribe/SPB_mines.webp", rounds_free: false, status: true, original: false, game_code: "SPB_mines", provider: { name: "OFICIAL - SPRIBE" } },
-  { name: "Roulette", image_url: "https://imagensfivers.com/Games/Evolution-Live/GPKEVO_002f1c169f987367a76460647f4d38f5.webp", rounds_free: false, status: true, original: false, game_code: "GPKEVO_002f1c169f987367a76460647f4d38f5", provider: { name: "OFICIAL - EVOLUTION LIVE" } },
-  { name: "Baccarat A", image_url: "https://imagensfivers.com/Games/Evolution-Live/GPKEVO_dbbb995447823f91946b33fc4a59ed69.webp", rounds_free: false, status: true, original: false, game_code: "GPKEVO_dbbb995447823f91946b33fc4a59ed69", provider: { name: "OFICIAL - EVOLUTION LIVE" } },
-  { name: "Blackjack A", image_url: "https://imagensfivers.com/Games/Evolution-Live/GPKEVO_d44f99268a3f923142a9dbcdc3295448.webp", rounds_free: false, status: true, original: false, game_code: "GPKEVO_d44f99268a3f923142a9dbcdc3295448", provider: { name: "OFICIAL - EVOLUTION LIVE" } },
-  { name: "Crazy Time", image_url: "https://imagensfivers.com/Games/Evolution-Live/GPKEVO_7d9bf93163aa8286ca8af68253fbe635.webp", rounds_free: false, status: true, original: false, game_code: "GPKEVO_7d9bf93163aa8286ca8af68253fbe635", provider: { name: "OFICIAL - EVOLUTION LIVE" } },
-  { name: "Dragon Tiger", image_url: "https://imagensfivers.com/Games/Evolution-Live/GPKEVO_f6fdac8354ea904db507a13c6cf13b56.webp", rounds_free: false, status: true, original: false, game_code: "GPKEVO_f6fdac8354ea904db507a13c6cf13b56", provider: { name: "OFICIAL - EVOLUTION LIVE" } },
-  { name: "Bacará Rápido", image_url: "https://imagensfivers.com/Games/Evolution-Live/GPKEVO_c605e257bc20ba94849999cdc3007f72.webp", rounds_free: false, status: true, original: false, game_code: "GPKEVO_c605e257bc20ba94849999cdc3007f72", provider: { name: "OFICIAL - EVOLUTION LIVE" } },
-  { name: "Auto Roulette", image_url: "https://imagensfivers.com/Games/Ezugi/EZUGI_5001.webp", rounds_free: false, status: true, original: false, game_code: "EZUGI_5001", provider: { name: "OFICIAL - EZUGI" } },
-  { name: "Baccarat", image_url: "https://imagensfivers.com/Games/Ezugi/EZUGI_100.webp", rounds_free: false, status: true, original: false, game_code: "EZUGI_100", provider: { name: "OFICIAL - EZUGI" } },
-];
-
-type LaunchPFGameResult =
-  | { ok: true; launch_url: string; name?: string }
-  | { ok: false; error: string; status?: number; code?: "ip_not_allowed" | "not_configured" | "frozen" | "profile_missing" | "launch_failed" };
-
+// ---------------------------------------------------------------------------
+// Acesso à API da PlayFivers (sempre via resolvePFEndpoint por causa do IP fixo)
+// ---------------------------------------------------------------------------
 class PFRequestError extends Error {
   constructor(
     message: string,
     public status: number,
-    public path: string,
   ) {
     super(message);
     this.name = "PFRequestError";
@@ -56,372 +43,578 @@ class PFRequestError extends Error {
 }
 
 async function pfFetch(path: string, init?: RequestInit) {
-  // Read inside the call: process.env is only available in server handlers.
-  const endpoint = resolvePFEndpoint(process.env.PLAYFIVERS_PROXY_URL, process.env.PLAYFIVERS_PROXY_KEY);
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10_000);
+  const endpoint = resolvePFEndpoint(
+    process.env.PLAYFIVERS_PROXY_URL,
+    process.env.PLAYFIVERS_PROXY_KEY,
+  );
   const res = await fetch(`${endpoint.base}${path}`, {
     ...init,
-    signal: controller.signal,
+    signal: AbortSignal.timeout(15_000),
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
       ...endpoint.headers,
       ...(init?.headers ?? {}),
     },
-  }).finally(() => clearTimeout(timeout));
+  });
   const text = await res.text();
-  let json: any = null;
-  try { json = text ? JSON.parse(text) : null; } catch { /* ignore */ }
-  if (!res.ok) {
-    throw new PFRequestError(json?.msg ?? text ?? "Erro na PlayFivers", res.status, path);
+  let json: Record<string, unknown> | null = null;
+  try {
+    json = text ? JSON.parse(text) : null;
+  } catch {
+    /* resposta não-JSON */
   }
+  if (!res.ok)
+    throw new PFRequestError(String(json?.msg ?? (text || "Erro na PlayFivers")), res.status);
   return json;
 }
 
-async function getServerOutboundIp() {
-  try {
-    const res = await fetch("https://api.ipify.org?format=json", {
-      headers: { Accept: "application/json" },
-    });
-    if (!res.ok) return null;
-    const json = await res.json() as { ip?: string };
-    return json.ip ?? null;
-  } catch {
-    return null;
-  }
+function pfCredentials() {
+  const agentToken = process.env.PLAYFIVERS_AGENT_TOKEN;
+  const secretKey = process.env.PLAYFIVERS_SECRET_KEY;
+  return agentToken && secretKey ? { agentToken, secretKey } : null;
 }
 
-async function normalizeLaunchError(error: unknown): Promise<LaunchPFGameResult> {
-  if (error instanceof PFRequestError) {
-    const isIpDenied = error.status === 403 && /ip/i.test(error.message);
-    const viaProxy = resolvePFEndpoint(process.env.PLAYFIVERS_PROXY_URL, process.env.PLAYFIVERS_PROXY_KEY).viaProxy;
-    // Without the relay the site's outbound IP rotates, so allow-listing it is not a durable fix.
-    const outboundIp = isIpDenied && !viaProxy ? await getServerOutboundIp() : null;
-    return {
-      ok: false,
-      status: error.status,
-      code: isIpDenied ? "ip_not_allowed" : "launch_failed",
-      error: isIpDenied
-        ? viaProxy
-          ? "PlayFivers recusou o IP do servidor intermediário. Autorize o IP fixo dele no painel da PlayFivers."
-          : `Jogos indisponíveis: configure o servidor intermediário de IP fixo (IP atual, que muda: ${outboundIp ?? "desconhecido"}).`
-        : error.status === 401 && viaProxy
-          ? "Chave do servidor intermediário inválida."
-          : `PlayFivers ${error.status}: ${error.message}`,
-    };
-  }
 
-  return {
-    ok: false,
-    code: "launch_failed",
-    error: error instanceof Error ? error.message : "Falha ao iniciar jogo",
+// ---------------------------------------------------------------------------
+// Lobby (público)
+// ---------------------------------------------------------------------------
+function showcase(): LobbyGame[] {
+  const map: Record<string, LobbyCategory> = {
+    slots: "slot",
+    crash: "crash",
+    live: "live",
+    table: "table",
+    popular: "slot",
   };
-}
-
-// Public — list of providers (cached)
-let providersCache: { at: number; data: PFProvider[] } | null = null;
-async function loadProviders() {
-  if (providersCache && Date.now() - providersCache.at < 5 * 60_000) return providersCache.data;
-  const json = await pfFetch("/api/v2/providers");
-  const data: PFProvider[] = (json?.data ?? []).filter((p: PFProvider) => p.status === 1);
-  providersCache = { at: Date.now(), data };
-  return data;
-}
-
-export const getPFProviders = createServerFn({ method: "GET" }).handler(async () => {
-  try {
-    return await loadProviders();
-  } catch (error) {
-    console.error("PlayFivers providers unavailable", error);
-    return providersCache?.data ?? [];
-  }
-});
-
-// Public — list of games (optionally filtered by provider id)
-const gamesCache = new Map<string, { at: number; data: PFGame[] }>();
-type CatalogDiagnostics = {
-  providers: number;
-  providersLoaded: number;
-  providersFailed: number;
-  rawGames: number;
-  uniqueGames: number;
-  duplicatesRemoved: number;
-  updatedAt: string;
-};
-type CatalogSnapshot = { at: number; data: PFGame[]; diagnostics: CatalogDiagnostics };
-let catalogCache: CatalogSnapshot | null = null;
-/** Só entram no catálogo jogos ativos e com arte remota válida. */
-function hasArtwork(game: PFGame) {
-  const url = (game.image_url ?? "").trim();
-  return /^https?:\/\/\S+\.(webp|png|jpe?g|avif|gif)(\?\S*)?$/i.test(url);
-}
-
-async function loadProviderGames(providerId: number) {
-  const key = String(providerId);
-  const cached = gamesCache.get(key);
-  if (cached && Date.now() - cached.at < 5 * 60_000) return cached.data;
-  const json = await pfFetch(`/api/v2/games?provider=${providerId}`);
-  const list: PFGame[] = (json?.data ?? []).filter((g: PFGame) => g.status && hasArtwork(g));
-  gamesCache.set(key, { at: Date.now(), data: list });
-  return list;
-}
-
-const PROVIDER_PRIORITY_HINTS = [
-  "PG SOFT",
-  "PGSOFT",
-  "POCKET GAMES SOFT",
-  "SPRIBE",
-  "JETX",
-  "AVIATRIX",
-  "TURBO GAMES",
-  "EVOLUTION LIVE",
-  "EZUGI",
-  "PRAGMATIC LIVE",
-  "LIVE88",
-  "DREAMGAMING LIVE",
-  "WINFINITY",
-  "GALAXSYS ORIGINAL",
-  "PRAGMATIC",
-];
-
-function providerPriority(provider: PFProvider) {
-  const name = provider.name.toUpperCase();
-  const index = PROVIDER_PRIORITY_HINTS.findIndex((hint) => name.includes(hint));
-  return index === -1 ? 999 : index;
-}
-
-/** Normaliza o provedor para agrupar variações do mesmo estúdio
- *  ("OFICIAL - PG SOFT", "PG SOFT", "PGSOFT ORIGINAL" -> "PGSOFT"). */
-function providerBaseKey(name: string) {
-  return name
-    .toUpperCase()
-    .replace(/^OFICIAL\s*-\s*/, "")
-    .replace(/\b(ORIGINAL|OFICIAL|SLOTS|SLOT|LIVE|CASSINO|CASINO|GAMES|GAMING)\b/g, "")
-    .replace(/[^A-Z0-9]/g, "");
-}
-
-function gameNameKey(name: string) {
-  return name.toLowerCase().replace(/[^a-z0-9]/g, "");
-}
-
-/** Remove duplicados exatos (mesmo provedor + code) e o mesmo jogo repetido
- *  entre variações do provedor (ex.: PG SOFT x OFICIAL - PG SOFT). */
-function dedupeGames<T extends { name: string; game_code: string; provider: { name: string } }>(
-  games: T[],
-  /** true no lobby geral: o mesmo título só aparece uma vez, mesmo em estúdios diferentes. */
-  globalByName = false,
-) {
-  const seenCode = new Set<string>();
-  const seenName = new Set<string>();
-  const out: T[] = [];
-  for (const game of games) {
-    const codeKey = `${game.provider.name.toUpperCase()}:${game.game_code}`;
-    const nameKey = globalByName
-      ? `*:${gameNameKey(game.name)}`
-      : `${providerBaseKey(game.provider.name)}:${gameNameKey(game.name)}`;
-    if (seenCode.has(codeKey) || seenName.has(nameKey)) continue;
-    seenCode.add(codeKey);
-    seenName.add(nameKey);
-    out.push(game);
-  }
-  return out;
-}
-
-function orderLobbyGames(games: PFGame[]) {
-  const unique = dedupeGames(games, true);
-  const crash = unique.filter((game) => getPFGameCategory(game) === "crash");
-  const live = unique.filter((game) => getPFGameCategory(game) === "live");
-  const slots = unique.filter((game) => getPFGameCategory(game) === "slot");
-  const orderedSlots = sortPFSectionGames(slots, "slot");
-  return [
-    ...orderedSlots.slice(0, 72),
-    ...sortPFSectionGames(crash, "crash"),
-    ...sortPFSectionGames(live, "live"),
-    ...orderedSlots.slice(72),
-  ];
-}
-
-/** Providers loaded first: they cover the games the lobby actually shows. */
-const FAST_PROVIDER_COUNT = 16;
-
-let completeInFlight: Promise<CatalogSnapshot> | null = null;
-
-/**
- * Fast path: only the priority studios, fully in parallel. Answers in ~1s so
- * the lobby paints immediately while the full catalog warms up in background.
- */
-async function loadFastCatalog() {
-  const providers = await loadProviders();
-  const sorted = [...providers].sort((a, b) => providerPriority(a) - providerPriority(b));
-  const settled = await Promise.allSettled(
-    sorted.slice(0, FAST_PROVIDER_COUNT).map((provider) => loadProviderGames(provider.id)),
-  );
-  const raw = settled.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
-  return orderLobbyGames(raw);
-}
-
-async function loadCompleteCatalog() {
-  if (catalogCache && Date.now() - catalogCache.at < 5 * 60_000) return catalogCache;
-  if (completeInFlight) return completeInFlight;
-  completeInFlight = buildCompleteCatalog().finally(() => {
-    completeInFlight = null;
-  });
-  return completeInFlight;
-}
-
-async function buildCompleteCatalog() {
-  const providers = await loadProviders();
-  const sorted = [...providers].sort((a, b) => providerPriority(a) - providerPriority(b));
-  const loaded: PFGame[][] = [];
-  let failed = 0;
-  for (let start = 0; start < sorted.length; start += 24) {
-    const batch = sorted.slice(start, start + 24);
-    const settled = await Promise.allSettled(batch.map((provider) => loadProviderGames(provider.id)));
-    for (const result of settled) {
-      if (result.status === "fulfilled") loaded.push(result.value);
-      else failed += 1;
-    }
-  }
-  const raw = loaded.flat();
-  const data = orderLobbyGames(raw);
-  const diagnostics: CatalogDiagnostics = {
-    providers: sorted.length,
-    providersLoaded: sorted.length - failed,
-    providersFailed: failed,
-    rawGames: raw.length,
-    uniqueGames: data.length,
-    duplicatesRemoved: Math.max(0, raw.length - data.length),
-    updatedAt: new Date().toISOString(),
-  };
-  const snapshot: CatalogSnapshot = { at: Date.now(), data, diagnostics };
-  catalogCache = snapshot;
-  return snapshot;
-}
-
-/** Only the fields the UI renders — keeps the JSON payload small and fast. */
-type PFGameLitePayload = {
-  game_code: string;
-  name: string;
-  image_url: string;
-  original: boolean;
-  provider: { name: string };
-};
-
-function toLite(games: PFGame[]): PFGameLitePayload[] {
-  return games.map((g) => ({
-    game_code: g.game_code,
+  return showcaseGames.map((g, i) => ({
+    id: -(i + 1),
     name: g.name,
-    image_url: g.image_url,
-    original: g.original,
-    provider: { name: g.provider.name },
+    provider: g.provider,
+    image_url: g.image,
+    category: map[g.category] ?? "slot",
+    featured: i < FEATURED_COUNT,
+    launchable: false,
   }));
 }
 
-function applyGameQuery(games: PFGame[], q?: string) {
-  const query = q?.toLowerCase();
-  return query
-    ? games.filter((g) => g.name.toLowerCase().includes(query) || g.provider.name.toLowerCase().includes(query))
-    : games;
-}
+const lobbySchema = z.object({
+  category: z.enum(["all", "slot", "live", "crash", "table", "other"]).default("all"),
+  provider: z.string().trim().max(60).optional(),
+  q: z.string().trim().max(80).optional(),
+  featured: z.boolean().optional(),
+  limit: z.number().int().min(1).max(2000).default(60),
+  offset: z.number().int().min(0).default(0),
+});
 
-export const getPFGames = createServerFn({ method: "GET" })
-  .inputValidator((d: unknown) => z.object({
-    providerId: z.number().int().optional(),
-    limit: z.number().int().min(24).max(10_000).default(600),
-    q: z.string().trim().max(80).optional(),
-    /** true = wait for every provider (browse-all pages); false = fast lobby. */
-    complete: z.boolean().default(false),
-  }).parse(d ?? {}))
+export const getLobbyGames = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => lobbySchema.parse(d ?? {}))
   .handler(async ({ data }) => {
-    try {
-      let list: PFGame[];
-      if (data.providerId) {
-        list = await loadProviderGames(data.providerId);
-      } else {
-        const fresh = catalogCache && Date.now() - catalogCache.at < 5 * 60_000 ? catalogCache : null;
-        if (fresh) {
-          list = fresh.data;
-        } else if (data.complete) {
-          list = (await loadCompleteCatalog()).data;
-        } else {
-          // Warm the full catalog without blocking this response.
-          void loadCompleteCatalog().catch(() => undefined);
-          list = await loadFastCatalog();
-        }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let q = supabaseAdmin
+      .from("games")
+      .select("id,name,provider,image_url,category,featured", { count: "exact" })
+      .eq("active", true)
+      .order("featured", { ascending: false })
+      .order("sort_order", { ascending: true })
+      .order("name", { ascending: true })
+      .range(data.offset, data.offset + data.limit - 1);
+    if (data.category !== "all") q = q.eq("category", data.category);
+    if (data.provider) q = q.eq("provider", data.provider);
+    if (data.featured) q = q.eq("featured", true);
+    if (data.q) q = q.ilike("name", `%${data.q.replace(/[%_]/g, "")}%`);
+    const { data: rows, count, error } = await q;
+    if (error) throw new Error("Não foi possível carregar os jogos");
+
+    // Catálogo ainda vazio (PlayFivers não configurada): mostra a vitrine local.
+    if (!count && !data.q && !data.provider) {
+      const { count: total } = await supabaseAdmin
+        .from("games")
+        .select("id", { count: "exact", head: true })
+        .eq("active", true);
+      if (!total) {
+        let list = showcase();
+        if (data.category !== "all") list = list.filter((g) => g.category === data.category);
+        if (data.featured) list = list.filter((g) => g.featured);
+        return {
+          games: list.slice(data.offset, data.offset + data.limit),
+          total: list.length,
+          showcase: true,
+        };
       }
-      if (!data.providerId && list.length === 0) list = orderLobbyGames(CURATED_FEATURED_GAMES);
-      const filtered = dedupeGames(applyGameQuery(list, data.q), !data.providerId);
-      return toLite(filtered.slice(0, data.limit));
-    } catch (error) {
-      console.error("PlayFivers games unavailable", error);
-      const fallback = data.providerId ? gamesCache.get(String(data.providerId))?.data : [...gamesCache.values()].flatMap((c) => c.data);
-      const list = data.providerId ? (fallback ?? []) : orderLobbyGames((fallback?.length ? fallback : CURATED_FEATURED_GAMES));
-      const filtered = dedupeGames(applyGameQuery(list, data.q), !data.providerId);
-      return toLite(filtered.slice(0, data.limit));
     }
+    const games: LobbyGame[] = (rows ?? []).map((g) => ({
+      ...g,
+      category: g.category as LobbyCategory,
+      launchable: true,
+    }));
+    return { games, total: count ?? games.length, showcase: false };
   });
 
-export const getPFCatalogDiagnostics = createServerFn({ method: "GET" })
+export const getLobbyProviders = createServerFn({ method: "GET" }).handler(async () => {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("games")
+    .select("provider")
+    .eq("active", true)
+    .limit(10_000);
+  const counts = new Map<string, number>();
+  for (const row of data ?? []) counts.set(row.provider, (counts.get(row.provider) ?? 0) + 1);
+  if (counts.size === 0) {
+    for (const g of showcaseGames) counts.set(g.provider, (counts.get(g.provider) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .map(([name, games]) => ({ name, games }))
+    .sort((a, b) => b.games - a.games || a.name.localeCompare(b.name));
+});
+
+// ---------------------------------------------------------------------------
+// Abrir jogo
+// ---------------------------------------------------------------------------
+export type LaunchResult =
+  | { ok: true; launch_url: string; name: string }
+  | {
+      ok: false;
+      error: string;
+      code:
+        | "not_configured"
+        | "unavailable"
+        | "blocked"
+        | "deposit_required"
+        | "ip_not_allowed"
+        | "launch_failed";
+    };
+
+export const launchGame = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { data: role } = await context.supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", context.userId)
-      .eq("role", "admin")
+  .inputValidator((d: unknown) => z.object({ gameId: z.number().int().positive() }).parse(d))
+  .handler(async ({ data, context }): Promise<LaunchResult> => {
+    const { userId } = context;
+    const m = await import("./money.server");
+    const admin = await m.getAdminClient();
+
+    const settings = await m.loadMoneySettings();
+    if (settings.maintenance_mode)
+      return { ok: false, code: "unavailable", error: "Plataforma em manutenção." };
+    if (!settings.casino_enabled)
+      return {
+        ok: false,
+        code: "unavailable",
+        error: "O cassino está temporariamente indisponível.",
+      };
+
+    const { data: game } = await admin
+      .from("games")
+      .select("id,name,provider_code,game_code,is_original,active")
+      .eq("id", data.gameId)
       .maybeSingle();
-    if (!role) throw new Error("Acesso negado");
-    return (await loadCompleteCatalog()).diagnostics;
-  });
+    // Defesa em profundidade: mesmo que algo escape da sincronização, clone nunca abre.
+    if (!game || !game.active || game.is_original || !isOfficialProvider(game.provider_code)) {
+      return { ok: false, code: "unavailable", error: "Este jogo não está disponível." };
+    }
 
-// Authenticated — launch a game for the current user
-export const launchPFGame = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
-    z.object({
-      game_code: z.string().min(1).max(120),
-      provider: z.string().min(1).max(60),
-      game_original: z.boolean(),
-      lang: z.enum(["pt", "es", "en", "ja", "zh", "ru", "th", "hi"]).default("pt"),
-    }).parse(d),
-  )
-  .handler(async ({ data, context }): Promise<LaunchPFGameResult> => {
-    const { supabase, userId } = context;
-    const agentToken = process.env.PLAYFIVERS_AGENT_TOKEN;
-    const secretKey = process.env.PLAYFIVERS_SECRET_KEY;
-    if (!agentToken || !secretKey) return { ok: false, code: "not_configured", error: "PlayFivers não configurado" };
+    try {
+      await m.assertNotFrozen(userId);
+      await m.rgCheck(userId, "bet", 0);
+    } catch (e) {
+      return {
+        ok: false,
+        code: "blocked",
+        error: e instanceof Error ? e.message : "Conta bloqueada para jogos.",
+      };
+    }
 
-    // Block frozen accounts
-    const { data: prof } = await supabase
+    const { data: profile } = await admin
       .from("profiles")
-      .select("balance,is_frozen,freeze_reason")
+      .select("balance")
       .eq("id", userId)
       .maybeSingle();
-    if (!prof) return { ok: false, code: "profile_missing", error: "Perfil não encontrado" };
-    if (prof.is_frozen) {
-      return { ok: false, code: "frozen", error: prof.freeze_reason ? `Conta congelada — ${prof.freeze_reason}` : "Conta congelada" };
-    }
+    const balance = Number(profile?.balance ?? 0);
+    if (balance <= 0)
+      return { ok: false, code: "deposit_required", error: "Você precisa de saldo para jogar." };
 
-    // Note: deposit gate is enforced in the UI for slots/live; sportsbook is open to all logged-in users.
+    const creds = pfCredentials();
+    const record = async (ok: boolean, error?: string) => {
+      await admin.from("game_launches").insert({
+        user_id: userId,
+        provider_code: game.provider_code,
+        game_code: game.game_code,
+        game_name: game.name,
+        balance,
+        ok,
+        error: error ?? null,
+      });
+    };
+    if (!creds) {
+      await record(false, "not_configured");
+      return {
+        ok: false,
+        code: "not_configured",
+        error: "Os jogos ainda não estão liberados nesta plataforma.",
+      };
+    }
 
     try {
       const json = await pfFetch("/api/v2/game_launch", {
         method: "POST",
+        // user_rtp nunca é enviado: o RTP é o do próprio provedor.
         body: JSON.stringify({
-          agentToken,
-          secretKey,
+          agentToken: creds.agentToken,
+          secretKey: creds.secretKey,
           user_code: userId,
-          game_code: data.game_code,
-          provider: data.provider,
-          game_original: data.game_original,
-          user_balance: Number(prof.balance ?? 0),
-          lang: data.lang,
+          game_code: game.game_code,
+          provider: game.provider_code,
+          game_original: false,
+          user_balance: balance,
+          lang: "pt",
         }),
       });
-      if (!json?.launch_url) return { ok: false, code: "launch_failed", error: json?.msg ?? "Falha ao iniciar jogo" };
-      return { ok: true, launch_url: json.launch_url as string, name: json.name as string | undefined };
+      const url = typeof json?.launch_url === "string" ? json.launch_url : null;
+      if (!url) {
+        await record(false, String(json?.msg ?? "sem launch_url"));
+        return {
+          ok: false,
+          code: "launch_failed",
+          error: "O provedor não abriu o jogo. Tente novamente.",
+        };
+      }
+      await record(true);
+      return { ok: true, launch_url: url, name: game.name };
     } catch (error) {
-      return normalizeLaunchError(error);
+      const msg = error instanceof Error ? error.message : "erro";
+      await record(false, msg.slice(0, 300));
+      if (error instanceof PFRequestError && error.status === 403 && /ip/i.test(error.message)) {
+        return {
+          ok: false,
+          code: "ip_not_allowed",
+          error: "Jogos indisponíveis no momento. Tente mais tarde.",
+        };
+      }
+      return {
+        ok: false,
+        code: "launch_failed",
+        error: "Não foi possível abrir o jogo. Tente novamente.",
+      };
     }
+  });
+
+// ---------------------------------------------------------------------------
+// Admin: sincronizar catálogo, editar jogo, carteiras da PlayFivers
+// ---------------------------------------------------------------------------
+interface PFProvider {
+  id: number;
+  name: string;
+  status: number;
+}
+interface PFGame {
+  name: string;
+  image_url: string;
+  status: boolean;
+  original: boolean;
+  game_code: string;
+  provider?: { name?: string };
+}
+
+export const syncCatalog = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    if (!pfCredentials())
+      throw new Error("Configure as chaves da PlayFivers antes de sincronizar.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const startedAt = new Date().toISOString();
+
+    const providersJson = await pfFetch("/api/v2/providers");
+    const providers = ((providersJson?.data ?? []) as PFProvider[]).filter(
+      (p) => p.status === 1 && isOfficialProvider(p.name),
+    );
+
+    const loadedProviders: string[] = [];
+    const failed: string[] = [];
+    const incoming: PFGame[] = [];
+    for (let i = 0; i < providers.length; i += 8) {
+      const batch = providers.slice(i, i + 8);
+      const settled = await Promise.allSettled(
+        batch.map((p) => pfFetch(`/api/v2/games?provider=${p.id}`)),
+      );
+      settled.forEach((r, idx) => {
+        const provider = batch[idx];
+        if (r.status === "rejected") {
+          failed.push(provider.name);
+          return;
+        }
+        loadedProviders.push(provider.name);
+        for (const g of (r.value?.data ?? []) as PFGame[]) {
+          incoming.push({ ...g, provider: { name: g.provider?.name ?? provider.name } });
+        }
+      });
+    }
+
+    const valid = incoming.filter(
+      (g) =>
+        g.status &&
+        !g.original &&
+        g.game_code &&
+        g.name &&
+        hasArtwork(g.image_url) &&
+        isOfficialProvider(g.provider?.name ?? ""),
+    );
+
+    const { data: existingRows } = await supabaseAdmin
+      .from("games")
+      .select("provider_code,game_code")
+      .limit(50_000);
+    const existing = new Set((existingRows ?? []).map((r) => `${r.provider_code}::${r.game_code}`));
+
+    const seen = new Set<string>();
+    const toInsert: Record<string, unknown>[] = [];
+    const toRefresh: Record<string, unknown>[] = [];
+    for (const g of valid) {
+      const providerCode = g.provider!.name!;
+      const key = `${providerCode}::${g.game_code}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const common = {
+        provider_code: providerCode,
+        game_code: g.game_code,
+        provider: providerLabel(providerCode),
+        name: g.name.trim(),
+        image_url: g.image_url.trim(),
+        is_original: false,
+        last_seen_at: startedAt,
+        updated_at: startedAt,
+      };
+      if (existing.has(key)) {
+        toRefresh.push(common);
+      } else {
+        const sort = defaultSortOrder(g.name, providerCode);
+        toInsert.push({
+          ...common,
+          category: catalogCategory(g.name, providerCode, g.game_code),
+          sort_order: sort,
+          featured: sort <= FEATURED_COUNT * 10,
+          active: true,
+        });
+      }
+    }
+
+    for (let i = 0; i < toInsert.length; i += 500) {
+      const { error } = await supabaseAdmin
+        .from("games")
+        .insert(toInsert.slice(i, i + 500) as never);
+      if (error) throw new Error(`Falha ao inserir jogos: ${error.message}`);
+    }
+    // Atualiza só nome/arte/provedor; ordem, destaque, categoria e ativo são do admin.
+    for (let i = 0; i < toRefresh.length; i += 500) {
+      const { error } = await supabaseAdmin
+        .from("games")
+        .upsert(toRefresh.slice(i, i + 500) as never, { onConflict: "provider_code,game_code" });
+      if (error) throw new Error(`Falha ao atualizar jogos: ${error.message}`);
+    }
+
+    // Jogos que sumiram de um provedor que carregou certo saem do lobby.
+    let deactivated = 0;
+    if (loadedProviders.length) {
+      const { data: gone } = await supabaseAdmin
+        .from("games")
+        .update({ active: false, updated_at: startedAt })
+        .in("provider_code", loadedProviders)
+        .lt("last_seen_at", startedAt)
+        .eq("active", true)
+        .select("id");
+      deactivated = gone?.length ?? 0;
+    }
+
+    await context.supabase.rpc("admin_log", {
+      p_action: "catalog.sync",
+      p_details: {
+        providers: providers.length,
+        failed,
+        inserted: toInsert.length,
+        refreshed: toRefresh.length,
+        deactivated,
+      } as never,
+    });
+    return {
+      providers: providers.length,
+      failed,
+      inserted: toInsert.length,
+      refreshed: toRefresh.length,
+      deactivated,
+    };
+  });
+
+export const listCatalogAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        q: z.string().trim().max(80).optional(),
+        provider: z.string().trim().max(60).optional(),
+        category: z.enum(["all", "slot", "live", "crash", "table", "other"]).default("all"),
+        status: z.enum(["all", "active", "inactive", "featured"]).default("all"),
+        page: z.number().int().min(0).default(0),
+      })
+      .parse(d ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const pageSize = 60;
+    let q = context.supabase
+      .from("games")
+      .select(
+        "id,provider_code,provider,game_code,name,image_url,category,active,featured,sort_order,last_seen_at",
+        { count: "exact" },
+      )
+      .order("featured", { ascending: false })
+      .order("sort_order", { ascending: true })
+      .order("name", { ascending: true })
+      .range(data.page * pageSize, data.page * pageSize + pageSize - 1);
+    if (data.q) q = q.ilike("name", `%${data.q.replace(/[%_]/g, "")}%`);
+    if (data.provider) q = q.eq("provider", data.provider);
+    if (data.category !== "all") q = q.eq("category", data.category);
+    if (data.status === "active") q = q.eq("active", true);
+    if (data.status === "inactive") q = q.eq("active", false);
+    if (data.status === "featured") q = q.eq("featured", true);
+    const { data: rows, count, error } = await q;
+    if (error) throw new Error(error.message);
+    return { games: rows ?? [], total: count ?? 0, pageSize };
+  });
+
+export const updateCatalogGame = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.number().int().positive(),
+        active: z.boolean().optional(),
+        featured: z.boolean().optional(),
+        sort_order: z.number().int().min(0).max(100_000).optional(),
+        category: z.enum(["slot", "live", "crash", "table", "other"]).optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { id, ...patch } = data;
+    const { error } = await context.supabase
+      .from("games")
+      .update({ ...patch, updated_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) throw new Error(error.message);
+    await context.supabase.rpc("admin_log", {
+      p_action: "catalog.update",
+      p_target_id: String(id),
+      p_details: patch as never,
+    });
+    return { ok: true };
+  });
+
+export const getPFStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const creds = pfCredentials();
+    const endpoint = resolvePFEndpoint(
+      process.env.PLAYFIVERS_PROXY_URL,
+      process.env.PLAYFIVERS_PROXY_KEY,
+    );
+    const status = {
+      configured: !!creds,
+      callbackToken: (process.env.PLAYFIVERS_CALLBACK_TOKEN ?? "").length >= 24,
+      agentCode: !!process.env.PLAYFIVERS_AGENT_CODE,
+      viaProxy: endpoint.viaProxy,
+      wallets: null as Record<string, number> | null,
+      error: null as string | null,
+    };
+    if (!creds) return status;
+    try {
+      const qs = new URLSearchParams({ agentToken: creds.agentToken, secretKey: creds.secretKey });
+      const json = await pfFetch(`/api/v2/balances?${qs}`);
+      status.wallets = (json?.data ?? null) as Record<string, number> | null;
+    } catch (e) {
+      status.error = e instanceof Error ? e.message : "Falha ao consultar a PlayFivers";
+    }
+    return status;
+  });
+
+/**
+ * Top 10: jogos com mais rodadas nos últimos 7 dias. Enquanto não há rodadas
+ * suficientes, completa com os destaques do catálogo (e avisa via `ranked`).
+ */
+export const getTopGames = createServerFn({ method: "GET" }).handler(async () => {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const since = new Date(Date.now() - 7 * 86_400_000).toISOString();
+  const { data: rounds } = await supabaseAdmin
+    .from("game_rounds")
+    .select("provider,game_code")
+    .gte("created_at", since)
+    .gt("bet", 0)
+    .limit(50_000);
+  const counts = new Map<string, number>();
+  for (const r of rounds ?? []) {
+    if (!r.game_code) continue;
+    const key = `${r.provider ?? ""}::${r.game_code}`;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 30);
+
+  const out: LobbyGame[] = [];
+  const seen = new Set<number>();
+  if (ranked.length) {
+    const codes = ranked.map(([k]) => k.split("::")[1]);
+    const { data: rows } = await supabaseAdmin
+      .from("games")
+      .select("id,name,provider,provider_code,game_code,image_url,category,featured")
+      .eq("active", true)
+      .in("game_code", codes);
+    for (const [key] of ranked) {
+      const [, code] = key.split("::");
+      const g = (rows ?? []).find((x) => x.game_code === code);
+      if (g && !seen.has(g.id)) {
+        seen.add(g.id);
+        out.push({
+          id: g.id,
+          name: g.name,
+          provider: g.provider,
+          image_url: g.image_url,
+          category: g.category as LobbyCategory,
+          featured: g.featured,
+          launchable: true,
+        });
+      }
+      if (out.length === 10) break;
+    }
+  }
+  const byPlays = out.length >= 10;
+  if (out.length < 10) {
+    const { data: featured } = await supabaseAdmin
+      .from("games")
+      .select("id,name,provider,image_url,category,featured")
+      .eq("active", true)
+      .order("featured", { ascending: false })
+      .order("sort_order", { ascending: true })
+      .limit(20);
+    for (const g of featured ?? []) {
+      if (out.length === 10) break;
+      if (seen.has(g.id)) continue;
+      seen.add(g.id);
+      out.push({ ...g, category: g.category as LobbyCategory, launchable: true });
+    }
+    if (!out.length) return { games: showcase().slice(0, 10), byPlays: false };
+  }
+  return { games: out, byPlays };
+});
+
+export const getGameForPlay = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => z.object({ id: z.number().int().positive() }).parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: g } = await supabaseAdmin
+      .from("games")
+      .select("id,name,provider,image_url,category")
+      .eq("id", data.id)
+      .eq("active", true)
+      .maybeSingle();
+    return g ?? null;
   });

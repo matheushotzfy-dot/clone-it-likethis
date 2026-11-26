@@ -28,11 +28,17 @@ export const Route = createFileRoute("/api/public/bspay-webhook")({
         const signature = request.headers.get("x-webhook-signature");
         const ts = Number(request.headers.get("x-webhook-timestamp") || 0);
 
-        if (secret) {
+        // Sem segredo configurado não há como provar que o aviso veio da BSPay:
+        // recusa em vez de aceitar (aceitar = qualquer um aprovaria depósito).
+        if (!secret) {
+          console.error("BSPay webhook recusado: BSPAY_WEBHOOK_SECRET não configurado");
+          return new Response("Webhook not configured", { status: 503, headers: corsHeaders });
+        }
+        {
           if (!signature) {
             return new Response("Missing signature", { status: 401, headers: corsHeaders });
           }
-          if (ts && Math.abs(Date.now() / 1000 - ts) > 300) {
+          if (!ts || Math.abs(Date.now() / 1000 - ts) > 300) {
             return new Response("Stale timestamp", { status: 401, headers: corsHeaders });
           }
           try {

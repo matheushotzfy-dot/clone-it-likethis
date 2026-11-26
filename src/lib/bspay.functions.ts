@@ -13,25 +13,14 @@ async function getAccessToken(): Promise<string> {
     method: "POST",
     headers: { Authorization: `Basic ${basic}` },
   });
-  const j: { access_token?: string; error?: { message?: string } } = await r.json().catch(() => ({}));
+  const j: { access_token?: string; error?: { message?: string } } = await r
+    .json()
+    .catch(() => ({}));
   if (!r.ok || !j.access_token) {
     console.error("BSPay token error", r.status, JSON.stringify(j));
     throw new Error(j.error?.message || `BSPay auth HTTP ${r.status}`);
   }
   return j.access_token;
-}
-
-async function loadLimits(supabase: { from: (t: string) => { select: (c: string) => { in: (k: string, v: string[]) => Promise<{ data: { key: string; value: unknown }[] | null }> } } }) {
-  const { data } = await supabase
-    .from("app_settings")
-    .select("key,value")
-    .in("key", ["min_deposit", "max_deposit"]);
-  const out: Record<string, number> = { min_deposit: 30, max_deposit: 3000 };
-  for (const row of data ?? []) {
-    const n = Number(row.value);
-    if (Number.isFinite(n)) out[row.key] = n;
-  }
-  return out;
 }
 
 type CashinResponse = {
@@ -48,10 +37,16 @@ export const createBSPayPixDeposit = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId, claims } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const limits = await loadLimits(supabase as never);
-    if (data.amount < limits.min_deposit || data.amount > limits.max_deposit) {
-      throw new Error(`Depósito deve ser entre R$ ${limits.min_deposit} e R$ ${limits.max_deposit}`);
+    const m = await import("./money.server");
+    const settings = await m.assertRealMoney("deposit");
+    await m.assertActiveGateway("bspay");
+    await m.assertNotFrozen(userId);
+    if (data.amount < settings.min_deposit || data.amount > settings.max_deposit) {
+      throw new Error(
+        `Depósito deve ser entre R$ ${settings.min_deposit} e R$ ${settings.max_deposit}`,
+      );
     }
+    await m.rgCheck(userId, "deposit", data.amount);
     const { data: profile } = await supabase
       .from("profiles")
       .select("full_name,cpf,phone")
@@ -176,7 +171,10 @@ export const createBSPayPixDeposit = createServerFn({ method: "POST" })
     if (!qrcode) {
       await supabaseAdmin
         .from("transactions")
-        .update({ status: "rejected", description: `BSPay PIX ${j.data.transaction_id} (sem código PIX)` })
+        .update({
+          status: "rejected",
+          description: `BSPay PIX ${j.data.transaction_id} (sem código PIX)`,
+        })
         .eq("id", pendingTx.id);
       throw new Error("BSPay não retornou o código PIX");
     }

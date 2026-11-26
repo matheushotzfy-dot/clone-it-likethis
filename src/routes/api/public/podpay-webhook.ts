@@ -26,8 +26,7 @@ type PodPayEvent = {
 export const Route = createFileRoute("/api/public/podpay-webhook")({
   server: {
     handlers: {
-      OPTIONS: async () =>
-        new Response(null, { status: 204, headers: corsHeaders }),
+      OPTIONS: async () => new Response(null, { status: 204, headers: corsHeaders }),
       POST: async ({ request }) => {
         const secret = process.env.PODPAY_WEBHOOK_SECRET;
         const body = await request.text();
@@ -36,11 +35,17 @@ export const Route = createFileRoute("/api/public/podpay-webhook")({
           request.headers.get("x-signature") ||
           request.headers.get("x-webhook-signature");
 
-        if (secret && signature) {
+        // Assinatura obrigatória: sem segredo ou sem header, recusa.
+        if (!secret) {
+          console.error("PodPay webhook recusado: PODPAY_WEBHOOK_SECRET não configurado");
+          return new Response("Webhook not configured", { status: 503, headers: corsHeaders });
+        }
+        if (!signature) {
+          return new Response("Missing signature", { status: 401, headers: corsHeaders });
+        }
+        {
           try {
-            const expected = createHmac("sha256", secret)
-              .update(body)
-              .digest("hex");
+            const expected = createHmac("sha256", secret).update(body).digest("hex");
             // Accept hex or "sha256=..." prefix
             const provided = signature.replace(/^sha256=/, "").trim();
             const a = Buffer.from(provided);
@@ -136,10 +141,7 @@ export const Route = createFileRoute("/api/public/podpay-webhook")({
         };
         const newStatus = map[status.toLowerCase()] ?? "pending";
         if (newStatus !== "pending" && tx.status === "pending") {
-          await supabaseAdmin
-            .from("transactions")
-            .update({ status: newStatus })
-            .eq("id", tx.id);
+          await supabaseAdmin.from("transactions").update({ status: newStatus }).eq("id", tx.id);
         }
         return new Response("ok", { status: 200, headers: corsHeaders });
       },
