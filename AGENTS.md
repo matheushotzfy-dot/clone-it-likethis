@@ -3,6 +3,7 @@
 ## Dinheiro
 - `profiles.balance` só muda dentro de `public.wallet_apply()`; um trigger bloqueia qualquer UPDATE direto, inclusive da service role. Toda mudança gera uma linha imutável em `wallet_ledger` com chave de idempotência única.
 - Depósito credita quando a transação passa para `approved`. Saque reserva o valor na criação (`withdrawal_hold`), devolve se for recusado/cancelado (`withdrawal_release`) e não mexe no saldo ao aprovar.
+- A taxa do saque é gravada em `transactions.fee` no pedido (imutável); o admin envia `amount - fee`. `decided_at` é preenchido pelo banco quando o status muda. Saque com `kyc_required` só é pago depois dos documentos aprovados.
 - Transação finalizada não muda de status; valor, tipo e dono nunca mudam; transação que movimentou saldo não pode ser apagada.
 - Ajuste manual do admin só via `admin_adjust_balance` (exige motivo e request id; grava auditoria).
 - `app_settings.real_money_enabled = false` (homologação) bloqueia no banco depósitos e saques de jogadores; só o admin lança crédito de teste.
@@ -17,7 +18,7 @@
 - Toda chamada à API da PlayFivers passa por `resolvePFEndpoint` (relay de IP fixo opcional).
 
 ## Esportes
-- Aposta só pelo servidor (`placeSportsBet` revalida a odd na ESPN e chama `place_sports_bet` com a service role). Liquidação automática por `runSettlement` com a regra pura `settleMatchResult` (tempo normal; adiado/cancelado anula).
+- Aposta só pelo servidor (`placeSportsBet` revalida a odd na ESPN e chama `place_sports_bet` com a service role). O `requestId` do cupom torna a aposta idempotente (`sports_bets.request_id`). Liquidação automática por `runSettlement` com a regra pura `settleMatchResult` (tempo normal; adiado/cancelado anula).
 - Parsing da ESPN e regras de preço ficam em `sports-data.ts`; placares são buscados por `sports.functions.ts` com cache e deduplicação.
 
 ## Contas
@@ -26,7 +27,12 @@
 
 ## Interface
 - Cores com função fixa: `primary` (azul) ações de jogo e navegação, `pix` (verde-água) só dinheiro entrando, `gold` ganhos/prêmios/ranking, `live` evento acontecendo. Títulos em Barlow Condensed sem caixa alta; texto em Figtree; valores com `num` (algarismos tabulares).
-- Papéis visuais ficam em `src/styles.css`; não criar camadas de estilo novas por cima das existentes.
+- Papéis visuais ficam em `src/styles.css`; não criar camadas de estilo novas por cima das existentes. Classes base que recebem ajuste por utilitário (como `.field-input`) ficam em `@layer components`.
+
+## Admin
+- Telas em `src/routes/admin/*` usam o kit `src/components/admin/ui.tsx`; funções em `admin.functions.ts` sempre chamam `assertAdmin`. Toda ação que muda dado grava `admin_log`.
+- Números de período vêm de funções SQL (`admin_daily_stats`, `admin_finance_summary`), nunca de somas no navegador (o PostgREST corta em 1000 linhas).
+- Segredos de gateway nunca voltam inteiros ao navegador.
 - Capas de jogo usam `GameTile`, que some se a arte falhar; wrappers de trilho usam `empty:hidden` para não deixar buraco.
 - Rotas folha usam `pageMeta` com título e descrição próprios.
 - Conteúdo de promoção, torneio ou indicação só aparece se existir de verdade, com regras completas.

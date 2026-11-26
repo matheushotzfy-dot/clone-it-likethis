@@ -570,6 +570,7 @@ export type Database = {
           odd: number;
           pick: string;
           potential_payout: number;
+          request_id: string | null;
           score_away: number | null;
           score_home: number | null;
           settle_note: string | null;
@@ -591,6 +592,7 @@ export type Database = {
           odd: number;
           pick: string;
           potential_payout: number;
+          request_id?: string | null;
           score_away?: number | null;
           score_home?: number | null;
           settle_note?: string | null;
@@ -612,6 +614,7 @@ export type Database = {
           odd?: number;
           pick?: string;
           potential_payout?: number;
+          request_id?: string | null;
           score_away?: number | null;
           score_home?: number | null;
           settle_note?: string | null;
@@ -943,6 +946,7 @@ export type Database = {
           p_league_name: string;
           p_odd: number;
           p_pick: string;
+          p_request_id?: string;
           p_stake: number;
           p_starts_at: string;
           p_user_id: string;

@@ -179,6 +179,7 @@ export const placeSportsBet = createServerFn({ method: "POST" })
       p_pick: data.pick,
       p_odd: price,
       p_stake: stake,
+      p_request_id: data.requestId,
     });
     if (error)
       throw new Error(m.friendlyDbError(error.message, "Não foi possível registrar a aposta."));
