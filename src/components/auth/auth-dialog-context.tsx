@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 
-type DialogKey = "login" | "register" | "deposit" | "promotions" | null;
+type DialogKey = "login" | "register" | "deposit" | "promotions" | "identity" | null;
 
 interface Ctx {
   current: DialogKey;
@@ -18,7 +18,9 @@ export function AuthDialogProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (typeof document === "undefined") return;
     const strip = () => {
-      const hasOpenDialog = !!document.querySelector('[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]');
+      const hasOpenDialog = !!document.querySelector(
+        '[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]',
+      );
       if (document.body.style.pointerEvents === "none") {
         document.body.style.pointerEvents = "";
       }
@@ -34,17 +36,19 @@ export function AuthDialogProvider({ children }: { children: ReactNode }) {
     return () => mo.disconnect();
   }, [current]);
 
-
-  const open = useCallback((k: DialogKey) => {
-    // Defer to next frame so a previous dialog has a chance to fully unmount
-    // before the next one mounts (prevents Radix lock conflicts).
-    if (k && k !== current) {
-      setCurrent(null);
-      window.setTimeout(() => setCurrent(k), 0);
-    } else {
-      setCurrent(k);
-    }
-  }, [current]);
+  const open = useCallback(
+    (k: DialogKey) => {
+      // Defer to next frame so a previous dialog has a chance to fully unmount
+      // before the next one mounts (prevents Radix lock conflicts).
+      if (k && k !== current) {
+        setCurrent(null);
+        window.setTimeout(() => setCurrent(k), 0);
+      } else {
+        setCurrent(k);
+      }
+    },
+    [current],
+  );
 
   const close = useCallback(() => setCurrent(null), []);
 

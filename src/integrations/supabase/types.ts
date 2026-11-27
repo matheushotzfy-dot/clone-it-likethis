@@ -240,6 +240,7 @@ export type Database = {
           sort_order: number;
           tags: string[];
           updated_at: string;
+          rtp: number | null;
         };
         Insert: {
           active?: boolean;
@@ -257,6 +258,7 @@ export type Database = {
           sort_order?: number;
           tags?: string[];
           updated_at?: string;
+          rtp?: number | null;
         };
         Update: {
           active?: boolean;
@@ -274,6 +276,7 @@ export type Database = {
           sort_order?: number;
           tags?: string[];
           updated_at?: string;
+          rtp?: number | null;
         };
         Relationships: [];
       };
@@ -336,7 +339,7 @@ export type Database = {
           id_back_url: string | null;
           id_front_url: string;
           rejection_reason: string | null;
-          residence_url: string;
+          residence_url: string | null;
           reviewed_at: string | null;
           reviewed_by: string | null;
           selfie_url: string;
@@ -351,7 +354,7 @@ export type Database = {
           id_back_url?: string | null;
           id_front_url: string;
           rejection_reason?: string | null;
-          residence_url: string;
+          residence_url?: string | null;
           reviewed_at?: string | null;
           reviewed_by?: string | null;
           selfie_url: string;
@@ -366,7 +369,7 @@ export type Database = {
           id_back_url?: string | null;
           id_front_url?: string;
           rejection_reason?: string | null;
-          residence_url?: string;
+          residence_url?: string | null;
           reviewed_at?: string | null;
           reviewed_by?: string | null;
           selfie_url?: string;
@@ -445,6 +448,27 @@ export type Database = {
           utm_medium: string | null;
           utm_source: string | null;
           utm_term: string | null;
+          nationality: string | null;
+          address_zip: string | null;
+          address_street: string | null;
+          address_number: string | null;
+          address_complement: string | null;
+          address_district: string | null;
+          address_city: string | null;
+          address_state: string | null;
+          country: string;
+          terms_version: string | null;
+          terms_accepted_at: string | null;
+          privacy_consent_at: string | null;
+          closed_at: string | null;
+          closed_reason: string | null;
+          last_login_at: string | null;
+          previous_login_at: string | null;
+          last_login_ip: string | null;
+          failed_logins: number;
+          locked_at: string | null;
+          session_started_at: string | null;
+          limits_prompted_at: string | null;
         };
         Insert: {
           avatar_url?: string | null;
@@ -475,6 +499,27 @@ export type Database = {
           utm_medium?: string | null;
           utm_source?: string | null;
           utm_term?: string | null;
+          nationality?: string | null;
+          address_zip?: string | null;
+          address_street?: string | null;
+          address_number?: string | null;
+          address_complement?: string | null;
+          address_district?: string | null;
+          address_city?: string | null;
+          address_state?: string | null;
+          country?: string;
+          terms_version?: string | null;
+          terms_accepted_at?: string | null;
+          privacy_consent_at?: string | null;
+          closed_at?: string | null;
+          closed_reason?: string | null;
+          last_login_at?: string | null;
+          previous_login_at?: string | null;
+          last_login_ip?: string | null;
+          failed_logins?: number;
+          locked_at?: string | null;
+          session_started_at?: string | null;
+          limits_prompted_at?: string | null;
         };
         Update: {
           avatar_url?: string | null;
@@ -505,6 +550,27 @@ export type Database = {
           utm_medium?: string | null;
           utm_source?: string | null;
           utm_term?: string | null;
+          nationality?: string | null;
+          address_zip?: string | null;
+          address_street?: string | null;
+          address_number?: string | null;
+          address_complement?: string | null;
+          address_district?: string | null;
+          address_city?: string | null;
+          address_state?: string | null;
+          country?: string;
+          terms_version?: string | null;
+          terms_accepted_at?: string | null;
+          privacy_consent_at?: string | null;
+          closed_at?: string | null;
+          closed_reason?: string | null;
+          last_login_at?: string | null;
+          previous_login_at?: string | null;
+          last_login_ip?: string | null;
+          failed_logins?: number;
+          locked_at?: string | null;
+          session_started_at?: string | null;
+          limits_prompted_at?: string | null;
         };
         Relationships: [];
       };
@@ -521,6 +587,12 @@ export type Database = {
           session_minutes: number | null;
           updated_at: string;
           user_id: string;
+          loss_weekly: number | null;
+          loss_monthly: number | null;
+          bets_daily: number | null;
+          session_alert_minutes: number | null;
+          paused_until: string | null;
+          paused_at: string | null;
         };
         Insert: {
           deposit_daily?: number | null;
@@ -534,6 +606,12 @@ export type Database = {
           session_minutes?: number | null;
           updated_at?: string;
           user_id: string;
+          loss_weekly?: number | null;
+          loss_monthly?: number | null;
+          bets_daily?: number | null;
+          session_alert_minutes?: number | null;
+          paused_until?: string | null;
+          paused_at?: string | null;
         };
         Update: {
           deposit_daily?: number | null;
@@ -547,6 +625,12 @@ export type Database = {
           session_minutes?: number | null;
           updated_at?: string;
           user_id?: string;
+          loss_weekly?: number | null;
+          loss_monthly?: number | null;
+          bets_daily?: number | null;
+          session_alert_minutes?: number | null;
+          paused_until?: string | null;
+          paused_at?: string | null;
         };
         Relationships: [
           {
@@ -651,6 +735,8 @@ export type Database = {
           status: Database["public"]["Enums"]["transaction_status"];
           type: Database["public"]["Enums"]["transaction_type"];
           user_id: string;
+          is_test: boolean;
+          gateway: string | null;
         };
         Insert: {
           amount: number;
@@ -667,6 +753,8 @@ export type Database = {
           status?: Database["public"]["Enums"]["transaction_status"];
           type: Database["public"]["Enums"]["transaction_type"];
           user_id: string;
+          is_test?: boolean;
+          gateway?: string | null;
         };
         Update: {
           amount?: number;
@@ -683,6 +771,8 @@ export type Database = {
           status?: Database["public"]["Enums"]["transaction_status"];
           type?: Database["public"]["Enums"]["transaction_type"];
           user_id?: string;
+          is_test?: boolean;
+          gateway?: string | null;
         };
         Relationships: [];
       };
@@ -805,6 +895,64 @@ export type Database = {
       };
     };
     Functions: {
+      accept_terms: {
+        Args: { p_version: string };
+        Returns: undefined;
+      };
+      auth_clear_lock: {
+        Args: never;
+        Returns: undefined;
+      };
+      auth_user_id_by_email: {
+        Args: { p_email: string };
+        Returns: string;
+      };
+      auth_record_login: {
+        Args: { p_ip: string; p_success: boolean; p_user: string };
+        Returns: { failed: number; locked: boolean }[];
+      };
+      close_my_account: {
+        Args: { p_reason: string };
+        Returns: undefined;
+      };
+      cpf_taken: {
+        Args: { p_cpf: string; p_id: string };
+        Returns: boolean;
+      };
+      mark_limits_prompted: {
+        Args: never;
+        Returns: undefined;
+      };
+      my_annual_statement: {
+        Args: { p_year: number };
+        Returns: {
+          deposits: number;
+          withdrawals: number;
+          bets: number;
+          prizes: number;
+          refunds: number;
+          net: number;
+        }[];
+      };
+      my_rg_status: {
+        Args: never;
+        Returns: {
+          session_started_at: string | null;
+          today_result: number;
+          today_deposits: number;
+          today_bets: number;
+          last_login_at: string | null;
+          previous_login_at: string | null;
+        }[];
+      };
+      rg_end_pause: {
+        Args: never;
+        Returns: string;
+      };
+      rg_pause: {
+        Args: { p_days: number };
+        Returns: string;
+      };
       admin_adjust_balance: {
         Args: {
           p_delta: number;
@@ -1000,11 +1148,15 @@ export type Database = {
       };
       rg_set_limits: {
         Args: {
-          p_deposit_daily: number;
-          p_deposit_monthly: number;
-          p_deposit_weekly: number;
-          p_loss_daily: number;
-          p_session_minutes: number;
+          p_bets_daily: number | null;
+          p_deposit_daily: number | null;
+          p_deposit_monthly: number | null;
+          p_deposit_weekly: number | null;
+          p_loss_daily: number | null;
+          p_loss_monthly: number | null;
+          p_loss_weekly: number | null;
+          p_session_alert_minutes: number | null;
+          p_session_minutes: number | null;
         };
         Returns: Json;
       };

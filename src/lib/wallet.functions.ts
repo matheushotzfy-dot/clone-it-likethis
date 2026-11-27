@@ -68,6 +68,7 @@ export const getMyWallet = createServerFn({ method: "GET" })
       selfExcludedUntil: excludedUntil,
       hasCpf: !!profile?.cpf,
       realMoney: s.real_money_enabled,
+      testPayments: !s.real_money_enabled && s.active_gateway === "teste",
       limits: {
         minDeposit: s.min_deposit,
         maxDeposit: s.max_deposit,
@@ -240,7 +241,8 @@ export const requestWithdrawal = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { userId } = context;
     const m = await money();
-    const s = await m.assertRealMoney("withdrawal");
+    const { settings: s, test } = await m.assertMoneyAllowed("withdrawal");
+    await m.assertIdentity(userId);
     const amount = m.roundMoney(data.amount);
     if (amount < s.min_withdraw) throw new Error(`Saque mínimo: R$ ${s.min_withdraw.toFixed(2)}`);
     if (amount > s.max_withdraw) throw new Error(`Saque máximo: R$ ${s.max_withdraw.toFixed(2)}`);
@@ -277,7 +279,9 @@ export const requestWithdrawal = createServerFn({ method: "POST" })
         status: "pending",
         pix_key: `cpf:${cpf}`,
         gateway_external_id: externalId,
-        description: "Saque via Pix",
+        description: test ? "Saque via Pix (teste)" : "Saque via Pix",
+        is_test: test,
+        gateway: test ? "teste" : s.active_gateway,
       })
       .select("id,status")
       .single();
@@ -310,22 +314,39 @@ export const setMyLimits = createServerFn({ method: "POST" })
         deposit_weekly: limitValue,
         deposit_monthly: limitValue,
         loss_daily: limitValue,
+        loss_weekly: limitValue,
+        loss_monthly: limitValue,
+        bets_daily: z.number().int().min(1).max(100_000).nullable(),
         session_minutes: z
           .number()
           .int()
           .min(10)
           .max(24 * 60)
           .nullable(),
+        session_alert_minutes: z
+          .union([
+            z.literal(15),
+            z.literal(30),
+            z.literal(45),
+            z.literal(60),
+            z.literal(90),
+            z.literal(120),
+          ])
+          .nullable(),
       })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
     const { error, data: result } = await context.supabase.rpc("rg_set_limits", {
-      p_deposit_daily: data.deposit_daily as number,
-      p_deposit_weekly: data.deposit_weekly as number,
-      p_deposit_monthly: data.deposit_monthly as number,
-      p_loss_daily: data.loss_daily as number,
-      p_session_minutes: data.session_minutes as number,
+      p_deposit_daily: data.deposit_daily,
+      p_deposit_weekly: data.deposit_weekly,
+      p_deposit_monthly: data.deposit_monthly,
+      p_loss_daily: data.loss_daily,
+      p_loss_weekly: data.loss_weekly,
+      p_loss_monthly: data.loss_monthly,
+      p_bets_daily: data.bets_daily,
+      p_session_minutes: data.session_minutes,
+      p_session_alert_minutes: data.session_alert_minutes,
     });
     if (error) {
       const { friendlyDbError } = await money();

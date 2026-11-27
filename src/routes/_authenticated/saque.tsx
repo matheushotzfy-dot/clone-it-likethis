@@ -69,7 +69,7 @@ function Page() {
   });
 
   const cpf = profile.data?.cpf;
-  const disabled = !w?.realMoney;
+  const disabled = !w?.realMoney && !w?.testPayments;
 
   return (
     <AccountLayout
@@ -107,6 +107,12 @@ function Page() {
                 if (!error && amount > 0) submit.mutate();
               }}
             >
+              {w?.testPayments && (
+                <p className="rounded-[10px] border border-dashed border-border bg-background px-3 py-2.5 text-[13px]">
+                  <strong className="font-semibold">Modo de teste.</strong> O saque usa o saldo de
+                  teste e não envia Pix de verdade. O admin aprova ou recusa pela fila de saques.
+                </p>
+              )}
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-[10px] border border-border bg-background p-3.5">
                   <p className="text-[13px] text-muted-foreground">Disponível para saque</p>

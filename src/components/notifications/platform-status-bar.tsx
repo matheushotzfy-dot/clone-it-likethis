@@ -11,6 +11,13 @@ export function PlatformStatusBar() {
       </div>
     );
   }
+  if (!data.realMoney && data.testPayments) {
+    return (
+      <div role="status" className="homolog-bar px-4 py-2 text-center text-[13px] font-semibold">
+        Ambiente de homologação com Pix de teste: nenhum pagamento é real.
+      </div>
+    );
+  }
   if (!data.realMoney) {
     return (
       <div role="status" className="homolog-bar px-4 py-2 text-center text-[13px] font-semibold">

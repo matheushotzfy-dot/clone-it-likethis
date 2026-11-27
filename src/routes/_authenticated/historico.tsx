@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2 } from "lucide-react";
+import { useState } from "react";
+import { Loader2, Printer } from "lucide-react";
 import { AccountLayout, EmptyState, SubTabs } from "@/components/account/account-layout";
 import { PaymentRow } from "@/components/account/payment-row";
 import { Button } from "@/components/ui/button";
@@ -12,15 +13,20 @@ import {
   listMySportsBets,
   type LedgerKind,
 } from "@/lib/wallet.functions";
+import { getAnnualStatement } from "@/lib/account.functions";
 import { formatBRL, formatWhen } from "@/lib/format";
+import { formatCnpj, maskCPF } from "@/lib/validations";
 import { pageMeta } from "@/lib/page-meta";
 import { cn } from "@/lib/utils";
 
-type Aba = "extrato" | "cassino" | "esportes" | "pagamentos";
+type Aba = "extrato" | "cassino" | "esportes" | "pagamentos" | "informe";
 
 export const Route = createFileRoute("/_authenticated/historico")({
   validateSearch: (s: Record<string, unknown>): { aba?: Aba } => ({
-    aba: s.aba === "cassino" || s.aba === "esportes" || s.aba === "pagamentos" ? s.aba : undefined,
+    aba:
+      s.aba === "cassino" || s.aba === "esportes" || s.aba === "pagamentos" || s.aba === "informe"
+        ? s.aba
+        : undefined,
   }),
   head: () => ({
     meta: pageMeta(
@@ -46,12 +52,14 @@ function Page() {
           { id: "cassino", label: "Cassino" },
           { id: "esportes", label: "Esportes" },
           { id: "pagamentos", label: "Depósitos e saques" },
+          { id: "informe", label: "Informe anual" },
         ]}
       />
       {aba === "extrato" && <Ledger />}
       {aba === "cassino" && <CasinoRounds />}
       {aba === "esportes" && <SportsBets />}
       {aba === "pagamentos" && <Payments />}
+      {aba === "informe" && <AnnualStatement />}
     </AccountLayout>
   );
 }
@@ -332,6 +340,123 @@ function ListSkeleton() {
       {Array.from({ length: 5 }).map((_, i) => (
         <div key={i} className="skeleton h-16 rounded-[12px]" />
       ))}
+    </div>
+  );
+}
+
+/** Informe de rendimentos do ano, para a declaração do Imposto de Renda (Portaria 1.231, art. 41). */
+function AnnualStatement() {
+  const thisYear = new Date().getFullYear();
+  const years = Array.from({ length: Math.max(1, thisYear - 2024 + 1) }, (_, i) => thisYear - i);
+  const [year, setYear] = useState(thisYear === 2026 ? 2026 : thisYear - 1);
+  const fetchStatement = useServerFn(getAnnualStatement);
+  const q = useQuery({
+    queryKey: ["annual-statement", year],
+    queryFn: () => fetchStatement({ data: { year } }),
+  });
+  const d = q.data;
+  const rows: { label: string; value: number; hint?: string }[] = d
+    ? [
+        { label: "Depósitos", value: d.deposits },
+        { label: "Saques pagos", value: d.withdrawals },
+        { label: "Total apostado", value: d.bets, hint: "Cassino e esportes" },
+        { label: "Prêmios recebidos", value: d.prizes },
+        { label: "Estornos e apostas anuladas", value: d.refunds },
+      ]
+    : [];
+  return (
+    <div className="statement space-y-4 rounded-[14px] border border-border bg-surface p-4 md:p-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="font-display text-[24px] font-bold">Informe anual {year}</h2>
+          <p className="text-[13.5px] text-muted-foreground">
+            Resumo das movimentações do ano para a declaração do Imposto de Renda.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 print:hidden">
+          <select
+            aria-label="Ano"
+            className="field-input h-10 w-28"
+            value={year}
+            onChange={(e) => setYear(Number(e.target.value))}
+          >
+            {years.map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
+          </select>
+          <Button
+            variant="secondary"
+            className="h-10 rounded-[10px] shadow-none"
+            onClick={() => window.print()}
+          >
+            <Printer className="size-4" /> Imprimir ou salvar PDF
+          </Button>
+        </div>
+      </div>
+      {q.isLoading ? (
+        <div className="skeleton h-48 rounded-[10px]" />
+      ) : q.isError || !d ? (
+        <p className="text-[14px] text-muted-foreground">Não foi possível gerar o informe agora.</p>
+      ) : (
+        <>
+          <dl className="grid gap-x-6 gap-y-1 text-[13.5px] sm:grid-cols-2">
+            <div className="flex gap-2">
+              <dt className="text-muted-foreground">Titular</dt>
+              <dd className="font-semibold">{d.holder.name || "–"}</dd>
+            </div>
+            <div className="flex gap-2">
+              <dt className="text-muted-foreground">CPF</dt>
+              <dd className="num font-semibold">{d.holder.cpf ? maskCPF(d.holder.cpf) : "–"}</dd>
+            </div>
+            {d.company.name && (
+              <div className="flex gap-2 sm:col-span-2">
+                <dt className="text-muted-foreground">Fonte pagadora</dt>
+                <dd className="font-semibold">
+                  {d.company.name}
+                  {d.company.cnpj && (
+                    <span className="num"> · CNPJ {formatCnpj(d.company.cnpj)}</span>
+                  )}
+                </dd>
+              </div>
+            )}
+          </dl>
+          <table className="w-full text-[14.5px]">
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.label} className="border-b border-border/70">
+                  <td className="py-2.5">
+                    {r.label}
+                    {r.hint && (
+                      <span className="block text-[12.5px] text-muted-foreground">{r.hint}</span>
+                    )}
+                  </td>
+                  <td className="num py-2.5 text-right font-semibold">{formatBRL(r.value)}</td>
+                </tr>
+              ))}
+              <tr>
+                <td className="pt-3 font-semibold">
+                  Resultado do ano (prêmios + estornos − apostas)
+                </td>
+                <td
+                  className={cn(
+                    "num pt-3 text-right font-display text-[22px] font-bold",
+                    d.net > 0 && "text-gold",
+                  )}
+                >
+                  {d.net < 0 ? "−" : ""}
+                  {formatBRL(Math.abs(d.net))}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p className="text-[12.5px] leading-relaxed text-muted-foreground">
+            Valores em reais, de 1º de janeiro a 31 de dezembro de {year} (horário de Brasília). Em
+            caso de dúvida sobre como declarar, procure um contador.
+          </p>
+        </>
+      )}
     </div>
   );
 }

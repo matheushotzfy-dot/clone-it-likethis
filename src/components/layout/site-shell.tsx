@@ -5,6 +5,7 @@ import { Footer } from "./footer";
 import { MobileBottomNav } from "./mobile-bottom-nav";
 import { FreezeBanner } from "@/components/notifications/freeze-banner";
 import { PlatformStatusBar } from "@/components/notifications/platform-status-bar";
+import { RgStrip } from "@/components/account/play-guard";
 import { useTransactionNotifications } from "@/hooks/use-transaction-notifications";
 
 export function SiteShell({ children, bare = false }: { children: ReactNode; bare?: boolean }) {
@@ -15,6 +16,7 @@ export function SiteShell({ children, bare = false }: { children: ReactNode; bar
       <div className="app-column flex min-w-0 flex-1 flex-col">
         <PlatformStatusBar />
         <Header />
+        <RgStrip />
         <FreezeBanner />
         <main className="app-main min-w-0 flex-1 lg:pb-0">{children}</main>
         {!bare && <Footer />}

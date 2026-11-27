@@ -21,9 +21,16 @@
 - Aposta só pelo servidor (`placeSportsBet` revalida a odd na ESPN e chama `place_sports_bet` com a service role). O `requestId` do cupom torna a aposta idempotente (`sports_bets.request_id`). Liquidação automática por `runSettlement` com a regra pura `settleMatchResult` (tempo normal; adiado/cancelado anula).
 - Parsing da ESPN e regras de preço ficam em `sports-data.ts`; placares são buscados por `sports.functions.ts` com cache e deduplicação.
 
-## Contas
-- Cadastro validado no banco (`handle_new_user`): CPF válido e sem conta, 18+ e cadastro aberto. Login por CPF acontece no servidor (`signInWithCpf`) e nunca devolve o e-mail ao navegador.
-- Limites e autoexclusão em `rg_limits`; `rg_check` roda antes de qualquer aposta ou depósito. Reduzir limite vale na hora; aumentar vale em 24h.
+## Contas (Portaria SPA/MF 1.231)
+- Cadastro e login só pelo servidor (`signUp` e `signIn` em `auth.functions.ts`). O cadastro grava nacionalidade, endereço, IP e navegador, versão dos termos e consentimento LGPD; `handle_new_user` valida de novo (CPF, 18+, endereço, aceite). Senha com letras, números e caractere especial (`password-policy.ts`).
+- Login por e-mail ou CPF; 3 senhas erradas bloqueiam (`auth_record_login`) até trocar a senha pelo e-mail (`auth_clear_lock`). Conta encerrada não entra; em autoexclusão só entra quem tem saldo para sacar. O e-mail ligado a um CPF nunca volta ao navegador.
+- Identidade (documento + selfie) em `kyc_submissions` com `transaction_id` nulo; `profiles.kyc_status` none/pending/verified/rejected. Com `require_identity` ligado, `rg_check` recusa aposta e depósito e o saque exige identidade verificada.
+- Limites, pausa e autoexclusão em `rg_limits`; `rg_check` roda antes de qualquer aposta, abertura de jogo ou depósito. Reduzir limite vale na hora; aumentar vale em 24h; pausa só termina antes com 24h de espera.
+- `PlayGuard` (logado): heartbeat de sessão (`touch_last_seen`), aviso de tempo, novo aceite quando `terms_version` muda e sugestão de limites no primeiro acesso. `RgStrip` é o painel permanente (tempo de sessão e resultado do dia).
+- Campos de status, KYC, login, sessão e termos do perfil só mudam por função do banco ou pelo admin (`prevent_profile_tampering`).
+
+## Homologação
+- `active_gateway = 'teste'` com dinheiro real desligado gera Pix simulado (`testpay.functions.ts`, `transactions.is_test`). A confirmação passa pelo mesmo caminho de um depósito real. O banco recusa transação de teste com dinheiro real ligado. Antes de ligar dinheiro real, zerar os saldos de teste.
 
 ## Interface
 - Cores com função fixa: `primary` (azul) ações de jogo e navegação, `pix` (verde-água) só dinheiro entrando, `gold` ganhos/prêmios/ranking, `live` evento acontecendo. Títulos em Barlow Condensed sem caixa alta; texto em Figtree; valores com `num` (algarismos tabulares).

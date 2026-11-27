@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { signInWithCpf } from "@/lib/auth.functions";
+import { signIn } from "@/lib/auth.functions";
 import { maskCPF } from "@/lib/validations";
 import { Button } from "@/components/ui/button";
 import { useAuthDialog } from "./auth-dialog-context";
@@ -11,6 +11,24 @@ import { AuthSheet, Field } from "./auth-sheet";
 
 function looksLikeCpf(value: string) {
   return !value.includes("@") && value.replace(/\D/g, "").length === 11;
+}
+
+function lastAccessText(iso: string | null) {
+  if (!iso) return "Este é o seu primeiro acesso.";
+  const d = new Date(iso);
+  const fmt = (o: Intl.DateTimeFormatOptions) =>
+    new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", ...o }).format(d);
+  return `Último acesso em ${fmt({ day: "2-digit", month: "2-digit", year: "numeric" })} às ${fmt({ hour: "2-digit", minute: "2-digit" })}.`;
+}
+
+/** Aviso de risco exibido em toda entrada (Portaria SPA/MF 1.231, art. 4º). */
+export function RiskNotice({ className }: { className?: string }) {
+  return (
+    <p className={className ?? "text-center text-[12.5px] leading-relaxed text-muted-foreground"}>
+      Apostar envolve risco de perda de dinheiro e pode causar dependência. Jogue com moderação,
+      defina limites e não aposte para recuperar perdas. Proibido para menores de 18 anos.
+    </p>
+  );
 }
 
 export function LoginDialog() {
@@ -21,7 +39,8 @@ export function LoginDialog() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resetSent, setResetSent] = useState(false);
-  const cpfLogin = useServerFn(signInWithCpf);
+  const [locked, setLocked] = useState(false);
+  const login = useServerFn(signIn);
 
   function onIdentifier(val: string) {
     setError(null);
@@ -42,37 +61,30 @@ export function LoginDialog() {
     setLoading(true);
     setError(null);
     try {
-      if (looksLikeCpf(identifier)) {
-        const res = await cpfLogin({ data: { cpf: identifier.replace(/\D/g, ""), password } });
-        if (!res.ok) {
-          setError(res.error);
-          return;
-        }
-        const { error: sessionError } = await supabase.auth.setSession({
-          access_token: res.access_token,
-          refresh_token: res.refresh_token,
-        });
-        if (sessionError) {
-          setError("Não foi possível entrar. Tente de novo.");
-          return;
-        }
-      } else {
-        const { error: authError } = await supabase.auth.signInWithPassword({
-          email: identifier.trim(),
-          password,
-        });
-        if (authError) {
-          setError(
-            authError.message.toLowerCase().includes("not confirmed")
-              ? "Confirme seu e-mail pelo link que enviamos antes de entrar."
-              : "E-mail ou senha incorretos.",
-          );
-          return;
-        }
+      const id = looksLikeCpf(identifier) ? identifier.replace(/\D/g, "") : identifier.trim();
+      const res = await login({ data: { identifier: id, password } });
+      if (!res.ok) {
+        setError(res.error);
+        setLocked(!!res.locked);
+        return;
+      }
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: res.access_token,
+        refresh_token: res.refresh_token,
+      });
+      if (sessionError) {
+        setError("Não foi possível entrar. Tente de novo.");
+        return;
       }
       setPassword("");
+      setLocked(false);
       close();
-      toast.success("Você entrou na sua conta.");
+      toast.success("Você entrou na sua conta.", {
+        description: `${lastAccessText(res.previousLoginAt)} Apostar envolve risco: jogue com limites.`,
+        duration: 7000,
+      });
+    } catch {
+      setError("Não foi possível entrar agora. Tente de novo em instantes.");
     } finally {
       setLoading(false);
     }
@@ -104,6 +116,7 @@ export function LoginDialog() {
           close();
           setResetSent(false);
           setError(null);
+          setLocked(false);
         }
       }}
       title="Entrar"
@@ -184,10 +197,15 @@ export function LoginDialog() {
         <button
           type="button"
           onClick={forgot}
-          className="block w-full text-center text-[14px] font-medium text-muted-foreground hover:text-foreground"
+          className={
+            locked
+              ? "block w-full rounded-[10px] border border-border py-2.5 text-center text-[14px] font-semibold hover:bg-surface"
+              : "block w-full text-center text-[14px] font-medium text-muted-foreground hover:text-foreground"
+          }
         >
-          Esqueci minha senha
+          {locked ? "Criar nova senha pelo e-mail" : "Esqueci minha senha"}
         </button>
+        <RiskNotice />
       </form>
     </AuthSheet>
   );

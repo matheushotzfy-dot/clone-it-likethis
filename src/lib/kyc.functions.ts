@@ -149,7 +149,9 @@ export const listPendingKyc = createServerFn({ method: "POST" })
       userIds.length
         ? supabase
             .from("profiles")
-            .select("id,full_name,username,cpf,birth_date,created_at,kyc_verified")
+            .select(
+              "id,full_name,username,cpf,birth_date,created_at,kyc_verified,kyc_status,nationality,address_street,address_number,address_city,address_state,address_zip",
+            )
             .in("id", userIds)
         : Promise.resolve({ data: [] as never[] }),
       txIds.length
@@ -167,6 +169,7 @@ export const listPendingKyc = createServerFn({ method: "POST" })
         selfie_signed: await signKycPath(s.selfie_url),
         profile: profMap.get(s.user_id) ?? null,
         withdrawal: s.transaction_id ? (txMap.get(s.transaction_id) ?? null) : null,
+        kind: (s.transaction_id ? "withdrawal" : "identity") as "withdrawal" | "identity",
       })),
     );
   });
@@ -220,6 +223,12 @@ export const reviewKyc = createServerFn({ method: "POST" })
           .from("transactions")
           .update({ kyc_required: false })
           .eq("id", sub.transaction_id);
+    } else if (!sub.transaction_id) {
+      // Identidade do cadastro recusada: o jogador vê o motivo e pode reenviar.
+      await supabase
+        .from("profiles")
+        .update({ kyc_status: "rejected", updated_at: now })
+        .eq("id", sub.user_id);
     }
     await supabase.rpc("admin_log", {
       p_action: "kyc.review",

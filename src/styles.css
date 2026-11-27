@@ -513,10 +513,15 @@
   z-index: 1;
 }
 @media (max-width: 639px) {
+  /* O snap alinha o item na borda do trilho; sem isso o "1" ficava cortado. */
+  .rank-row {
+    scroll-padding-inline: 12px;
+  }
   .rank-item {
-    padding-left: 26px;
+    padding-left: 28px;
   }
   .rank-item .rank-num {
+    left: 4px;
     font-size: 82px;
     -webkit-text-stroke-width: 1.5px;
   }
@@ -903,4 +908,23 @@
 }
 .registration-progress {
   appearance: none;
+}
+
+/* Impressão (informe anual): só o conteúdo. */
+@media print {
+  .app-header,
+  .rg-strip,
+  .homolog-bar,
+  [data-side][data-variant],
+  [data-sidebar="sidebar"],
+  .mobile-bottom-nav,
+  footer,
+  [role="tablist"],
+  [data-sonner-toaster] {
+    display: none !important;
+  }
+  .statement {
+    border: 0 !important;
+    padding: 0 !important;
+  }
 }

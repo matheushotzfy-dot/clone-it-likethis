@@ -317,6 +317,7 @@ export type LaunchResult =
         | "blocked"
         | "deposit_required"
         | "ip_not_allowed"
+        | "identity_required"
         | "launch_failed";
     };
 
@@ -352,9 +353,10 @@ export const launchGame = createServerFn({ method: "POST" })
       await m.assertNotFrozen(userId);
       await m.rgCheck(userId, "bet", 0);
     } catch (e) {
+      const identity = e instanceof m.MoneyError && e.code === "IDENTITY_REQUIRED";
       return {
         ok: false,
-        code: "blocked",
+        code: identity ? "identity_required" : "blocked",
         error: e instanceof Error ? e.message : "Conta bloqueada para jogos.",
       };
     }
@@ -598,7 +600,7 @@ export const listCatalogAdmin = createServerFn({ method: "POST" })
     let q = context.supabase
       .from("games")
       .select(
-        "id,provider_code,provider,game_code,name,image_url,category,active,featured,sort_order,last_seen_at",
+        "id,provider_code,provider,game_code,name,image_url,category,active,featured,sort_order,last_seen_at,rtp",
         { count: "exact" },
       )
       .order("featured", { ascending: false })
@@ -626,6 +628,8 @@ export const updateCatalogGame = createServerFn({ method: "POST" })
         featured: z.boolean().optional(),
         sort_order: z.number().int().min(0).max(100_000).optional(),
         category: z.enum(["slot", "live", "crash", "table", "other"]).optional(),
+        // RTP informado pelo provedor/certificado do jogo (Portaria 1.231, art. 4º, IX).
+        rtp: z.number().min(50).max(100).nullable().optional(),
       })
       .parse(d),
   )
@@ -722,7 +726,7 @@ export const getGameForPlay = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: g } = await supabaseAdmin
       .from("games")
-      .select("id,name,provider,image_url,category")
+      .select("id,name,provider,image_url,category,rtp")
       .eq("id", data.id)
       .eq("active", true)
       .maybeSingle();

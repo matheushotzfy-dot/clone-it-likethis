@@ -2,16 +2,18 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, Check, Copy, Loader2 } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Check, Copy, FlaskConical, Loader2 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { listMyTransactions } from "@/lib/profile.functions";
 import { createPodPayPixDeposit } from "@/lib/podpay.functions";
 import { createBSPayPixDeposit } from "@/lib/bspay.functions";
 import { createVeoPagPixDeposit, syncMyVeoPagDeposit } from "@/lib/veopag.functions";
+import { createTestPixDeposit, simulateMyTestPayment } from "@/lib/testpay.functions";
 import { canDismissDeposit } from "@/lib/deposit-navigation";
 import { formatBRL, parseBRL } from "@/lib/format";
-import { usePublicSettings, useRefreshMoney, useWallet } from "@/hooks/use-account";
+import { useProfile, usePublicSettings, useRefreshMoney, useWallet } from "@/hooks/use-account";
+import { useRgStatus } from "@/components/account/play-guard";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -51,6 +53,8 @@ export function DepositDialog() {
   const isOpen = current === "deposit";
   const settings = usePublicSettings();
   const wallet = useWallet();
+  const profile = useProfile();
+  const rg = useRgStatus();
   const refresh = useRefreshMoney();
 
   const [raw, setRaw] = useState("");
@@ -65,6 +69,8 @@ export function DepositDialog() {
   const createVeo = useServerFn(createVeoPagPixDeposit);
   const createPod = useServerFn(createPodPayPixDeposit);
   const createBs = useServerFn(createBSPayPixDeposit);
+  const createTest = useServerFn(createTestPixDeposit);
+  const simulateTest = useServerFn(simulateMyTestPayment);
   const syncVeo = useServerFn(syncMyVeoPagDeposit);
   const fetchTxs = useServerFn(listMyTransactions);
 
@@ -83,7 +89,12 @@ export function DepositDialog() {
   const min = s?.minDeposit ?? 30;
   const max = s?.maxDeposit ?? 3000;
   const amount = parseBRL(raw);
-  const blocked = wallet.data?.frozen || !!wallet.data?.selfExcludedUntil;
+  const testMode = !!s?.testPayments;
+  const moneyOn = !!s && (s.realMoney || testMode);
+  const paused = !!rg.data?.pausedUntil;
+  const blocked = wallet.data?.frozen || !!wallet.data?.selfExcludedUntil || paused;
+  const needsIdentity =
+    !!s?.requireIdentity && !!profile.data && profile.data.kyc_status !== "verified";
 
   // Enquanto o QR está na tela, confere o pagamento a cada 3s.
   const status = useQuery({
@@ -115,6 +126,12 @@ export function DepositDialog() {
   const create = useMutation({
     mutationFn: async () => {
       const g = s?.activeGateway;
+      if (testMode)
+        return (await createTest({ data: { amount } })) as {
+          transactionId: string;
+          qrCodeImage: string;
+          copyPaste: string;
+        };
       const res =
         g === "bspay"
           ? await createBs({ data: { amount } })
@@ -134,6 +151,12 @@ export function DepositDialog() {
     onError: (e: Error) => toast.error(e.message || "Não foi possível gerar o Pix."),
   });
 
+  const simulate = useMutation({
+    mutationFn: () => simulateTest({ data: { transactionId: pix!.transactionId } }),
+    onSuccess: () => status.refetch(),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const invalid = amount > 0 && (amount < min || amount > max);
 
   return (
@@ -148,7 +171,7 @@ export function DepositDialog() {
       }
       width={440}
     >
-      {s && !s.realMoney ? (
+      {s && !moneyOn ? (
         <div className="space-y-4">
           <p className="rounded-[10px] border border-border bg-surface p-4 text-[14.5px] leading-relaxed">
             A plataforma está em homologação e ainda não recebe depósitos com dinheiro real. Assim
@@ -162,12 +185,38 @@ export function DepositDialog() {
             Entendi
           </Button>
         </div>
+      ) : needsIdentity ? (
+        <div className="space-y-4">
+          <p className="flex items-start gap-3 rounded-[10px] border border-border bg-surface p-4 text-[14.5px] leading-relaxed">
+            <BadgeCheck className="mt-0.5 size-5 shrink-0 text-primary" />
+            {profile.data?.kyc_status === "pending"
+              ? "Seus documentos estão em análise. O depósito é liberado assim que a identidade for aprovada."
+              : "Antes do primeiro depósito, a lei exige confirmar quem é o titular da conta. Leva poucos minutos: um documento com foto e uma selfie."}
+          </p>
+          {profile.data?.kyc_status !== "pending" && (
+            <Button
+              className="h-12 w-full rounded-[10px] text-[16px] font-bold shadow-none"
+              onClick={() => openDialog("identity")}
+            >
+              Verificar identidade
+            </Button>
+          )}
+          <Button
+            variant="secondary"
+            className="h-11 w-full rounded-[10px] shadow-none"
+            onClick={close}
+          >
+            Agora não
+          </Button>
+        </div>
       ) : blocked ? (
         <div className="space-y-4">
           <p className="rounded-[10px] border border-destructive/40 bg-destructive/10 p-4 text-[14.5px] leading-relaxed">
             {wallet.data?.frozen
               ? "Sua conta está suspensa e não pode receber depósitos. Fale com o suporte."
-              : "Sua autoexclusão está ativa. Depósitos voltam quando o período terminar."}
+              : paused
+                ? "Você está em pausa. Depósitos e apostas voltam quando a pausa terminar."
+                : "Sua autoexclusão está ativa. Depósitos voltam quando o período terminar."}
           </p>
           <Button
             variant="secondary"
@@ -185,6 +234,7 @@ export function DepositDialog() {
             if (amount >= min && amount <= max) create.mutate();
           }}
         >
+          {testMode && <TestModeNote />}
           <label className="block">
             <span className="mb-1.5 block text-[13.5px] font-semibold">Valor</span>
             <span
@@ -257,6 +307,7 @@ export function DepositDialog() {
         </form>
       ) : (
         <div className="space-y-5">
+          {testMode && <TestModeNote />}
           <div className="mx-auto w-fit rounded-[14px] bg-qr-paper p-4">
             {pix.qrCodeImage ? (
               <img src={pix.qrCodeImage} alt="QR Code do Pix" className="size-52" />
@@ -295,6 +346,23 @@ export function DepositDialog() {
             )}
           </button>
 
+          {testMode && (
+            <button
+              type="button"
+              disabled={simulate.isPending}
+              onClick={() => simulate.mutate()}
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-[10px] border border-dashed border-pix text-[15px] font-bold text-pix hover:bg-pix/10 disabled:opacity-50"
+            >
+              {simulate.isPending ? (
+                <Loader2 className="size-5 animate-spin" />
+              ) : (
+                <>
+                  <FlaskConical className="size-5" /> Simular pagamento de teste
+                </>
+              )}
+            </button>
+          )}
+
           <div
             className="flex items-center justify-center gap-2 text-[13.5px] text-muted-foreground"
             role="status"
@@ -316,5 +384,18 @@ export function DepositDialog() {
         </div>
       )}
     </AuthSheet>
+  );
+}
+
+/** Homologação: deixa claro que o Pix é simulado e não deve ser pago no banco. */
+function TestModeNote() {
+  return (
+    <p className="flex items-start gap-2.5 rounded-[10px] border border-dashed border-border bg-surface px-3 py-2.5 text-[13px] leading-relaxed">
+      <FlaskConical className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+      <span>
+        <strong className="font-semibold">Modo de teste.</strong> Este Pix é simulado e não vale
+        como pagamento: não pague no banco. Use o botão de simular para testar o crédito.
+      </span>
+    </p>
   );
 }

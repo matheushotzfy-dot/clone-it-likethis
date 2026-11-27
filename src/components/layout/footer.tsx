@@ -2,6 +2,8 @@ import { Link } from "@tanstack/react-router";
 import { Logo } from "./logo";
 import { IcPix } from "@/components/icons/maxy-icons";
 import { useProviders } from "@/hooks/use-games";
+import { usePublicSettings } from "@/hooks/use-account";
+import { formatCnpj } from "@/lib/validations";
 
 type FooterLink = { to: string; label: string; search?: Record<string, string> };
 
@@ -40,7 +42,7 @@ const cols: { title: string; links: FooterLink[] }[] = [
       { to: "/legal/termos", label: "Termos de uso" },
       { to: "/legal/privacidade", label: "Privacidade" },
       { to: "/legal/jogo-responsavel", label: "Jogo responsável" },
-      { to: "/promocoes", label: "Promoções" },
+      { to: "/atendimento", label: "Atendimento e ouvidoria" },
     ],
   },
 ];
@@ -48,6 +50,7 @@ const cols: { title: string; links: FooterLink[] }[] = [
 export function Footer() {
   const providers = useProviders();
   const names = (providers.data ?? []).slice(0, 12);
+  const settings = usePublicSettings().data;
 
   return (
     <footer className="mt-14 border-t border-border bg-sidebar">
@@ -115,7 +118,22 @@ export function Footer() {
 
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-[1600px] flex-col gap-1.5 px-4 py-5 text-[12.5px] text-muted-foreground md:flex-row md:items-center md:justify-between md:px-6">
-          <p>© {new Date().getFullYear()} apostamaxy</p>
+          <p>
+            © {new Date().getFullYear()}{" "}
+            {settings?.company?.name ? (
+              <>
+                {settings.company.name}
+                {settings.company.cnpj && (
+                  <span className="num"> · CNPJ {formatCnpj(settings.company.cnpj)}</span>
+                )}
+                {settings.spaAuthorization && (
+                  <> · Autorização SPA/MF {settings.spaAuthorization}</>
+                )}
+              </>
+            ) : (
+              "apostamaxy"
+            )}
+          </p>
           <p>
             Se o jogo deixou de ser diversão, procure ajuda: o CVV atende pelo 188, todos os dias.
           </p>

@@ -39,7 +39,7 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="Navegação principal"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-sidebar pb-[env(safe-area-inset-bottom)] lg:hidden"
+      className="mobile-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-border bg-sidebar pb-[env(safe-area-inset-bottom)] lg:hidden"
     >
       <ul className="grid h-[64px] grid-cols-5">
         <li>

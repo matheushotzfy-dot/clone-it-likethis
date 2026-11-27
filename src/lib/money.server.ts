@@ -9,7 +9,8 @@ export async function getAdminClient(): Promise<AdminClient> {
   return mod.supabaseAdmin;
 }
 
-export type Gateway = "veopag" | "podpay" | "bspay";
+/** "teste" = Pix simulado da homologação (nunca com dinheiro real ligado). */
+export type Gateway = "veopag" | "podpay" | "bspay" | "teste";
 
 export interface MoneySettings {
   real_money_enabled: boolean;
@@ -26,6 +27,18 @@ export interface MoneySettings {
   min_bet_sports: number;
   max_bet_sports: number;
   max_payout_sports: number;
+  /** Exige identidade verificada antes de depositar ou apostar (Portaria 1.231, art. 31). */
+  require_identity: boolean;
+  /** Versão vigente dos termos; mudar pede novo aceite de todos (arts. 46-47). */
+  terms_version: string;
+  support_email: string;
+  support_whatsapp: string;
+  support_hours: string;
+  ouvidoria_email: string;
+  /** Número da portaria de autorização da SPA/MF, mostrado no rodapé quando preenchido. */
+  spa_authorization: string;
+  company_name: string;
+  company_cnpj: string;
 }
 
 export const MONEY_DEFAULTS: MoneySettings = {
@@ -43,6 +56,15 @@ export const MONEY_DEFAULTS: MoneySettings = {
   min_bet_sports: 1,
   max_bet_sports: 5000,
   max_payout_sports: 50000,
+  require_identity: true,
+  terms_version: "",
+  support_email: "",
+  support_whatsapp: "",
+  support_hours: "",
+  ouvidoria_email: "",
+  spa_authorization: "",
+  company_name: "",
+  company_cnpj: "",
 };
 
 /** Converte as linhas de app_settings mantendo o tipo de cada chave conhecida. */
@@ -105,6 +127,34 @@ export async function assertRealMoney(kind: "deposit" | "withdrawal") {
   return s;
 }
 
+/**
+ * Dinheiro liberado para esta operação? Com dinheiro real ligado, sim (test=false).
+ * Em homologação, só pelo gateway de teste (Pix simulado, test=true).
+ */
+export async function assertMoneyAllowed(kind: "deposit" | "withdrawal") {
+  const s = await loadMoneySettings(true);
+  if (s.maintenance_mode)
+    throw new MoneyError("MAINTENANCE", "Plataforma em manutenção. Tente novamente em instantes.");
+  if (s.real_money_enabled) return { settings: s, test: false };
+  if (s.active_gateway === "teste") return { settings: s, test: true };
+  return { settings: await assertRealMoney(kind), test: false };
+}
+
+/** Identidade verificada (quando a configuração exige) e conta aberta. */
+export async function assertIdentity(userId: string) {
+  const s = await loadMoneySettings();
+  const admin = await getAdminClient();
+  const { data } = await admin
+    .from("profiles")
+    .select("kyc_status,closed_at")
+    .eq("id", userId)
+    .maybeSingle();
+  if (!data) throw new MoneyError("USER_NOT_FOUND", DB_ERRORS.USER_NOT_FOUND);
+  if (data.closed_at) throw new MoneyError("ACCOUNT_CLOSED", DB_ERRORS.ACCOUNT_CLOSED);
+  if (s.require_identity && data.kyc_status !== "verified")
+    throw new MoneyError("IDENTITY_REQUIRED", DB_ERRORS.IDENTITY_REQUIRED);
+}
+
 export async function assertActiveGateway(gateway: Gateway) {
   const s = await loadMoneySettings();
   if (s.active_gateway !== gateway) {
@@ -122,6 +172,22 @@ const DB_ERRORS: Record<string, string> = {
   LIMIT_DEPOSIT_WEEKLY: "Este depósito passa do seu limite semanal.",
   LIMIT_DEPOSIT_MONTHLY: "Este depósito passa do seu limite mensal.",
   LIMIT_LOSS_DAILY: "Você atingiu seu limite diário de perda.",
+  LIMIT_LOSS_WEEKLY: "Você atingiu seu limite semanal de perda.",
+  LIMIT_LOSS_MONTHLY: "Você atingiu seu limite mensal de perda.",
+  LIMIT_BETS_DAILY: "Você atingiu o número máximo de apostas que definiu para hoje.",
+  LIMIT_SESSION:
+    "Seu tempo de sessão acabou, pelo limite que você definiu. Faça uma pausa e volte mais tarde.",
+  IDENTITY_REQUIRED:
+    "Verifique sua identidade para depositar e apostar. Leva poucos minutos, em Minha conta.",
+  PAUSED: "Sua conta está em pausa. Você pode consultar e sacar, mas não apostar nem depositar.",
+  ACCOUNT_CLOSED: "Esta conta foi encerrada.",
+  ACCOUNT_HAS_BALANCE: "Saque todo o saldo antes de encerrar a conta.",
+  ACCOUNT_HAS_PENDING:
+    "Espere o depósito ou saque em andamento terminar antes de encerrar a conta.",
+  TERMS_VERSION_MISMATCH:
+    "Os termos foram atualizados. Recarregue a página e aceite a versão nova.",
+  INVALID_ADDRESS: "Confira o CEP e a sigla do estado.",
+  TEST_MONEY_DISABLED: "Pagamentos de teste estão desligados porque o dinheiro real foi ativado.",
   REAL_MONEY_DISABLED: "Operação indisponível: a plataforma está em fase de homologação.",
   INVALID_STAKE: "Valor de aposta inválido.",
   INVALID_ODD: "Odd inválida.",

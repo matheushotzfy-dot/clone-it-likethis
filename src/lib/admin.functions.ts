@@ -340,6 +340,73 @@ export const getPlayer = createServerFn({ method: "POST" })
 
 const playerListSchema = z.object({ id: uuid, before: z.string().optional() });
 
+/**
+ * Ações de conta pelo admin, todas auditadas:
+ * - unlock: tira o bloqueio de 3 senhas erradas (art. 36);
+ * - reopen: reabre conta encerrada a pedido do titular;
+ * - identity_verified / identity_rejected / identity_reset: decide a identidade do cadastro.
+ */
+export const playerAccountAction = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        userId: uuid,
+        action: z.enum([
+          "unlock",
+          "reopen",
+          "identity_verified",
+          "identity_rejected",
+          "identity_reset",
+        ]),
+        reason: z.string().trim().max(300).optional(),
+      })
+      .refine((v) => v.action !== "identity_rejected" || (v.reason?.length ?? 0) >= 3, {
+        message: "Escreva o motivo da recusa. O jogador vê esse texto.",
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const now = new Date().toISOString();
+    const patch: Record<string, unknown> = { updated_at: now };
+    if (data.action === "unlock") Object.assign(patch, { failed_logins: 0, locked_at: null });
+    if (data.action === "reopen") Object.assign(patch, { closed_at: null, closed_reason: null });
+    if (data.action === "identity_verified")
+      Object.assign(patch, { kyc_status: "verified", kyc_verified: true });
+    if (data.action === "identity_rejected")
+      Object.assign(patch, { kyc_status: "rejected", kyc_verified: false });
+    if (data.action === "identity_reset")
+      Object.assign(patch, { kyc_status: "none", kyc_verified: false });
+    const { error } = await context.supabase
+      .from("profiles")
+      .update(patch as never)
+      .eq("id", data.userId);
+    if (error) throw new Error(error.message);
+    if (data.action.startsWith("identity_")) {
+      // Fecha envios de identidade em aberto com a mesma decisão.
+      const decided = data.action === "identity_verified" ? "approved" : "rejected";
+      if (data.action !== "identity_reset")
+        await context.supabase
+          .from("kyc_submissions")
+          .update({
+            status: decided,
+            rejection_reason: decided === "rejected" ? data.reason! : null,
+            reviewed_at: now,
+            reviewed_by: context.userId,
+          })
+          .eq("user_id", data.userId)
+          .is("transaction_id", null)
+          .eq("status", "pending");
+    }
+    await context.supabase.rpc("admin_log", {
+      p_action: `user.${data.action}`,
+      p_target_user: data.userId,
+      p_details: { motivo: data.reason ?? null } as never,
+    });
+    return { ok: true };
+  });
+
 export const listPlayerLedger = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => playerListSchema.parse(d))
@@ -530,6 +597,8 @@ export const updatePlayer = createServerFn({ method: "POST" })
       throw new Error("Informe o motivo da suspensão. O jogador vê esse texto.");
     const clean: Record<string, unknown> = { ...patch, updated_at: new Date().toISOString() };
     if (patch.is_frozen === false) clean.freeze_reason = null;
+    if (patch.kyc_verified !== undefined)
+      clean.kyc_status = patch.kyc_verified ? "verified" : "none";
     const { error } = await context.supabase
       .from("profiles")
       .update(clean as never)

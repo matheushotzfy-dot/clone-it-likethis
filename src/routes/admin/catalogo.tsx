@@ -103,6 +103,7 @@ function Page() {
       featured?: boolean;
       sort_order?: number;
       category?: Exclude<Cat, "all">;
+      rtp?: number | null;
     }) => update({ data: v }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-catalog"] });
@@ -265,7 +266,16 @@ function Page() {
         >
           <Table
             loading={list.isLoading}
-            head={["", "Jogo", "Categoria", "Ordem", "Destaque", "No lobby", "Visto na sync"]}
+            head={[
+              "",
+              "Jogo",
+              "Categoria",
+              "Ordem",
+              "RTP",
+              "Destaque",
+              "No lobby",
+              "Visto na sync",
+            ]}
             empty={
               list.data && !list.data.games.length ? (
                 <Empty>
@@ -319,6 +329,12 @@ function Page() {
                   />
                 </Td>
                 <Td>
+                  <RtpInput
+                    value={g.rtp === null || g.rtp === undefined ? null : Number(g.rtp)}
+                    onSave={(v) => upd.mutate({ id: g.id, rtp: v })}
+                  />
+                </Td>
+                <Td>
                   <button
                     type="button"
                     onClick={() => upd.mutate({ id: g.id, featured: !g.featured })}
@@ -364,6 +380,40 @@ function Page() {
         suficientes para medir os mais jogados.
       </p>
     </div>
+  );
+}
+
+/** RTP do certificado/ficha do provedor; aparece na tela do jogo. Vazio = não informado. */
+function RtpInput({ value, onSave }: { value: number | null; onSave: (v: number | null) => void }) {
+  const fmt = (n: number | null) => (n === null ? "" : String(n).replace(".", ","));
+  const [v, setV] = useState(fmt(value));
+  useEffect(() => setV(fmt(value)), [value]);
+  return (
+    <span className="relative inline-block">
+      <input
+        className="num h-9 w-[84px] rounded-[8px] border border-border bg-background pl-2 pr-6 text-[13px]"
+        inputMode="decimal"
+        placeholder="–"
+        value={v}
+        onChange={(e) => setV(e.target.value.replace(/[^\d,]/g, "").slice(0, 6))}
+        onBlur={() => {
+          const n = v.trim() ? Number(v.replace(",", ".")) : null;
+          if (n !== null && (Number.isNaN(n) || n < 50 || n > 100)) {
+            toast.error("RTP entre 50 e 100%.");
+            setV(fmt(value));
+            return;
+          }
+          if (n !== value) onSave(n);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+        }}
+        aria-label="RTP em porcentagem"
+      />
+      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[12px] text-muted-foreground">
+        %
+      </span>
+    </span>
   );
 }
 

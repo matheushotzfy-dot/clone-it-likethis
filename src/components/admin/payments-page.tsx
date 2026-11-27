@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Check, Copy, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { listPayments, recheckDeposit, setTransactionStatus } from "@/lib/admin.functions";
+import { adminSimulateTestPayment } from "@/lib/testpay.functions";
 import { requestKycForTransaction } from "@/lib/kyc.functions";
 import {
   Empty,
@@ -45,6 +46,16 @@ export function PaymentsPage({ type }: { type: "deposit" | "withdrawal" }) {
   const decide = useServerFn(setTransactionStatus);
   const requestKyc = useServerFn(requestKycForTransaction);
   const recheck = useServerFn(recheckDeposit);
+  const simulateTest = useServerFn(adminSimulateTestPayment);
+  const testM = useMutation({
+    mutationFn: (id: string) => simulateTest({ data: { transactionId: id } }),
+    onSuccess: () => {
+      toast.success("Depósito de teste confirmado e creditado.");
+      qc.invalidateQueries({ queryKey: ["admin-payments"] });
+      qc.invalidateQueries({ queryKey: ["admin-overview"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const q = useQuery({
     queryKey: ["admin-payments", type, status, page],
@@ -201,6 +212,11 @@ export function PaymentsPage({ type }: { type: "deposit" | "withdrawal" }) {
                 )}
                 <Td>
                   <StatusPill status={t.status} />
+                  {t.is_test && (
+                    <span className="mt-1 block text-[12px] font-semibold text-muted-foreground">
+                      Teste, sem dinheiro real
+                    </span>
+                  )}
                   {t.kyc_required && t.status === "pending" && (
                     <span className="mt-1 block text-[12px] text-gold">
                       {t.kycStatus === "pending"
@@ -267,6 +283,15 @@ export function PaymentsPage({ type }: { type: "deposit" | "withdrawal" }) {
                             </Button>
                           )}
                         </>
+                      ) : t.is_test ? (
+                        <Button
+                          size="sm"
+                          className="shadow-none"
+                          disabled={testM.isPending}
+                          onClick={() => testM.mutate(t.id)}
+                        >
+                          Simular pagamento
+                        </Button>
                       ) : (
                         <>
                           <Button

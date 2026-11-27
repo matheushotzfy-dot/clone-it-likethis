@@ -1,4 +1,3 @@
-
 export function maskCPF(value: string) {
   return value
     .replace(/\D/g, "")
@@ -53,3 +52,11 @@ export const EMAIL_DOMAINS = [
   "uol.com.br",
   "terra.com.br",
 ];
+
+/** 14 dígitos -> 00.000.000/0000-00 (outros valores voltam como vieram). */
+export function formatCnpj(v: string) {
+  const d = (v ?? "").replace(/\D/g, "");
+  return d.length === 14
+    ? `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`
+    : v;
+}

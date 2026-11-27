@@ -4,13 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { ArrowDownToLine, ArrowLeft, ExternalLink, Loader2, Maximize2 } from "lucide-react";
 import { getGameForPlay, launchGame, type LaunchResult } from "@/lib/playfivers.functions";
-import { getMyLimits } from "@/lib/wallet.functions";
-import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthDialog } from "@/components/auth/auth-dialog-context";
 import { useRefreshMoney, useWallet } from "@/hooks/use-account";
 import { Button } from "@/components/ui/button";
 import { formatBRL } from "@/lib/format";
+import { formatDuration, useRgStatus } from "@/components/account/play-guard";
 
 export const Route = createFileRoute("/jogar/$gameId")({
   head: () => ({
@@ -63,24 +62,18 @@ function PlayPage() {
     };
   }, [id, user, authLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Aviso de tempo de sessão que o jogador configurou em Limites de jogo.
-  const fetchLimits = useServerFn(getMyLimits);
-  const limits = useQuery({
-    queryKey: ["rg-limits"],
-    queryFn: () => fetchLimits(),
-    enabled: !!user,
-  });
+  // Painel permanente durante o jogo: tempo de sessão e resultado do dia.
+  // O aviso de tempo (PlayGuard) vale em todo o site, inclusive aqui.
+  const rg = useRgStatus();
+  const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    const minutes = limits.data?.session_minutes;
-    if (!minutes || !result?.ok) return;
-    const t = setTimeout(() => {
-      toast(`Você está jogando há ${minutes} minutos`, {
-        description: "Que tal uma pausa? Você pode ajustar esse aviso em Limites de jogo.",
-        duration: 20_000,
-      });
-    }, minutes * 60_000);
-    return () => clearTimeout(t);
-  }, [limits.data?.session_minutes, result?.ok]);
+    const t = window.setInterval(() => setNow(Date.now()), 20_000);
+    return () => window.clearInterval(t);
+  }, []);
+  const sessionMin = rg.data?.sessionStartedAt
+    ? Math.max(0, Math.floor((now - new Date(rg.data.sessionStartedAt).getTime()) / 60_000))
+    : null;
+  const today = rg.data?.todayResult ?? 0;
 
   // Ao sair do jogo, o saldo do resto do site é recarregado.
   useEffect(() => () => refresh(), [refresh]);
@@ -114,9 +107,25 @@ function PlayPage() {
             {game.data?.name ?? "Carregando…"}
           </p>
           {game.data && (
-            <p className="truncate text-[12px] text-muted-foreground">{game.data.provider}</p>
+            <p className="truncate text-[12px] text-muted-foreground">
+              {game.data.provider}
+              {game.data.rtp != null && (
+                <span className="num"> · RTP {String(game.data.rtp).replace(".", ",")}%</span>
+              )}
+            </p>
           )}
         </div>
+        {rg.data && (
+          <span
+            className="num hidden shrink-0 text-right text-[12px] leading-tight text-muted-foreground md:block"
+            title="Tempo de sessão e resultado de hoje"
+          >
+            Sessão {sessionMin === null ? "–" : formatDuration(sessionMin)}
+            <br />
+            Hoje {today > 0 ? "+" : today < 0 ? "−" : ""}
+            {formatBRL(Math.abs(today))}
+          </span>
+        )}
         <span className="num hidden rounded-[8px] border border-border px-3 py-1.5 text-[14px] font-semibold sm:block">
           {wallet.data ? formatBRL(wallet.data.balance) : "–"}
         </span>
@@ -177,7 +186,9 @@ function PlayPage() {
               <p className="font-display text-[26px] font-bold">
                 {result.code === "deposit_required"
                   ? "Você está sem saldo"
-                  : "Não foi possível abrir o jogo"}
+                  : result.code === "identity_required"
+                    ? "Verifique sua identidade"
+                    : "Não foi possível abrir o jogo"}
               </p>
               <p className="mt-2 text-[15px] text-muted-foreground">{result.error}</p>
               <div className="mt-6 flex flex-col gap-2">
@@ -189,6 +200,13 @@ function PlayPage() {
                   >
                     Depositar com Pix
                   </button>
+                ) : result.code === "identity_required" ? (
+                  <Button
+                    className="h-11 rounded-[10px] font-bold"
+                    onClick={() => open("identity")}
+                  >
+                    Enviar documento e selfie
+                  </Button>
                 ) : result.code === "launch_failed" ? (
                   <Button
                     className="h-11 rounded-[10px]"

@@ -37,8 +37,16 @@ const REASONS = [
   "Foto ilegível ou cortada",
   "Documento não bate com o CPF do cadastro",
   "Selfie não mostra o rosto junto com o documento",
+  "Documento vencido ou sem foto",
   "Comprovante de residência com mais de 90 dias",
 ];
+
+const DOC_LABEL: Record<string, string> = {
+  rg: "RG",
+  cnh: "CNH",
+  cin: "CIN",
+  passaporte: "Passaporte",
+};
 
 function Page() {
   const qc = useQueryClient();
@@ -51,12 +59,19 @@ function Page() {
     queryFn: () => listFn({ data: { status: st } }),
   });
   const review = useMutation({
-    mutationFn: (v: { submissionId: string; approve: boolean; reason?: string }) =>
-      reviewFn({ data: v }),
+    mutationFn: (v: {
+      submissionId: string;
+      approve: boolean;
+      reason?: string;
+      kind?: "identity" | "withdrawal";
+    }) =>
+      reviewFn({ data: { submissionId: v.submissionId, approve: v.approve, reason: v.reason } }),
     onSuccess: (_, v) => {
       toast.success(
         v.approve
-          ? "Documentos aprovados. O saque voltou para a fila de saques."
+          ? v.kind === "identity"
+            ? "Identidade aprovada. A conta já pode depositar e apostar."
+            : "Documentos aprovados. O saque voltou para a fila de saques."
           : "Documentos recusados. O jogador vê o motivo e pode mandar de novo.",
       );
       setRejecting(null);
@@ -71,7 +86,7 @@ function Page() {
     <div className="space-y-5">
       <PageHeader
         title="Documentos"
-        description="Confira se o documento é da mesma pessoa do cadastro (nome, CPF e data de nascimento) antes de liberar o saque. Os links das fotos valem por 30 minutos."
+        description="Identidade do cadastro (documento e selfie, libera depósito e aposta) e documentos de saque. Confira se nome, CPF, data de nascimento e rosto batem com o cadastro. Os links das fotos valem por 30 minutos."
       />
       <Segmented<St>
         value={st}
@@ -117,10 +132,15 @@ function Page() {
                   </Link>
                 }
                 actions={
-                  <StatusPill
-                    status={s.status}
-                    label={s.status === "pending" ? "Para revisar" : undefined}
-                  />
+                  <span className="flex items-center gap-2">
+                    <span className="rounded-full border border-border px-2.5 py-0.5 text-[12px] font-semibold text-muted-foreground">
+                      {s.kind === "identity" ? "Identidade" : "Saque"}
+                    </span>
+                    <StatusPill
+                      status={s.status}
+                      label={s.status === "pending" ? "Para revisar" : undefined}
+                    />
+                  </span>
                 }
               >
                 <dl className="mb-4 grid grid-cols-2 gap-x-4 gap-y-2 text-[13.5px] sm:grid-cols-4">
@@ -133,21 +153,39 @@ function Page() {
                         : "–"
                     }
                   />
-                  <Item label="Documento" value={s.document_type === "cnh" ? "CNH" : "RG"} />
-                  <Item
-                    label="Saque"
-                    value={s.withdrawal ? <Money value={s.withdrawal.amount} /> : "–"}
-                  />
+                  <Item label="Documento" value={DOC_LABEL[s.document_type] ?? s.document_type} />
+                  {s.kind === "withdrawal" ? (
+                    <Item
+                      label="Saque"
+                      value={s.withdrawal ? <Money value={s.withdrawal.amount} /> : "–"}
+                    />
+                  ) : (
+                    <Item label="Nacionalidade" value={p?.nationality || "–"} />
+                  )}
+                  {s.kind === "identity" && (
+                    <div className="col-span-2 sm:col-span-4">
+                      <dt className="text-[12px] text-muted-foreground">Endereço do cadastro</dt>
+                      <dd className="font-medium">
+                        {p?.address_street
+                          ? `${p.address_street}, ${p.address_number ?? ""} · ${p.address_city ?? ""}/${p.address_state ?? ""} · CEP ${p.address_zip ?? ""}`
+                          : "Não informado (cadastro antigo)"}
+                      </dd>
+                    </div>
+                  )}
                 </dl>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   <Doc label="Frente" url={s.id_front_signed} />
                   <Doc
                     label="Verso"
                     url={s.id_back_signed}
-                    missing={s.document_type === "cnh" ? "CNH não tem verso" : "Não enviado"}
+                    missing={
+                      s.document_type === "cnh" || s.document_type === "passaporte"
+                        ? "Documento sem verso"
+                        : "Não enviado"
+                    }
                   />
                   <Doc label="Selfie com documento" url={s.selfie_signed} />
-                  <Doc label="Comprovante" url={s.residence_signed} />
+                  {s.kind === "withdrawal" && <Doc label="Comprovante" url={s.residence_signed} />}
                 </div>
                 <p className="mt-3 text-[12.5px] text-muted-foreground">
                   Enviado em {formatDateTime(s.created_at)}
@@ -171,12 +209,16 @@ function Page() {
                     <Button
                       className="h-10 rounded-[10px] font-bold shadow-none"
                       disabled={review.isPending}
-                      onClick={() => review.mutate({ submissionId: s.id, approve: true })}
+                      onClick={() =>
+                        review.mutate({ submissionId: s.id, approve: true, kind: s.kind })
+                      }
                     >
                       {review.isPending &&
                       review.variables?.submissionId === s.id &&
                       review.variables.approve ? (
                         <Loader2 className="animate-spin" />
+                      ) : s.kind === "identity" ? (
+                        "Aprovar identidade"
                       ) : (
                         "Aprovar documentos"
                       )}

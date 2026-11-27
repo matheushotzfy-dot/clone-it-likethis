@@ -203,11 +203,122 @@ function Page() {
           value={form.active_gateway}
           onChange={(v) => save.mutate({ active_gateway: v })}
           options={[
+            { id: "teste", label: "Teste (homologação)" },
             { id: "veopag", label: "VeoPag" },
             { id: "podpay", label: "PodPay" },
             { id: "bspay", label: "BSPay" },
           ]}
         />
+        {form.active_gateway === "teste" && (
+          <p className="mt-3 text-[13.5px] text-muted-foreground">
+            O gateway de teste gera um Pix simulado, sem valor. O jogador ou o admin clica em
+            simular pagamento e o crédito passa pelo mesmo caminho de um depósito real. Só funciona
+            com dinheiro real desligado.
+          </p>
+        )}
+      </Panel>
+
+      <Panel title="Cadastro e identidade">
+        <ul className="divide-y divide-border">
+          <Toggle
+            label="Exigir identidade verificada"
+            hint="Sem documento e selfie aprovados, a conta não deposita, não aposta e não saca. Obrigatório para ligar dinheiro real."
+            checked={form.require_identity}
+            onChange={(v) => save.mutate({ require_identity: v })}
+          />
+        </ul>
+        <form
+          className="mt-5 grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end"
+          onSubmit={(e) => {
+            e.preventDefault();
+            save.mutate({ terms_version: form.terms_version.trim() });
+          }}
+        >
+          <Text
+            label="Versão dos termos"
+            hint="Troque quando mudar os Termos ou a Privacidade. Todo jogador precisa aceitar de novo antes de jogar."
+            value={form.terms_version}
+            onChange={(v) => setForm({ ...form, terms_version: v.slice(0, 20) })}
+          />
+          <Button
+            type="submit"
+            variant="secondary"
+            disabled={save.isPending}
+            className="h-11 rounded-[10px] px-5 shadow-none"
+          >
+            Publicar versão
+          </Button>
+        </form>
+      </Panel>
+
+      <Panel title="Atendimento e empresa">
+        <form
+          className="space-y-5"
+          onSubmit={(e) => {
+            e.preventDefault();
+            save.mutate({
+              support_email: form.support_email.trim(),
+              support_whatsapp: form.support_whatsapp.replace(/\D/g, ""),
+              support_hours: form.support_hours.trim(),
+              ouvidoria_email: form.ouvidoria_email.trim(),
+              company_name: form.company_name.trim(),
+              company_cnpj: form.company_cnpj.replace(/\D/g, ""),
+              spa_authorization: form.spa_authorization.trim(),
+            });
+          }}
+        >
+          <p className="text-[14px] text-muted-foreground">
+            Aparecem na página de atendimento, no rodapé, nos termos e no informe anual dos
+            jogadores.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Text
+              label="E-mail do atendimento"
+              value={form.support_email}
+              onChange={(v) => setForm({ ...form, support_email: v })}
+            />
+            <Text
+              label="WhatsApp do atendimento"
+              value={form.support_whatsapp}
+              onChange={(v) => setForm({ ...form, support_whatsapp: v })}
+              placeholder="(44) 99999-9999"
+            />
+            <Text
+              label="Horário de atendimento"
+              value={form.support_hours}
+              onChange={(v) => setForm({ ...form, support_hours: v })}
+            />
+            <Text
+              label="E-mail da ouvidoria"
+              value={form.ouvidoria_email}
+              onChange={(v) => setForm({ ...form, ouvidoria_email: v })}
+            />
+            <Text
+              label="Razão social"
+              value={form.company_name}
+              onChange={(v) => setForm({ ...form, company_name: v })}
+            />
+            <Text
+              label="CNPJ"
+              value={form.company_cnpj}
+              onChange={(v) => setForm({ ...form, company_cnpj: v })}
+              placeholder="00.000.000/0001-00"
+            />
+            <Text
+              label="Autorização SPA/MF"
+              hint="Número da portaria de autorização, quando publicada."
+              value={form.spa_authorization}
+              onChange={(v) => setForm({ ...form, spa_authorization: v })}
+            />
+          </div>
+          <Button
+            type="submit"
+            disabled={save.isPending}
+            className="h-11 rounded-[10px] px-6 font-bold shadow-none"
+          >
+            {save.isPending ? <Loader2 className="animate-spin" /> : "Salvar"}
+          </Button>
+        </form>
       </Panel>
 
       <Credentials />
@@ -218,8 +329,9 @@ function Page() {
             <AlertDialogTitle className="text-[24px]">Ligar dinheiro real?</AlertDialogTitle>
             <AlertDialogDescription className="text-[14.5px]">
               A partir daqui o site recebe Pix de verdade e paga saques. Confirme que a autorização
-              da SPA está publicada e que os gateways e a PlayFivers estão com as credenciais de
-              produção.
+              da SPA está publicada e vigente, que a oferta de apostas é permitida pela lei em vigor
+              e que os gateways e a PlayFivers estão com as credenciais de produção. Antes, zere os
+              saldos de teste dos jogadores.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -256,6 +368,33 @@ function Toggle({
       </div>
       <Switch checked={checked} onCheckedChange={onChange} aria-label={label} />
     </li>
+  );
+}
+
+function Text({
+  label,
+  hint,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  hint?: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-[13.5px] font-semibold">{label}</span>
+      <input
+        className="field-input"
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      {hint && <span className="mt-1 block text-[12.5px] text-muted-foreground">{hint}</span>}
+    </label>
   );
 }
 

@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, ChevronDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   adjustBalance,
@@ -13,6 +13,7 @@ import {
   listPlayerLedger,
   listPlayerPayments,
   listPlayerRounds,
+  playerAccountAction,
   setTransactionStatus,
   updatePlayer,
 } from "@/lib/admin.functions";
@@ -30,7 +31,19 @@ import {
   Td,
 } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   formatBRL,
   formatDate,
@@ -102,7 +115,17 @@ function Page() {
             <h1 className="text-[30px] md:text-[34px]">{p.full_name || p.username}</h1>
             <StatusPill status={p.is_frozen ? "frozen" : "active"} />
             {q.data.isAdmin && <StatusPill status="open" label="Administrador" />}
-            {p.kyc_verified && <StatusPill status="approved" label="Documento verificado" />}
+            {p.kyc_status === "verified" && (
+              <StatusPill status="approved" label="Identidade verificada" />
+            )}
+            {p.kyc_status === "pending" && (
+              <StatusPill status="pending" label="Identidade em análise" />
+            )}
+            {p.kyc_status === "rejected" && (
+              <StatusPill status="rejected" label="Identidade recusada" />
+            )}
+            {p.locked_at && <StatusPill status="frozen" label="Bloqueada por senha" />}
+            {p.closed_at && <StatusPill status="rejected" label="Encerrada pelo jogador" />}
           </div>
           <p className="num mt-1 text-[14px] text-muted-foreground">
             @{p.username}, CPF {p.cpf ? maskCPF(p.cpf) : "não informado"},{" "}
@@ -112,6 +135,12 @@ function Page() {
           {p.is_frozen && p.freeze_reason && (
             <p className="mt-2 max-w-2xl rounded-[8px] border border-destructive/40 bg-destructive/10 px-3 py-2 text-[13.5px]">
               Motivo da suspensão: {p.freeze_reason}
+            </p>
+          )}
+          {p.closed_at && (
+            <p className="mt-2 max-w-2xl rounded-[8px] border border-border bg-surface px-3 py-2 text-[13.5px]">
+              Conta encerrada em {formatDateTime(p.closed_at)}
+              {p.closed_reason ? `. Motivo: ${p.closed_reason}` : ""}.
             </p>
           )}
         </div>
@@ -136,6 +165,12 @@ function Page() {
           >
             Editar dados
           </Button>
+          <AccountActions
+            userId={id}
+            locked={!!p.locked_at}
+            closed={!!p.closed_at}
+            identity={(p.kyc_status ?? "none") as string}
+          />
           {(q.data.reconciliation.entries ?? 0) === 0 && (
             <Button
               variant="ghost"
@@ -195,7 +230,33 @@ function Page() {
             label="Origem"
             value={[p.utm_source, p.utm_campaign].filter(Boolean).join(", ") || "direto"}
           />
-          <Info label="IP do cadastro" value={p.signup_ip ?? "não registrado"} />
+          <Info label="IP do cadastro" value={p.signup_ip || "não registrado"} />
+          <Info label="Nacionalidade" value={p.nationality || "não informada"} />
+          <Info
+            label="Endereço"
+            value={
+              p.address_street
+                ? `${p.address_street}, ${p.address_number ?? ""}${p.address_complement ? `, ${p.address_complement}` : ""} · ${p.address_district ? `${p.address_district}, ` : ""}${p.address_city ?? ""}/${p.address_state ?? ""} · CEP ${p.address_zip ?? ""}`
+                : "não informado"
+            }
+          />
+          <Info
+            label="Termos aceitos"
+            value={
+              p.terms_version
+                ? `versão ${p.terms_version}${p.terms_accepted_at ? ` em ${formatDateTime(p.terms_accepted_at)}` : ""}`
+                : "nenhum aceite registrado"
+            }
+          />
+          <Info
+            label="Último acesso registrado"
+            value={
+              p.last_login_at
+                ? `${formatDateTime(p.last_login_at)}${p.last_login_ip ? `, IP ${p.last_login_ip}` : ""}`
+                : "nenhum"
+            }
+          />
+          <Info label="Senhas erradas seguidas" value={String(p.failed_logins ?? 0)} />
           <Info label="Id" value={p.id} mono />
         </dl>
       </Panel>
@@ -584,6 +645,12 @@ const ACTION: Record<string, string> = {
   "deposit.rejected": "Recusou depósito",
   "sports_bet.settle": "Liquidou aposta manualmente",
   "kyc.review": "Revisou documentos",
+  "user.unlock": "Desbloqueou o login",
+  "user.reopen": "Reabriu a conta",
+  "user.identity_verified": "Aprovou a identidade",
+  "user.identity_rejected": "Recusou a identidade",
+  "user.identity_reset": "Pediu nova verificação de identidade",
+  "deposit.test_paid": "Confirmou depósito de teste",
 };
 
 function ActivityTab({ id }: { id: string }) {
@@ -681,6 +748,7 @@ function LimitsTab({ limits }: { limits: Record<string, unknown> | null }) {
   const v = (k: string) =>
     limits?.[k] === null || limits?.[k] === undefined ? "sem limite" : formatBRL(Number(limits[k]));
   const until = limits?.self_excluded_until as string | null | undefined;
+  const paused = limits?.paused_until as string | null | undefined;
   return (
     <Panel title="Limites definidos pelo jogador">
       <dl className="grid gap-4 text-[14px] sm:grid-cols-2 xl:grid-cols-3">
@@ -688,9 +756,23 @@ function LimitsTab({ limits }: { limits: Record<string, unknown> | null }) {
         <Info label="Depósito por semana" value={v("deposit_weekly")} />
         <Info label="Depósito por mês" value={v("deposit_monthly")} />
         <Info label="Perda por dia" value={v("loss_daily")} />
+        <Info label="Perda por semana" value={v("loss_weekly")} />
+        <Info label="Perda por mês" value={v("loss_monthly")} />
         <Info
-          label="Aviso de sessão"
-          value={limits?.session_minutes ? `${limits.session_minutes} min` : "sem aviso"}
+          label="Apostas por dia"
+          value={limits?.bets_daily ? String(limits.bets_daily) : "sem limite"}
+        />
+        <Info
+          label="Tempo máximo de sessão"
+          value={limits?.session_minutes ? `${limits.session_minutes} min` : "sem limite"}
+        />
+        <Info
+          label="Aviso de tempo"
+          value={`a cada ${(limits?.session_alert_minutes as number | undefined) ?? 60} min`}
+        />
+        <Info
+          label="Pausa"
+          value={paused && new Date(paused) > new Date() ? `até ${formatDateTime(paused)}` : "não"}
         />
         <Info
           label="Autoexclusão"
@@ -698,9 +780,114 @@ function LimitsTab({ limits }: { limits: Record<string, unknown> | null }) {
         />
       </dl>
       <p className="mt-4 text-[13px] text-muted-foreground">
-        Esses limites são do jogador. O admin não reduz nem remove autoexclusão.
+        Esses limites são do jogador. O admin não reduz limite, não encerra pausa e não remove
+        autoexclusão.
       </p>
     </Panel>
+  );
+}
+
+/** Ações de conta: desbloqueio de senha, reabertura e decisão de identidade (auditadas). */
+function AccountActions({
+  userId,
+  locked,
+  closed,
+  identity,
+}: {
+  userId: string;
+  locked: boolean;
+  closed: boolean;
+  identity: string;
+}) {
+  const act = useServerFn(playerAccountAction);
+  const refresh = useRefreshPlayer(userId);
+  const [rejecting, setRejecting] = useState(false);
+  const [reason, setReason] = useState("");
+  type Action = "unlock" | "reopen" | "identity_verified" | "identity_rejected" | "identity_reset";
+  const m = useMutation({
+    mutationFn: (v: { action: Action; reason?: string }) => act({ data: { userId, ...v } }),
+    onSuccess: (_, v) => {
+      const msg: Record<Action, string> = {
+        unlock: "Login desbloqueado.",
+        reopen: "Conta reaberta.",
+        identity_verified: "Identidade aprovada.",
+        identity_rejected: "Identidade recusada. O jogador vê o motivo.",
+        identity_reset: "O jogador vai precisar enviar a identidade de novo.",
+      };
+      toast.success(msg[v.action]);
+      setRejecting(false);
+      setReason("");
+      refresh();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="secondary" className="h-10 rounded-[10px] shadow-none">
+            Conta e identidade <ChevronDown className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-60">
+          {identity !== "verified" && (
+            <DropdownMenuItem onSelect={() => m.mutate({ action: "identity_verified" })}>
+              Aprovar identidade
+            </DropdownMenuItem>
+          )}
+          {identity !== "rejected" && (
+            <DropdownMenuItem onSelect={() => setRejecting(true)}>
+              Recusar identidade
+            </DropdownMenuItem>
+          )}
+          {identity !== "none" && (
+            <DropdownMenuItem onSelect={() => m.mutate({ action: "identity_reset" })}>
+              Pedir nova verificação
+            </DropdownMenuItem>
+          )}
+          {locked && (
+            <DropdownMenuItem onSelect={() => m.mutate({ action: "unlock" })}>
+              Desbloquear login
+            </DropdownMenuItem>
+          )}
+          {closed && (
+            <DropdownMenuItem onSelect={() => m.mutate({ action: "reopen" })}>
+              Reabrir conta encerrada
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <Dialog open={rejecting} onOpenChange={setRejecting}>
+        <DialogContent className="rounded-[14px] border-border bg-background">
+          <DialogTitle className="text-[24px]">Recusar identidade</DialogTitle>
+          <DialogDescription>
+            O jogador vê este motivo e pode enviar os documentos de novo.
+          </DialogDescription>
+          <textarea
+            className="field-input min-h-24 py-2.5"
+            value={reason}
+            onChange={(e) => setReason(e.target.value.slice(0, 300))}
+            placeholder="Ex.: a selfie não mostra o documento junto do rosto"
+          />
+          <DialogFooter>
+            <Button
+              variant="secondary"
+              className="rounded-[10px] shadow-none"
+              onClick={() => setRejecting(false)}
+            >
+              Voltar
+            </Button>
+            <Button
+              className="rounded-[10px] font-bold shadow-none"
+              disabled={reason.trim().length < 3 || m.isPending}
+              onClick={() => m.mutate({ action: "identity_rejected", reason: reason.trim() })}
+            >
+              {m.isPending ? <Loader2 className="animate-spin" /> : "Recusar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

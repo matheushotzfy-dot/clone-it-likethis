@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AoVivoRouteImport } from './routes/ao-vivo'
+import { Route as AtendimentoRouteImport } from './routes/atendimento'
 import { Route as CassinoRouteImport } from './routes/cassino'
 import { Route as EsportesRouteImport } from './routes/esportes'
 import { Route as IndiqueAmigosRouteImport } from './routes/indique-amigos'
@@ -70,6 +71,11 @@ const AdminRoute = AdminRouteImport.update({
 const AoVivoRoute = AoVivoRouteImport.update({
   id: '/ao-vivo',
   path: '/ao-vivo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AtendimentoRoute = AtendimentoRouteImport.update({
+  id: '/atendimento',
+  path: '/atendimento',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CassinoRoute = CassinoRouteImport.update({
@@ -276,6 +282,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/ao-vivo': typeof AoVivoRoute
+  '/atendimento': typeof AtendimentoRoute
   '/cassino': typeof CassinoRoute
   '/esportes': typeof EsportesRoute
   '/indique-amigos': typeof IndiqueAmigosRoute
@@ -319,6 +326,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/ao-vivo': typeof AoVivoRoute
+  '/atendimento': typeof AtendimentoRoute
   '/cassino': typeof CassinoRoute
   '/esportes': typeof EsportesRoute
   '/indique-amigos': typeof IndiqueAmigosRoute
@@ -365,6 +373,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/admin': typeof AdminRouteWithChildren
   '/ao-vivo': typeof AoVivoRoute
+  '/atendimento': typeof AtendimentoRoute
   '/cassino': typeof CassinoRoute
   '/esportes': typeof EsportesRoute
   '/indique-amigos': typeof IndiqueAmigosRoute
@@ -411,6 +420,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/ao-vivo'
+    | '/atendimento'
     | '/cassino'
     | '/esportes'
     | '/indique-amigos'
@@ -454,6 +464,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/ao-vivo'
+    | '/atendimento'
     | '/cassino'
     | '/esportes'
     | '/indique-amigos'
@@ -499,6 +510,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/admin'
     | '/ao-vivo'
+    | '/atendimento'
     | '/cassino'
     | '/esportes'
     | '/indique-amigos'
@@ -545,6 +557,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
   AoVivoRoute: typeof AoVivoRoute
+  AtendimentoRoute: typeof AtendimentoRoute
   CassinoRoute: typeof CassinoRoute
   EsportesRoute: typeof EsportesRoute
   IndiqueAmigosRoute: typeof IndiqueAmigosRoute
@@ -595,6 +608,13 @@ declare module '@tanstack/react-router' {
       path: '/ao-vivo'
       fullPath: '/ao-vivo'
       preLoaderRoute: typeof AoVivoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/atendimento': {
+      id: '/atendimento'
+      path: '/atendimento'
+      fullPath: '/atendimento'
+      preLoaderRoute: typeof AtendimentoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cassino': {
@@ -934,6 +954,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
   AoVivoRoute: AoVivoRoute,
+  AtendimentoRoute: AtendimentoRoute,
   CassinoRoute: CassinoRoute,
   EsportesRoute: EsportesRoute,
   IndiqueAmigosRoute: IndiqueAmigosRoute,

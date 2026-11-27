@@ -41,6 +41,18 @@ const updateSchema = z.object({
     .regex(/^\d{10,11}$/, "Celular inválido")
     .optional(),
   full_name: z.string().trim().min(5).max(120).optional(),
+  nationality: z.string().trim().min(3).max(60).optional(),
+  address: z
+    .object({
+      zip: z.string().regex(/^\d{8}$/, "CEP com 8 números"),
+      street: z.string().trim().min(2).max(160),
+      number: z.string().trim().min(1).max(20),
+      complement: z.string().trim().max(80).default(""),
+      district: z.string().trim().max(80).default(""),
+      city: z.string().trim().min(2).max(80),
+      state: z.string().regex(/^[A-Z]{2}$/, "UF com 2 letras"),
+    })
+    .optional(),
 });
 
 /** Nome só pode ser preenchido uma vez (depois, só o suporte muda). CPF e nascimento ficam travados no banco. */
@@ -52,6 +64,16 @@ export const updateMyProfile = createServerFn({ method: "POST" })
     const patch: Record<string, string> = {};
     if (data.username) patch.username = data.username.toLowerCase();
     if (data.phone) patch.phone = data.phone;
+    if (data.nationality) patch.nationality = data.nationality;
+    if (data.address) {
+      patch.address_zip = data.address.zip;
+      patch.address_street = data.address.street;
+      patch.address_number = data.address.number;
+      patch.address_complement = data.address.complement;
+      patch.address_district = data.address.district;
+      patch.address_city = data.address.city;
+      patch.address_state = data.address.state;
+    }
     if (data.full_name) {
       const { data: me } = await supabase
         .from("profiles")
