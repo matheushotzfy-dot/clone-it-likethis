@@ -25,7 +25,7 @@ function Page() {
   return (
     <SiteShell>
       <div className="mx-auto max-w-md px-4 py-16 text-center">
-        <h1 className="text-[30px]">Crie sua conta</h1>
+        <h1 className="text-[24px] sm:text-[30px]">Crie sua conta</h1>
         <p className="mt-2 text-muted-foreground">Cadastro com CPF, 18 anos ou mais.</p>
         <button
           type="button"

@@ -59,7 +59,7 @@ function Home() {
 
   return (
     <SiteShell>
-      <div className="mx-auto max-w-[1600px] space-y-7 px-3 py-4 md:space-y-10 md:px-6 md:py-6">
+      <div className="mx-auto max-w-[1600px] space-y-6 px-3 py-3 sm:space-y-7 sm:py-4 md:space-y-10 md:px-6 md:py-6">
         <PromoBanners />
         <HubTiles />
 

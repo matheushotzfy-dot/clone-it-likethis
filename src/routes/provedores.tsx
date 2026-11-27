@@ -31,7 +31,7 @@ function Page() {
       <div className="mx-auto max-w-[1600px] space-y-5 px-3 py-4 md:space-y-6 md:px-6 md:py-6">
         <CategoryNav />
         <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
-          <h1 className="text-[30px] md:text-[36px]">Provedores</h1>
+          <h1 className="text-[24px] sm:text-[30px] md:text-[36px]">Provedores</h1>
           {data && (
             <p className="num pb-1 text-[14px] text-muted-foreground">
               {data.length} estúdios, {totalGames.toLocaleString("pt-BR")} jogos

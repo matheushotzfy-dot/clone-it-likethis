@@ -239,11 +239,11 @@ export function DepositDialog() {
             <span className="mb-1.5 block text-[13.5px] font-semibold">Valor</span>
             <span
               className={cn(
-                "flex h-[68px] items-center rounded-[12px] border bg-surface px-4 transition-colors focus-within:border-pix",
+                "flex h-[60px] items-center rounded-[12px] border bg-surface px-4 transition-colors focus-within:border-pix sm:h-[68px]",
                 invalid ? "border-destructive" : "border-input",
               )}
             >
-              <span className="mr-2 font-display text-[26px] font-bold text-muted-foreground">
+              <span className="mr-2 font-display text-[22px] font-bold text-muted-foreground sm:text-[26px]">
                 R$
               </span>
               <input
@@ -252,7 +252,7 @@ export function DepositDialog() {
                 inputMode="decimal"
                 placeholder="0,00"
                 aria-describedby="deposit-limits"
-                className="num w-full min-w-0 bg-transparent font-display text-[38px] font-bold outline-none placeholder:text-muted-foreground/50"
+                className="num w-full min-w-0 bg-transparent font-display text-[32px] font-bold outline-none placeholder:text-muted-foreground/50 sm:text-[38px]"
               />
             </span>
             <span
@@ -273,7 +273,7 @@ export function DepositDialog() {
                 type="button"
                 onClick={() => setRaw(String(v))}
                 data-active={amount === v}
-                className="num h-12 rounded-[10px] border border-border bg-surface font-display text-[19px] font-bold transition-colors hover:border-pix/60 data-[active=true]:border-pix data-[active=true]:bg-pix/10"
+                className="num h-11 rounded-[10px] border border-border bg-surface font-display text-[18px] font-bold sm:h-12 sm:text-[19px] transition-colors hover:border-pix/60 data-[active=true]:border-pix data-[active=true]:bg-pix/10"
               >
                 {v.toLocaleString("pt-BR")}
               </button>

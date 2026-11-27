@@ -76,7 +76,7 @@ export function HeaderAccount() {
   return (
     <div className="ml-auto flex min-w-0 shrink-0 items-center gap-2">
       {/* Saldo + depositar formam um controle só */}
-      <div className="flex h-10 min-w-0 items-stretch overflow-hidden rounded-[10px] border border-border bg-background">
+      <div className="flex h-9 min-w-0 items-stretch overflow-hidden rounded-[10px] border border-border bg-background sm:h-10">
         <button
           type="button"
           onClick={() => wallet.refetch()}
@@ -87,7 +87,7 @@ export function HeaderAccount() {
           <span
             key={tick}
             className={cn(
-              "num truncate font-display text-[19px] font-bold leading-none",
+              "num truncate font-display text-[17px] font-bold leading-none sm:text-[19px]",
               tick > 0 && "balance-tick",
             )}
           >
@@ -115,7 +115,7 @@ export function HeaderAccount() {
           <button
             type="button"
             aria-label="Abrir menu da conta"
-            className="grid size-10 shrink-0 place-items-center rounded-[10px] border border-border bg-surface font-display text-[17px] font-bold transition-colors hover:border-primary"
+            className="grid size-9 shrink-0 place-items-center rounded-[10px] border border-border bg-surface font-display text-[16px] font-bold transition-colors hover:border-primary sm:size-10 sm:text-[17px]"
           >
             {initial}
           </button>

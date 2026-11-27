@@ -75,10 +75,10 @@ export function RgStrip() {
 
   return (
     <div className="rg-strip border-b border-border bg-surface/60">
-      <div className="mx-auto flex h-9 max-w-[1600px] items-center gap-4 overflow-x-auto px-3 text-[12.5px] text-muted-foreground md:px-5 thin-scrollbar">
+      <div className="no-scrollbar mx-auto flex h-8 max-w-[1600px] items-center gap-3 overflow-x-auto px-3 text-[12px] text-muted-foreground sm:h-9 sm:gap-4 sm:text-[12.5px] md:px-5">
         <span className="flex shrink-0 items-center gap-1.5" title="Tempo desde que você entrou">
           <Clock3 className="size-3.5" />
-          Sessão{" "}
+          <span className="max-sm:sr-only">Sessão</span>{" "}
           <strong className="num font-semibold text-foreground">{formatDuration(minutes)}</strong>
         </span>
         <span className="shrink-0" title="Ganhos menos apostas de hoje, cassino e esportes">
@@ -94,13 +94,15 @@ export function RgStrip() {
           </strong>
         </span>
         {s.todayBets > 0 && (
-          <span className="shrink-0">
+          <span className="shrink-0 max-sm:hidden">
             Apostas hoje{" "}
             <strong className="num font-semibold text-foreground">{s.todayBets}</strong>
           </span>
         )}
         {s.pausedUntil && (
-          <span className="shrink-0 font-semibold text-foreground">Pausa ativa: só saque</span>
+          <span className="shrink-0 font-semibold text-foreground">
+            Pausa<span className="max-sm:hidden"> ativa: só saque</span>
+          </span>
         )}
         <span className="ml-auto flex shrink-0 items-center gap-3">
           {needsIdentity && (
@@ -110,7 +112,8 @@ export function RgStrip() {
               className="flex items-center gap-1.5 font-semibold text-primary hover:underline"
             >
               <BadgeCheck className="size-3.5" />
-              {pending ? "Identidade em análise" : "Verificar identidade"}
+              {pending ? "Em análise" : "Verificar"}
+              <span className="max-sm:hidden">identidade</span>
             </button>
           )}
           <Link
@@ -118,7 +121,8 @@ export function RgStrip() {
             search={{ aba: "limites" } as never}
             className="flex items-center gap-1.5 hover:text-foreground"
           >
-            <SlidersHorizontal className="size-3.5" /> Limites
+            <SlidersHorizontal className="size-4 sm:size-3.5" />
+            <span className="max-sm:sr-only">Limites</span>
           </Link>
         </span>
       </div>

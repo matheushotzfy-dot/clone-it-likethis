@@ -30,9 +30,11 @@ export function AuthSheet({
         )}
       >
         <div className="auth-sheet-scroll min-h-0 flex-1 overflow-y-auto px-5 pb-7 pt-6 sm:px-7">
-          <DialogTitle className="pr-10 text-[28px] leading-tight">{title}</DialogTitle>
+          <DialogTitle className="pr-10 text-[24px] leading-tight sm:text-[28px]">
+            {title}
+          </DialogTitle>
           {description ? (
-            <DialogDescription className="mt-1 text-[14.5px] text-muted-foreground">
+            <DialogDescription className="mt-1 text-[14px] text-muted-foreground sm:text-[14.5px]">
               {description}
             </DialogDescription>
           ) : (

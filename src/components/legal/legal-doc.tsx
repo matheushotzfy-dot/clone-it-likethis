@@ -20,8 +20,10 @@ export function LegalDoc({
   const s = usePublicSettings().data;
   return (
     <SiteShell>
-      <article className="legal-doc mx-auto max-w-[72ch] px-4 py-10 md:py-14">
-        <h1 className="font-display text-[34px] font-bold leading-tight md:text-[40px]">{title}</h1>
+      <article className="legal-doc mx-auto max-w-[72ch] px-4 py-6 sm:py-10 md:py-14">
+        <h1 className="font-display text-[27px] font-bold leading-tight sm:text-[34px] md:text-[40px]">
+          {title}
+        </h1>
         {versioned && s?.termsVersion && (
           <p className="mt-1 text-[13px] text-muted-foreground">Versão {s.termsVersion}</p>
         )}
@@ -70,8 +72,8 @@ export function CompanyBlock() {
 export function LegalSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="space-y-3">
-      <h2 className="font-display text-[23px] font-bold leading-snug">{title}</h2>
-      <div className="space-y-3 text-[15.5px] leading-[1.7] text-foreground/85 [&_li]:pl-1 [&_ul]:list-disc [&_ul]:space-y-1.5 [&_ul]:pl-5">
+      <h2 className="font-display text-[20px] font-bold leading-snug sm:text-[23px]">{title}</h2>
+      <div className="space-y-3 text-[15px] leading-[1.65] sm:text-[15.5px] sm:leading-[1.7] text-foreground/85 [&_li]:pl-1 [&_ul]:list-disc [&_ul]:space-y-1.5 [&_ul]:pl-5">
         {children}
       </div>
     </section>

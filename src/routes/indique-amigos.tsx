@@ -13,7 +13,7 @@ function Page() {
   return (
     <SiteShell>
       <div className="mx-auto max-w-[900px] px-3 py-6 md:px-6 md:py-10">
-        <h1 className="text-[32px] md:text-[38px]">Indique amigos</h1>
+        <h1 className="text-[24px] sm:text-[32px] md:text-[38px]">Indique amigos</h1>
         <div className="mt-6 rounded-[14px] border border-border bg-surface px-6 py-12 text-center">
           <p className="font-display text-[24px] font-bold">
             O programa de indicação ainda não está aberto

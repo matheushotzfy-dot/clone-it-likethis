@@ -6,22 +6,37 @@ export function PlatformStatusBar() {
   if (!data) return null;
   if (data.maintenance) {
     return (
-      <div role="status" className="homolog-bar px-4 py-2 text-center text-[13px] font-semibold">
+      <div
+        role="status"
+        className="homolog-bar px-3 py-1.5 text-center text-[11.5px] font-semibold sm:py-2 sm:text-[13px]"
+      >
         Plataforma em manutenção. Algumas funções podem ficar indisponíveis por alguns minutos.
       </div>
     );
   }
   if (!data.realMoney && data.testPayments) {
     return (
-      <div role="status" className="homolog-bar px-4 py-2 text-center text-[13px] font-semibold">
-        Ambiente de homologação com Pix de teste: nenhum pagamento é real.
+      <div
+        role="status"
+        className="homolog-bar px-3 py-1.5 text-center text-[11.5px] font-semibold sm:py-2 sm:text-[13px]"
+      >
+        <span className="sm:hidden">Homologação: Pix de teste, nenhum pagamento é real</span>
+        <span className="max-sm:hidden">
+          Ambiente de homologação com Pix de teste: nenhum pagamento é real.
+        </span>
       </div>
     );
   }
   if (!data.realMoney) {
     return (
-      <div role="status" className="homolog-bar px-4 py-2 text-center text-[13px] font-semibold">
-        Ambiente de homologação: depósitos e saques com dinheiro real estão desativados.
+      <div
+        role="status"
+        className="homolog-bar px-3 py-1.5 text-center text-[11.5px] font-semibold sm:py-2 sm:text-[13px]"
+      >
+        <span className="sm:hidden">Homologação: sem depósitos e saques reais</span>
+        <span className="max-sm:hidden">
+          Ambiente de homologação: depósitos e saques com dinheiro real estão desativados.
+        </span>
       </div>
     );
   }

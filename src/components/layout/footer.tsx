@@ -47,14 +47,38 @@ const cols: { title: string; links: FooterLink[] }[] = [
   },
 ];
 
+const MOBILE_LINKS: FooterLink[] = [
+  { to: "/legal/termos", label: "Termos" },
+  { to: "/legal/privacidade", label: "Privacidade" },
+  { to: "/legal/jogo-responsavel", label: "Jogo responsável" },
+  { to: "/atendimento", label: "Atendimento" },
+  { to: "/provedores", label: "Provedores" },
+];
+
 export function Footer() {
   const providers = useProviders();
   const names = (providers.data ?? []).slice(0, 12);
   const settings = usePublicSettings().data;
 
   return (
-    <footer className="mt-14 border-t border-border bg-sidebar">
-      <div className="mx-auto grid max-w-[1600px] gap-10 px-4 py-10 md:px-6 lg:grid-cols-[1.25fr_2.75fr]">
+    <footer className="mt-10 border-t border-border bg-sidebar sm:mt-14">
+      {/* Celular: rodapé enxuto, como em app. */}
+      <div className="space-y-3 px-4 py-6 sm:hidden">
+        <nav aria-label="Regras e ajuda" className="flex flex-wrap gap-x-4 gap-y-2 text-[13px]">
+          {MOBILE_LINKS.map((l) => (
+            <Link key={l.label} to={l.to} className="text-muted-foreground hover:text-foreground">
+              {l.label}
+            </Link>
+          ))}
+        </nav>
+        <p className="flex items-center gap-2 text-[12px] leading-snug text-muted-foreground">
+          <span className="grid size-7 shrink-0 place-items-center rounded-full border-2 border-destructive font-display text-[12px] font-bold text-destructive">
+            18+
+          </span>
+          Proibido para menores. Apostar envolve risco de perda. Jogue com limites.
+        </p>
+      </div>
+      <div className="mx-auto grid max-w-[1600px] gap-10 px-4 py-10 max-sm:hidden md:px-6 lg:grid-cols-[1.25fr_2.75fr]">
         <div className="max-w-sm space-y-4">
           <Logo />
           <p className="text-[13.5px] leading-relaxed text-muted-foreground">
@@ -99,7 +123,7 @@ export function Footer() {
       </div>
 
       {names.length > 0 && (
-        <div className="border-t border-border">
+        <div className="border-t border-border max-sm:hidden">
           <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-x-5 gap-y-2 px-4 py-5 md:px-6">
             <span className="text-[12.5px] font-semibold text-foreground/80">Provedores</span>
             {names.map((p) => (
@@ -117,7 +141,7 @@ export function Footer() {
       )}
 
       <div className="border-t border-border">
-        <div className="mx-auto flex max-w-[1600px] flex-col gap-1.5 px-4 py-5 text-[12.5px] text-muted-foreground md:flex-row md:items-center md:justify-between md:px-6">
+        <div className="mx-auto flex max-w-[1600px] flex-col gap-1.5 px-4 py-4 text-[11.5px] text-muted-foreground sm:py-5 sm:text-[12.5px] md:flex-row md:items-center md:justify-between md:px-6">
           <p>
             © {new Date().getFullYear()}{" "}
             {settings?.company?.name ? (

@@ -89,7 +89,7 @@ function Page() {
       <div className="mx-auto grid max-w-[1400px] gap-6 px-3 py-4 md:px-6 md:py-6 lg:grid-cols-[1fr_340px]">
         <section className="min-w-0 space-y-4">
           <div className="flex flex-wrap items-end justify-between gap-3">
-            <h1 className="text-[32px] md:text-[38px]">Esportes</h1>
+            <h1 className="text-[24px] sm:text-[32px] md:text-[38px]">Esportes</h1>
             {user && (
               <Link
                 to="/historico"

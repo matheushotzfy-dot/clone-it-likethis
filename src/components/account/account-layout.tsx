@@ -29,36 +29,40 @@ function AccountHeader() {
       }).format(new Date(p.created_at))
     : null;
   return (
-    <div className="mb-5 flex flex-wrap items-center gap-4 rounded-[16px] border border-border bg-[linear-gradient(135deg,var(--surface-2),var(--surface)_60%)] p-4 md:p-5">
-      <span className="grid size-12 shrink-0 place-items-center rounded-full bg-primary/15 font-display text-[20px] font-bold text-primary md:size-14 md:text-[22px]">
+    <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-3 rounded-[14px] border border-border bg-[linear-gradient(135deg,var(--surface-2),var(--surface)_60%)] p-3.5 sm:mb-5 sm:gap-4 sm:rounded-[16px] sm:p-4 md:p-5">
+      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/15 font-display text-[17px] font-bold text-primary sm:size-12 sm:text-[20px] md:size-14 md:text-[22px]">
         {initials}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-1.5 truncate text-[17px] font-semibold">
+        <p className="flex items-center gap-1.5 truncate text-[15.5px] font-semibold sm:text-[17px]">
           {name ? `Olá, ${name.split(" ")[0]}` : "Sua conta"}
           {p?.kyc_verified && (
             <BadgeCheck className="size-4 shrink-0 text-live" aria-label="Documentos verificados" />
           )}
         </p>
-        {since && <p className="text-[13px] text-muted-foreground">Cliente desde {since}</p>}
+        {since && (
+          <p className="text-[12.5px] text-muted-foreground sm:text-[13px]">
+            Cliente desde {since}
+          </p>
+        )}
       </div>
-      <div className="flex w-full flex-wrap items-center gap-2.5 sm:w-auto sm:flex-nowrap sm:gap-3">
-        <div className="w-full sm:mr-2 sm:w-auto sm:text-right">
-          <p className="text-[12px] text-muted-foreground">Saldo</p>
-          <p className="num font-display text-[24px] font-bold leading-none">
+      <div className="flex w-full items-center gap-2 sm:w-auto sm:gap-3">
+        <div className="mr-auto min-w-0 sm:mr-2 sm:text-right">
+          <p className="text-[11.5px] text-muted-foreground sm:text-[12px]">Saldo</p>
+          <p className="num truncate font-display text-[20px] font-bold leading-none sm:text-[24px]">
             {wallet.data ? formatBRL(wallet.data.balance) : "–"}
           </p>
         </div>
         <button
           type="button"
           onClick={() => open("deposit")}
-          className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-[10px] bg-pix px-3.5 text-[14px] font-bold text-pix-foreground hover:brightness-110 sm:flex-none"
+          className="flex h-9 items-center justify-center gap-1.5 rounded-[10px] bg-pix px-3 text-[13.5px] font-bold text-pix-foreground hover:brightness-110 sm:h-10 sm:px-3.5 sm:text-[14px]"
         >
           <ArrowDownToLine className="size-4" /> Depositar
         </button>
         <Link
           to="/saque"
-          className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-border px-3.5 text-[14px] font-semibold hover:border-foreground/30 sm:flex-none"
+          className="flex h-9 items-center justify-center gap-1.5 rounded-[10px] border border-border px-3 text-[13.5px] font-semibold hover:border-foreground/30 sm:h-10 sm:px-3.5 sm:text-[14px]"
         >
           <ArrowUpFromLine className="size-4" /> Sacar
         </Link>
@@ -86,11 +90,11 @@ export function AccountLayout({
   const path = useRouterState({ select: (s) => s.location.pathname });
   return (
     <SiteShell>
-      <div className="mx-auto max-w-[1100px] px-3 py-5 md:px-6 md:py-8">
+      <div className="mx-auto max-w-[1100px] px-3 py-3 sm:py-5 md:px-6 md:py-8">
         <AccountHeader />
         <nav
           aria-label="Seções da conta"
-          className="no-scrollbar -mx-3 mb-6 flex gap-1 overflow-x-auto border-b border-border px-3 md:mx-0 md:px-0"
+          className="no-scrollbar -mx-3 mb-4 flex gap-1 overflow-x-auto border-b border-border px-3 sm:mb-6 md:mx-0 md:px-0"
         >
           {TABS.map((t) => {
             const active = path === t.to;
@@ -100,7 +104,7 @@ export function AccountLayout({
                 to={t.to}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "relative shrink-0 px-3 pb-3 pt-1 text-[15px] font-semibold transition-colors",
+                  "relative shrink-0 px-3 pb-2.5 pt-1 text-[14px] font-semibold transition-colors sm:pb-3 sm:text-[15px]",
                   active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -114,7 +118,7 @@ export function AccountLayout({
         </nav>
         <div className={cn(aside && "grid gap-6 lg:grid-cols-[1fr_320px]")}>
           <div className="min-w-0">
-            <h1 className="mb-5 text-[32px] md:text-[38px]">{title}</h1>
+            <h1 className="mb-5 text-[32px] max-sm:sr-only md:text-[38px]">{title}</h1>
             {children}
           </div>
           {aside && <aside className="space-y-4">{aside}</aside>}
@@ -137,7 +141,7 @@ export function SubTabs<T extends string>({
   return (
     <div
       role="tablist"
-      className="no-scrollbar -mx-3 mb-5 flex gap-2 overflow-x-auto px-3 md:mx-0 md:px-0"
+      className="no-scrollbar -mx-3 mb-4 flex gap-2 overflow-x-auto px-3 sm:mb-5 md:mx-0 md:px-0"
     >
       {options.map((o) => (
         <button
@@ -168,10 +172,19 @@ export function Section({
   className?: string;
 }) {
   return (
-    <section className={cn("rounded-[14px] border border-border bg-surface p-4 md:p-6", className)}>
-      <h2 className="text-[22px]">{title}</h2>
-      {description && <p className="mt-1 text-[14px] text-muted-foreground">{description}</p>}
-      <div className="mt-5">{children}</div>
+    <section
+      className={cn(
+        "account-section rounded-[14px] border border-border bg-surface p-4 md:p-6",
+        className,
+      )}
+    >
+      <h2 className="text-[19px] sm:text-[22px]">{title}</h2>
+      {description && (
+        <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground sm:text-[14px]">
+          {description}
+        </p>
+      )}
+      <div className="mt-4 sm:mt-5">{children}</div>
     </section>
   );
 }

@@ -87,7 +87,7 @@ export function SectionHeading({
 }) {
   return (
     <div className="mb-3 flex min-w-0 items-center gap-2.5">
-      <h2 className="flex min-w-0 items-center gap-2 truncate text-[21px] md:text-[25px]">
+      <h2 className="flex min-w-0 items-center gap-2 truncate text-[19px] sm:text-[21px] md:text-[25px]">
         {icon}
         <span className="truncate">{title}</span>
       </h2>

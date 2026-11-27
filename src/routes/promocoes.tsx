@@ -28,7 +28,7 @@ function Page() {
   return (
     <SiteShell>
       <div className="mx-auto max-w-[900px] space-y-6 px-3 py-6 md:px-6 md:py-10">
-        <h1 className="text-[32px] md:text-[38px]">Promoções</h1>
+        <h1 className="text-[24px] sm:text-[32px] md:text-[38px]">Promoções</h1>
         <div className="rounded-[14px] border border-border bg-surface px-6 py-8">
           <p className="font-display text-[24px] font-bold">Nenhuma promoção ativa no momento</p>
           <p className="mt-1 text-[15px] text-muted-foreground">

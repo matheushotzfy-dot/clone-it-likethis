@@ -330,7 +330,7 @@ function IdentityCard() {
         {(st === "none" || st === "rejected") && (
           <Button
             onClick={() => open("identity")}
-            className="h-11 shrink-0 rounded-[10px] px-5 font-bold shadow-none"
+            className="btn-mobile-block h-11 shrink-0 rounded-[10px] px-5 font-bold shadow-none"
           >
             {st === "rejected" ? "Enviar de novo" : "Verificar agora"}
           </Button>
@@ -455,7 +455,7 @@ function Security() {
         <Button
           variant="secondary"
           onClick={signOutEverywhere}
-          className="h-11 rounded-[10px] px-5 shadow-none"
+          className="btn-mobile-block h-11 rounded-[10px] px-5 shadow-none"
         >
           Sair de todos os aparelhos
         </Button>
@@ -506,7 +506,7 @@ function CloseAccount() {
         variant="destructive"
         disabled={blocked}
         onClick={() => setOpen(true)}
-        className="h-11 rounded-[10px] px-5 font-bold shadow-none"
+        className="btn-mobile-block h-11 rounded-[10px] px-5 font-bold shadow-none"
       >
         Encerrar minha conta
       </Button>
@@ -714,17 +714,20 @@ function Limits() {
               <fieldset key={m.kind}>
                 <legend className="mb-1 text-[15px] font-semibold">{m.label}</legend>
                 <p className="mb-3 text-[12.5px] text-muted-foreground">{m.hint}</p>
-                <div className="grid gap-4 sm:grid-cols-3">
+                <div className="grid gap-2.5 sm:grid-cols-3 sm:gap-4">
                   {PERIODS.map((pr) => {
                     const key = `${m.kind}_${pr.id}` as MoneyKey;
+                    const hint = pendingHint(key);
                     return (
-                      <Field
+                      <label
                         key={key}
-                        label={pr.label}
                         htmlFor={`lim-${key}`}
-                        hint={pendingHint(key)}
+                        className="grid grid-cols-[88px_1fr] items-center gap-x-3 sm:block"
                       >
-                        <div className="relative">
+                        <span className="text-[13.5px] font-semibold text-foreground/90 sm:mb-1.5 sm:block">
+                          {pr.label}
+                        </span>
+                        <span className="relative block">
                           <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground">
                             R$
                           </span>
@@ -736,8 +739,13 @@ function Limits() {
                             value={values[key]}
                             onChange={(e) => set(key, e.target.value.replace(/[^\d,]/g, ""))}
                           />
-                        </div>
-                      </Field>
+                        </span>
+                        {hint && (
+                          <span className="col-span-2 mt-1 block text-[12.5px] text-muted-foreground max-sm:pl-[100px] sm:mt-1.5">
+                            {hint}
+                          </span>
+                        )}
+                      </label>
                     );
                   })}
                 </div>

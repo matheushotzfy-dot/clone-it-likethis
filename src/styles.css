@@ -813,6 +813,13 @@
   .field-input:disabled {
     opacity: 0.6;
   }
+  /* Celular: 44 px de toque e 16 px de texto (o iOS não dá zoom no foco). */
+  @media (max-width: 639px) {
+    .field-input {
+      height: 44px;
+      font-size: 16px;
+    }
+  }
 }
 
 /* -----------------------------------------------------------------------------
@@ -823,13 +830,13 @@
   -webkit-overflow-scrolling: touch;
 }
 @media (max-width: 639px) {
+  /* Tela cheia pelas quatro bordas (mais estável que 100dvh com a barra do navegador). */
   .auth-sheet {
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100%;
     max-width: none;
-    height: 100dvh;
-    max-height: 100dvh;
+    height: auto;
+    max-height: none;
     transform: none;
     translate: none !important;
     border-radius: 0;
@@ -852,6 +859,15 @@
   }
   .app-shell :is(a, button, input, select, textarea) {
     touch-action: manipulation;
+  }
+  /* Ações com medida de app: botão principal na largura toda. */
+  .account-section button[type="submit"],
+  .account-section .btn-mobile-block {
+    width: 100%;
+  }
+  .catalog-bar {
+    position: static;
+    padding-block: 4px;
   }
 }
 

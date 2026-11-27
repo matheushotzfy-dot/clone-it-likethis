@@ -22,7 +22,7 @@ export function LiveStrip() {
   return (
     <section aria-label="Esportes">
       <div className="mb-3 flex items-baseline gap-2.5">
-        <h2 className="flex items-center gap-2 text-[22px] md:text-[26px]">
+        <h2 className="flex items-center gap-2 text-[19px] sm:text-[21px] md:text-[25px]">
           {live.length > 0 && <span className="live-dot" aria-hidden />}
           {live.length > 0 ? "Rolando agora" : "Próximos jogos"}
         </h2>

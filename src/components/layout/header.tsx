@@ -11,7 +11,7 @@ export function Header() {
 
   return (
     <header className="app-header sticky top-0 z-40 border-b border-border bg-sidebar/95 backdrop-blur supports-[backdrop-filter]:bg-sidebar/85">
-      <div className="flex h-[60px] min-w-0 items-center gap-2 px-3 md:gap-3 md:px-5">
+      <div className="flex h-14 min-w-0 items-center gap-2 px-3 sm:h-[60px] md:gap-3 md:px-5">
         <Button
           variant="ghost"
           size="icon"

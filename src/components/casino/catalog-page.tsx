@@ -111,11 +111,13 @@ export function CatalogPage({
 
   return (
     <div className="mx-auto max-w-[1600px] space-y-4 px-3 py-4 md:space-y-5 md:px-6 md:py-6">
-      <CategoryNav active={nav} />
+      <div className="max-sm:hidden">
+        <CategoryNav active={nav} />
+      </div>
 
-      <div className="flex flex-wrap items-end gap-x-4 gap-y-1 pt-1">
-        <h1 className="text-[30px] md:text-[36px]">{heading}</h1>
-        <p className="num pb-1 text-[14px] text-muted-foreground">
+      <div className="flex flex-wrap items-end gap-x-3 gap-y-1 sm:gap-x-4 sm:pt-1">
+        <h1 className="text-[24px] sm:text-[30px] md:text-[36px]">{heading}</h1>
+        <p className="num pb-0.5 text-[13px] text-muted-foreground sm:pb-1 sm:text-[14px]">
           {pages.isLoading
             ? "Carregando…"
             : `${total.toLocaleString("pt-BR")} ${total === 1 ? "jogo" : "jogos"}`}
@@ -125,27 +127,44 @@ export function CatalogPage({
 
       <div className="catalog-bar">
         <div className="flex flex-col gap-2.5 md:flex-row md:items-center">
-          <label className="relative block md:w-[320px]">
-            <span className="sr-only">Buscar jogo</span>
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              value={term}
-              onChange={(e) => setTerm(e.target.value)}
-              placeholder="Buscar pelo nome do jogo"
-              enterKeyHint="search"
-              className="h-11 w-full rounded-[10px] border border-border bg-surface pl-10 pr-10 text-[15px] outline-none placeholder:text-muted-foreground focus:border-primary"
-            />
-            {term && (
-              <button
-                type="button"
-                onClick={() => setTerm("")}
-                aria-label="Limpar busca"
-                className="absolute right-2 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-md text-muted-foreground hover:text-foreground"
+          <div className="flex gap-2 md:contents">
+            <label className="relative block min-w-0 flex-1 md:w-[320px] md:flex-none">
+              <span className="sr-only">Buscar jogo</span>
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                value={term}
+                onChange={(e) => setTerm(e.target.value)}
+                placeholder="Buscar jogo"
+                enterKeyHint="search"
+                className="h-11 w-full rounded-[10px] border border-border bg-surface pl-10 pr-10 text-[16px] outline-none placeholder:text-muted-foreground focus:border-primary sm:text-[15px]"
+              />
+              {term && (
+                <button
+                  type="button"
+                  onClick={() => setTerm("")}
+                  aria-label="Limpar busca"
+                  className="absolute right-2 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-md text-muted-foreground hover:text-foreground"
+                >
+                  <X className="size-4" />
+                </button>
+              )}
+            </label>
+            <label className="flex shrink-0 items-center gap-2 md:order-last md:ml-auto">
+              <span className="shrink-0 text-[13px] text-muted-foreground max-sm:sr-only">
+                Ordenar
+              </span>
+              <select
+                value={sort}
+                onChange={(e) =>
+                  onSearch({ ...search, ordem: e.target.value === "az" ? "az" : undefined })
+                }
+                className="h-11 w-[124px] rounded-[10px] border border-border bg-surface px-3 text-[14px] outline-none focus:border-primary md:h-10 md:w-[150px]"
               >
-                <X className="size-4" />
-              </button>
-            )}
-          </label>
+                <option value="popular">Populares</option>
+                <option value="az">De A a Z</option>
+              </select>
+            </label>
+          </div>
 
           {!fixedCategory && (
             <div className="chip-row" role="tablist" aria-label="Tipo de jogo">
@@ -194,20 +213,6 @@ export function CatalogPage({
               ))}
             </div>
           )}
-
-          <label className="flex items-center gap-2 md:ml-auto">
-            <span className="shrink-0 text-[13px] text-muted-foreground">Ordenar</span>
-            <select
-              value={sort}
-              onChange={(e) =>
-                onSearch({ ...search, ordem: e.target.value === "az" ? "az" : undefined })
-              }
-              className="h-10 flex-1 rounded-[10px] border border-border bg-surface px-3 text-[14px] outline-none focus:border-primary md:w-[150px] md:flex-none"
-            >
-              <option value="popular">Populares</option>
-              <option value="az">Nome, de A a Z</option>
-            </select>
-          </label>
         </div>
 
         {(providers.data?.length ?? 0) > 1 && (
@@ -244,7 +249,7 @@ export function CatalogPage({
       </div>
 
       {showcase && (
-        <p className="rounded-[10px] border border-border bg-surface px-4 py-3 text-[14px] text-muted-foreground">
+        <p className="rounded-[10px] border border-border bg-surface px-3.5 py-2.5 text-[13px] text-muted-foreground sm:px-4 sm:py-3 sm:text-[14px]">
           Esta é a vitrine do cassino. Os jogos abrem assim que o catálogo do provedor for ativado.
         </p>
       )}
